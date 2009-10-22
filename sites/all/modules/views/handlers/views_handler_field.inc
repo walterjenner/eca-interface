@@ -48,6 +48,17 @@ class views_handler_field extends views_handler {
     return TRUE;
   }
 
+  /**
+   * Determine if this field can be aggregated over.
+   *
+   * Fields can set this to FALSE if they do not wish to allow
+   * aggregation functions (such as COUNT, SUM, MAX, etc.) to be
+   * used on this field.
+   */
+  function allow_aggregation() {
+    return TRUE;
+  }
+
   function init(&$view, $options) {
     parent::init($view, $options);
 
@@ -61,8 +72,17 @@ class views_handler_field extends views_handler {
    */
   function query() {
     $this->ensure_my_table();
-    // Add the field.
+
+    // Add the field, taking care of any aggregation that
+    // may affect it.
     $this->field_alias = $this->query->add_field($this->table_alias, $this->real_field);
+
+    if ($this->options['groupby']) {
+      $this->query->fields[$this->field_alias]['groupby'] = TRUE;
+    }
+    if ($this->options['aggregate']['aggregate_field']) {
+      $this->query->fields[$this->field_alias][$this->options['aggregate']['sql_function']] = TRUE;
+    }
 
     $this->add_additional_fields();
   }
@@ -181,6 +201,43 @@ class views_handler_field extends views_handler {
       '#default_value' => $this->options['exclude'],
       '#description' => t('Check this box to not display this field, but still load it in the view.  Use this option to not show a grouping field in each record, or when doing advanced theming.'),
     );
+    $form['groupby'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Group this field'),
+      '#default_value' => $this->options['groupby'],
+      '#description' => t('Check this box if you want to group (summarize) this field and (optionally) aggregate another field.'),
+    );
+
+    if ($this->allow_aggregation()) {
+      $form['aggregate']['#tree'] = TRUE;
+      $form['aggregate']['aggregate_field'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Aggregate this field'),
+        '#default_value' => $this->options['aggregate']['aggregate_field'],
+        '#description' => t('Check this box if you want to apply an aggregation function (such as a count, average) to the values in this field.'),
+      );
+
+      $sql_functions = array(
+        'count' => t('Count'),
+        'sum' => t('Sum'),
+        'average' => t('Average'),
+        'minimum' => t('Minimum'),
+        'maximum' => t('Maximum'),
+        'concat' => t('Concatenate'),
+      );
+
+      $form['aggregate']['sql_function'] = array(
+        '#type' => 'select',
+        '#title' => t('Aggregation function'),
+        '#default_value' => $this->options['aggregate']['sql_function'],
+        '#description' => t('The function that should be applied to the values in this field.'),
+        '#options' => $sql_functions,
+        '#process' => array('views_process_dependency'),
+        '#dependency' => array(
+          'edit-options-aggregate-aggregate-field' => array(1)
+        ),
+      );
+    }
 
     if ($this->allow_advanced_render()) {
       $form['alter']['#tree'] = TRUE;

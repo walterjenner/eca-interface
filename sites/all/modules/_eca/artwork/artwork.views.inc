@@ -7,6 +7,8 @@ function artwork_views_data(){
   $data['compartdb_creating']['table']['group'] = t('Creating CA');
   $data['compartdb_agent']['table']['group'] = t('Agent CA');
   $data['compartdb_artwork']['table']['group'] = t('Artwork CA');
+  $data['compartdb_illustrated_by']['table']['group'] = t('Illustrated By CA');
+  $data['compartdb_media_file']['table']['group'] = t('Media File CA');
    
   //connect drupal artwork table with node table
   $data['artwork']['table']['join']['node'] = array(
@@ -27,8 +29,44 @@ function artwork_views_data(){
     'left_table' => 'compartdb_creating',
     'left_field' => 'agent_id',
     'field' => 'agent_id',
+  ); 
+  $data['compartdb_illustrated_by']['table']['join']['node'] = array(
+    'left_table' => 'artwork',
+    'left_field' => 'artwork_id',
+    'field' => 'row_id',
+    'type' => 'inner',
+    'extra' => array( 'table_id' => array(
+                         'field' => 'table_id',
+                         ' operator' => '=',
+                         'value' => '5',
+                         'numeric' => true,
+                       ),
+                    ),
+  );
+  
+  $data['compartdb_media_file']['table']['join']['node'] = array(
+    'left_table' => 'compartdb_illustrated_by',
+    'left_field' => 'media_file_id',
+    'field' => 'media_file_id',
   );  
   
+  //fields
+  $data['compartdb_illustrated_by']['media_file_id'] = array(
+    'title' => t('media_file_id'),
+    'help' => t('media_file_id'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+  );  
+  $data['compartdb_media_file']['file_name'] = array(
+    'title' => t('file_name'),
+    'help' => t('file_name'),
+    'field' => array(
+      'handler' => 'artwork_handler_field_file_name',
+      'click sortable' => TRUE,
+    ),
+  );
   /*
   $data['agent']['table']['group'] = t('Creating table');
   $data['agent']['table']['title'] = t('Creating table');
@@ -158,6 +196,8 @@ function artwork_views_handlers() {
     'handlers' => array(
         'artwork_handler_field_artwork_agents' => array(
           'parent' => 'views_handler_field_prerender_list' ),
+        'artwork_handler_field_file_name' => array(
+          'parent' => 'views_handler_field' ),
         'artwork_handler_field_agent_list' => array(
           'parent' => 'views_handler_field_prerender_list' ),
         'eca_main_handler_argument_agent_id' => array(
