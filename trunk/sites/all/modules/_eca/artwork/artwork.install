@@ -1,0 +1,51 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * Contains install and update functions for artwork.
+ */
+
+/**
+ * Implementation of hook_install()
+ */
+function artwork_install() {
+  drupal_install_schema('artwork');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function artwork_uninstall() {
+  drupal_uninstall_schema('artwork');
+  
+  //delete all exhibition nodes. NOTE: takes loooooong //all comments, all terms, etc should be deleted as well
+  $res = db_query("SELECT n.nid FROM {node} n WHERE n.type = 'artwork'");
+  while ($n = db_fetch_object($res)) {
+    node_delete($n->nid);
+  }
+}
+
+function artwork_schema() {
+  $schema['artwork'] = array(
+      'description' => t('The table which does the mapping to artworks in compArt DB.'),
+      'fields' => array(
+        'nid' => array(
+          'description' => t('The primary identifier for a node.'),
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE),
+        'artwork_id' => array(
+          'description' => t('The id of the artwork in compArt DB.'),
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0),
+        ),
+      'unique keys' => array( 'artwork_id' => array('artwork_id') ),
+      'primary key' => array( 'nid' ),
+  );
+      
+  return $schema;
+}

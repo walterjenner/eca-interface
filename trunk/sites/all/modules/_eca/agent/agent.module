@@ -1,0 +1,217 @@
+<?php
+// $Id$
+
+//NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
+
+//include the file with the helper functions
+require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
+
+/**
+ * @file
+ * Wrapper-Node-Type to the Agent in the compArt DB
+ */
+
+function agent_node_info() {
+  return array(
+    'agent' => array(
+      'name' => t('Agent'),
+      'module' => 'agent',
+      'description' => "Wrapper-Node-Type to the Agent in the compArt DB",
+      'has_body' => FALSE,
+      'title_label' => t('Name'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function agent_help($path, $arg) {
+  $output = ''; 
+  switch ($path) {
+    case "admin/help#agent":
+      $output = '<p>'.  t("Wrapper-Node-Type to the Agent in the compArt DB.") .'</p>';
+      $output .= '<p>'.  t("It was developed for the ") 
+        . '<a href="http://www.compart.informatik.uni-bremen.de/" title="compArt Project">compArt Project</a>' 
+        . t(" at University Bremen.") .'</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Called everytime cron.php is run. 
+ * Updates the mapping if the timespan since last update is greater then 12h.
+ * 
+ * @return 
+ */
+function agent_cron()
+{
+  $last_run = variable_get('cron_last', time());
+ 
+  //if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_AGENT_SYNC ){
+  if( true ){
+    variable_set('cron_last', time() );
+    global $userMapping;
+        
+    //1-DELETE if there is a mapping which is not in compart db anymore
+    $selectDeprecated = "SELECT a.nid
+                          FROM agent a
+                          LEFT JOIN compartdb.agent ca_a
+                          ON a.agent_id = ca_a.agent_id
+                          WHERE ca_a.agent_id IS NULL";
+                          
+    $resultDeprecated = db_query( $selectDeprecated );
+    while( $toDelete = db_fetch_object( $resultDeprecated ) ){
+      node_delete( $toDelete->nid );
+      drupal_set_message( "Deleted agent: nid: $toDelete->nid");
+    }
+    
+    //2-INSERT if there is no mapping for an agent sofar.
+    $selectNew = "SELECT ca_a.agent_id, ca_a.first_name, ca_a.last_name, ca_a.owner_id
+                          FROM compartdb.agent ca_a
+                          LEFT JOIN agent a
+                          ON a.agent_id = ca_a.agent_id
+                          WHERE a.agent_id IS NULL";
+                          
+    $resultNew = db_query( $selectNew );
+    while( $toInsert = db_fetch_object( $resultNew ) ){
+      $toInsert->title = $toInsert->first_name . ' ' . $toInsert->last_name;
+      $toInsert->type = 'agent';
+      $toInsert->uid = isset($userMapping[$toInsert->owner_id])?$userMapping[$toInsert->owner_id]:0;
+      $toInsert->comment = 2;
+      
+      node_save( $toInsert );      
+      drupal_set_message( "Inserted agent: nid: $toInsert->nid, title: $toInsert->title, uid: $n->uid, owner_id: $toInsert->owner_id");
+      
+      //update search index     
+      _node_index_node( $toInsert ); 
+    }    
+      
+    //3-UPDATE if the data is newer
+    $selectUpdated = "SELECT ca_a.agent_id, ca_a.first_name, ca_a.last_name, a.nid as nid, ca_a.owner_id
+                FROM compartdb.agent ca_a
+                LEFT JOIN agent a
+                ON ca_a.agent_id = a.agent_id
+                LEFT JOIN node n
+                ON a.nid = n.nid
+                WHERE UNIX_TIMESTAMP(ca_a.last_change) > n.changed";
+    
+    $resultUpdated = db_query( $selectUpdated );
+    while( $updated = db_fetch_object($resultUpdated) ){
+      $n = new stdClass();
+      $n->nid = $updated->nid;
+      $n->vid = $n->nid; //to ensure that the title in revision table is also updated.
+      $n->uid = isset($userMapping[$updated->owner_id])?$userMapping[$updated->owner_id]:0;
+      $n->title = $updated->first_name . ' ' . $updated->last_name;
+      
+      node_save( $n );
+      drupal_set_message( "Updated agent: nid: $n->nid, title: $n->title, uid: $n->uid, owner_id: $updated->owner_id");
+      
+      //update search index
+      _node_index_node( $n );
+    }
+  }  
+}
+
+/**
+ * called after node_save, when a new node is about to be inserted
+ */
+function agent_insert($node) {
+  db_query("INSERT INTO agent (nid, agent_id) VALUES (%d, %d)",$node->nid, $node->agent_id );
+}
+
+/**
+ * called after node_delete
+ */
+function agent_delete($node) {
+  db_query("DELETE FROM agent WHERE nid = $node->nid");
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function agent_perm() {
+  return array('administer agents');
+}
+
+/**
+ * Implementation of hook_access
+ */
+function agent_access($op, $node, $account) {
+  switch($op) {
+    case 'create':
+      return false;
+    case 'update';
+      return user_access('administer agents');
+    case 'delete':
+      return user_access('administer agents');       
+  }
+}
+
+/**
+ * @return an array with all additional properties of this node-type
+ * @param object $node
+ */
+function agent_load($node) {
+  $selectAgent = "SELECT a.agent_id, a.nid, ca_a.death_location_id, ca_a.birth_location_id, ca_a.last_name, 
+                  ca_a.first_name, ca_a.title, ca_a.pseudonym, ca_a.gender, ca_a.email, ca_a.url, ca_a.birth_date, 
+                  ca_a.death_date, ca_a.biography, ca_a.description , ca_a.agent_id as ca_a_agent_id
+                  FROM agent a 
+                  LEFT JOIN compartdb.agent ca_a 
+                  ON a.agent_id = ca_a.agent_id 
+                  WHERE nid=$node->nid";
+                  
+  $resultAgent = db_query($selectAgent);
+  if( $agent = db_fetch_object($resultAgent ) ){    
+    
+    if(empty($agent->ca_a_agent_id)){
+      drupal_set_message('Sorry, person is no longer in our database.','error', false);
+      //node_delete($agent->nid); //connection is reset?
+    }      
+    
+    $agent->academic_title = $agent->title; 
+    $agent->title = $node->title;  
+    
+    //getMedia
+    $agent->media = eca_get_media(1, $agent->agent_id);
+    
+    //getAwards
+    $agent->awards = array();
+    $selectAwards = "SELECT ca_r.at_date, ca_aw.title, ca_aw.award_id 
+                      FROM compartdb.receiving ca_r
+                      LEFT JOIN compartdb.award ca_aw
+                      ON ca_r.award_id = ca_aw.award_id
+                      WHERE ca_r.agent_id = $agent->agent_id";
+    
+    $resAwards = db_query($selectAwards);
+    while( $award = db_fetch_object($resAwards) ) {
+      array_push($agent->awards, $award);  
+    }
+    //dvr($agent->awards); //STRANGE: if i have this line there, then the tag-block for the blog-tags is output.
+    
+    //getMembership (of institution)
+    $agent->institutions = array();
+    $selectInstitutions = "SELECT ca_i.name, ca_i.institution_id 
+                            FROM compartdb.membership ca_m 
+                            LEFT JOIN compartdb.institution ca_i
+                            ON ca_m.institution_id = ca_i.institution_id 
+                            WHERE ca_m.agent_id = $agent->agent_id";
+                            
+    $resInstitutions = db_query( $selectInstitutions );
+    while( $institution = db_fetch_object($resInstitutions) ){
+      array_push( $agent->institutions, $institution );
+    }                 
+    
+    //dvr( $agent );
+       
+    return $agent;
+  } 
+}
+
+function agent_views_api(){
+  return array(
+    'api' => 2
+);
+  
+}

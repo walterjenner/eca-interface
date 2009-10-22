@@ -1,0 +1,7 @@
+;  $Id$
+name = Main ECA
+description = The main ECA module, implements the detail and list views for publications, institiutions etc.
+core = 6.x
+
+package = ECA
+version = 0.1

@@ -1,0 +1,7 @@
+;  $Id$
+name = Agent Node-Type
+description = Wrapper-Node-Type to the Agent in the compArt DB
+core = 6.x
+
+package = ECA
+version = 0.1
