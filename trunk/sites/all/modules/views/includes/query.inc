@@ -912,6 +912,9 @@ class views_query {
       }
     }
 
+    $has_groupby = FALSE;
+    $groupby_fields = array();
+
     $has_aggregate = FALSE;
     $non_aggregates = array();
 
@@ -928,11 +931,37 @@ class views_query {
       // store for use with non-aggregates below
       $fieldname = (!empty($field['alias']) ? $field['alias'] : $string);
 
+      // check for and store group by fields
+      if(!empty($field['groupby'])) {
+        $has_groupby = TRUE;
+        $groupby_fields[] = $fieldname;
+      }
+
       if (!empty($field['distinct'])) {
         $string = "DISTINCT($string)";
       }
       if (!empty($field['count'])) {
         $string = "COUNT($string)";
+        $has_aggregate = TRUE;
+      }
+      else if (!empty($field['sum'])) {
+        $string = "SUM($string)";
+        $has_aggregate = TRUE;
+      }
+      else if (!empty($field['average'])) {
+        $string = "AVG($string)";
+        $has_aggregate = TRUE;
+      }
+      else if (!empty($field['minimum'])) {
+        $string = "MIN($string)";
+        $has_aggregate = TRUE;
+      }
+      else if (!empty($field['maximum'])) {
+        $string = "MAX($string)";
+        $has_aggregate = TRUE;
+      }
+      else if (!empty($field['concat'])) {
+        $string = "GROUP_CONCAT($string SEPARATOR ', ')";
         $has_aggregate = TRUE;
       }
       else if (!empty($field['aggregate'])) {
@@ -952,8 +981,8 @@ class views_query {
       }
     }
 
-    if ($has_aggregate || $this->groupby) {
-      $groupby = "GROUP BY " . implode(', ', array_unique(array_merge($this->groupby, $non_aggregates))) . "\n";
+    if ($has_aggregate || $has_groupby || $this->groupby) {
+      $groupby = "GROUP BY " . implode(', ', array_unique($has_groupby ? $groupby_fields : array_merge($this->groupby, $non_aggregates))) . "\n";
       if ($this->having) {
         $having = $this->condition_sql('having');
       }
