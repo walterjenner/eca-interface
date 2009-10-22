@@ -1,0 +1,351 @@
+<?php
+
+// $Id: collection.module,v 1.10.4.3 2009/08/21 06:53:52 xen Exp $
+
+/**
+ * @file
+ * Allows administrators to define content types as 'collections', which group nodes together.
+ *
+ * Provides a block to show which collections a node is part of, when viewing
+ * the node, and allows for custom rendering of nodes in that block.
+ *
+ * Relies on CCK nodereference module to do the actual referencing.
+ */
+
+/**
+ * $node->build_mode is set to this when building collection for block
+ * display. Makes it easy for node.tpl.php (or its overrides) to change the
+ * appearance of collections in blocks. Also allows CCK to make the display of
+ * fields configurable.
+ */
+define('NODE_BUILD_COLLECTION', 100);
+/**
+ * $node->build_mode is set to this for nodes listed, allowing for
+ * customisation through CCKs interface and custom node.tpl.php handling.
+ */
+define('NODE_BUILD_COLLECTION_LIST', 101);
+
+/**
+ * Implementation of hook_nodeapi().
+ * Used for maintaining backrefs, and setting $node->collection.
+ */
+function collection_nodeapi(&$node, $op, $teaser = FALSE, $page = FALSE) {
+  switch ($op) {
+    case 'load':
+      // Set $node->collections for all nodes that's part of a collection.
+      if ($collections = collection_nodes($node)) {
+        return array(
+          'collections' => $collections,
+        );
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function collection_form_node_type_form_alter(&$form, &$form_state) {
+  $type = $form['old_type']['#value'];
+
+  $fields = array(NULL => t('Not a collection'));
+  $content_type = content_types($type);
+  if ($content_type['fields']) {
+    foreach ($content_type['fields'] as $name => $field) {
+      if ($field['type'] == 'nodereference') {
+        $fields[$field['field_name']] = t($field['widget']['label']);
+      }
+    }
+  }
+  
+  $form['collection'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Collection settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['collection']['collection_field_name'] = array(
+    '#type' => 'select',
+    '#title' => t('Node reference field'),
+    '#options' => $fields,
+    '#default_value' => variable_get('collection_field_name_'. $type, NULL),
+    '#description' => t('The node reference field on the collection type that lists nodes that is part of this collection.'),
+  );
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function collection_block($op, $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      return array(
+        0 => array(
+          'info' => t('Collection listing'),
+          'cache' => BLOCK_CACHE_PER_PAGE,
+        ),
+        1 => array(
+          'info' => t('In same collection(s)'),
+          'cache' => BLOCK_CACHE_PER_PAGE,                    
+        ),
+      );
+      break;
+    case 'configure':
+      $form['teaser'] = array(
+        '#title' => t('Teaser'),
+        '#type' => 'checkbox',
+        '#default_value' => variable_get('collection_block_teaser_' . $delta, TRUE),
+        '#description' => t('Check here to show only the node teaser.'),
+      );
+
+      $form['links'] = array(
+        '#type' => 'checkbox',
+        '#default_value' => variable_get('collection_block_links_' . $delta, FALSE),
+        '#title' => t('Display links'),
+        '#description' => t('Check here to display the links with the post.'),
+      );
+      return $form;
+      break;
+    case 'save':
+      variable_set('collection_block_teaser_' . $delta, $edit['teaser']);
+      variable_set('collection_block_links_' . $delta, $edit['links']);
+      break;
+    case 'view':
+      $teaser = variable_get('collection_block_teaser_' . $delta, TRUE);
+      $links = variable_get('collection_block_links_' . $delta, FALSE);
+      switch ($delta) {
+        case 0:
+          // Show a listing of the collections this node is part of, when viewing
+          // a node in a collection.
+          if ($node = collection_in_collection()) {
+            return array(
+              'subject' => t('Collection listing'),
+              'content' => collection_collection_listing($node, $teaser, $links),
+            );           
+          }
+          break;
+        case 1:
+          // Show a listing of the nodes in the same collection (its
+          // siblings), when viewing a node in a collection.
+          if ($node = collection_in_collection()) {
+            return array(
+              'subject' => t('Collection siblings'),
+              'content' => collection_sibling_listing($node, $teaser, $links),
+            );           
+          }
+          break;
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_ctools_block_info().
+ */
+function collection_ctools_block_info($module, $delta, &$info) {
+  // Hide the regular blocks from CTools as our own content_types does it better.
+  $info = NULL;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function collection_theme() {
+  return array(
+    'collection_node_list' => array(
+      'arguments' => array('nodes' => array(), 'collection' => NULL, 'node' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_content_build_modes().
+ */
+function collection_content_build_modes() {
+ return array(
+   'collection' => array(
+     'title' => t('Collection'),
+     'build modes' => array(
+       NODE_BUILD_COLLECTION => array(
+         'title' => t('Collections block'),
+         'views style' => FALSE,
+       ),
+       NODE_BUILD_COLLECTION_LIST => array(
+         'title' => t('Collection article listing block'),
+         'views style' => FALSE,
+       ),
+     ),
+   ),
+ );
+}
+
+// --- CTools support ---
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ *
+ * Tells CTools where to look for plugin code.
+ */
+function collection_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools' && ($plugin == 'relationships' || $plugin == 'content_types')) {
+    return 'plugins/' . $plugin;
+  }
+}
+
+// --- Theming functions ---
+
+/**
+ * Theme the listing of related nodes in the "In same collection(s)" block.
+ */
+function theme_collection_node_list($nodes, $collection, $node) {
+  return join('', $nodes);
+}
+
+
+// --- Misc. functions ---
+
+/**
+ * Renders a nodes collections.
+ */
+function collection_collection_listing($node, $teaser, $links) {
+  $content = "";
+  foreach ($node->collections as $collection_node) {
+    // In the case when the collection block/pane is shown more than
+    // once on the pane, things go haywire when the node is rendered
+    // the second time. we have to rerender, as we can't be sure that
+    // the $teaser and $links settings are the same. So we start out
+    // by cloning so we don't change the original.
+    $collection_node = drupal_clone($collection_node);
+    // $node->collection_hidden allows modules to suppress the display of some collection nodes.
+    if (!isset($node->collection_hidden) or !$node->collection_hidden and
+        $node->status == 1 and node_access('view', $node)) {
+      $collection_node->build_mode = NODE_BUILD_COLLECTION;
+      $content .= node_view($collection_node, $teaser, FALSE, $links);
+    }
+  }
+  return $content;
+}
+
+/**
+ * Renders a nodes siblings.
+ */
+function collection_sibling_listing($node, $teaser, $links) {
+  $content = "";
+  foreach ($node->collections as $collection) {
+    $nodes = array();
+    foreach ($collection->{collection_field_name($collection->type)} as $delta => $cnode) {
+      if ($cnode = node_load($cnode['nid'])) {
+        if ($cnode->status == 1 and node_access('view', $cnode)) {
+          $cnode->build_mode = NODE_BUILD_COLLECTION_LIST;
+          $nodes[] = node_view($cnode, $teaser, FALSE, $links);
+        }
+      }
+    }
+    $content .= theme('collection_node_list', $nodes, $collection, $node);
+  }
+  return $content;
+}
+
+/**
+ * Helper function to figure out if we're looking at a node that's part of a
+ * collection. 
+ */
+function collection_in_collection() {
+  if ($node = menu_get_object() and $node->collections) {
+    return $node;
+  }
+  return NULL;
+}
+
+/**
+ * Returns information about collection types.
+ *
+ * Returns an array($type_name => array($table_name, $column_name), ...);
+ */
+function collection_types($reset = FALSE) {
+  static $collection_types;
+  if (!is_array($collection_types) || $reset) {
+    $collection_types = array();
+    foreach (content_types() as $type_name => $type) {
+      if ($field_name = collection_field_name($type_name)) {
+        $db_info = content_database_info($type['fields'][$field_name]);
+        $collection_types[$type_name] = array($db_info['table'],
+                                              $db_info['columns']['nid']['column']);
+      }
+    }
+  }
+  return $collection_types;
+}
+
+
+/**
+ * Helper function that returns collection_nid's that node is member of 
+ * 
+ * @param $nid
+ *   ID of node
+ * @return
+ *   FALSE if node isn't a menber of any collections
+ *   Or an array of collection ID's - array($collection_nid [, $collection_nid])
+ */
+function collection_get_collections_by_node($nid) {
+  $node_ids = array();
+  
+  foreach (collection_types() as $node_type => $db_info) {
+    list($table_name, $column_name) = $db_info;
+    $result = db_query('SELECT n.nid FROM {' . $table_name . '} JOIN {node} n USING (nid, vid) WHERE ' . $column_name . ' = %d AND status = 1 ORDER BY n.nid', $nid);
+    while ($row = db_fetch_object($result)) {
+      $node_ids[] = $row->nid;
+    }
+  }
+  if (!empty($node_ids)) {
+    return $node_ids; 
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Returns the node reference field for the collection type.
+ */
+function collection_field_name($type) {
+  return variable_get('collection_field_name_' . $type, NULL);
+}
+
+/**
+ * Get the collection nodes for a given node.
+ */
+function collection_nodes($node) {
+  $nodes = array();
+  $nids = collection_get_collections_by_node($node->nid);
+  if ($nids) {
+    foreach ($nids as $nid) {
+      if ($node->nid == $nid) {
+        continue;
+      }
+      // Check node_access, as we're likely to 'view' the node.
+      $n = node_load($nid);
+      if (node_access('view', $n)) {
+        $n->collection_weight = 0;
+        $nodes[] = $n;
+      }
+    }
+  }
+  // Allow modules to alter the collection.
+  drupal_alter('collection', $nodes, $node);
+  usort($nodes, '_collection_sort');
+  return $nodes;
+}
+
+/**
+ * Helper for uasort to sort collections by weight.
+ */
+function _collection_sort($a, $b) {
+  if ($a->collection_weight == $b->collection_weight) {
+    if ($a->title == $b->title) {
+      return 0;
+    }
+    return ($a->title < $b->title) ? -1 : 1;
+  }
+  return ($a->collection_weight < $b->collection_weight) ? -1 : 1;  
+}

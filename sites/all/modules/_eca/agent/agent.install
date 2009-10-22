@@ -1,0 +1,51 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * Contains install and update functions for agent.
+ */
+
+/**
+ * Implementation of hook_install()
+ */
+function agent_install() {
+  drupal_install_schema('agent');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function agent_uninstall() {
+  drupal_uninstall_schema('agent');
+  
+  //delete all exhibition nodes. NOTE: takes loooooong //all comments, all terms, etc should be deleted as well
+  $res = db_query("SELECT n.nid FROM {node} n WHERE n.type = 'agent'");
+  while ($n = db_fetch_object($res)) {
+    node_delete($n->nid);
+  }
+}
+
+function agent_schema() {
+  $schema['agent'] = array(
+      'description' => t('The table which does the mapping to agents in compArt DB.'),
+      'fields' => array(
+        'nid' => array(
+          'description' => t('The primary identifier for a node.'),
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE),
+        'agent_id' => array(
+          'description' => t('The id of the agent in compArt DB.'),
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0)
+        ),
+      'unique keys' => array( 'agent_id' => array('agent_id') ),
+      'primary key' => array('nid'),
+      );
+      
+     return $schema;
+}

@@ -1,0 +1,13 @@
+--- community_tags.module.orig	2008-08-23 05:04:48.000000000 +0200
++++ community_tags.module	2009-08-25 18:05:14.789946800 +0200
+@@ -367,7 +367,9 @@ function community_tags_taxonomy_node_sa
+   // Match real tags to community tags, if necessary (e.g. after quick tagging).
+   if (!$is_owner) {
+     $placeholders = implode(',', array_fill(0, count($community_tagged), '%d'));
+-    $result = db_query('SELECT n.tid, n.nid FROM {term_node} n LEFT JOIN {community_tags} c ON n.tid = c.tid AND n.nid = c.nid INNER JOIN {term_data} d ON n.tid = d.tid WHERE n.nid = %d AND c.nid IS NULL AND d.vid IN ('. $placeholders .')', $nid, $community_tagged);
++    $args = $community_tagged;
++    array_unshift($args, $nid);
++    $result = db_query('SELECT n.tid, n.nid FROM {term_node} n LEFT JOIN {community_tags} c ON n.tid = c.tid AND n.nid = c.nid INNER JOIN {term_data} d ON n.tid = d.tid WHERE n.nid = %d AND c.nid IS NULL AND d.vid IN ('. $placeholders .')', $args);
+     while ($tag = db_fetch_object($result)) {
+       db_query('DELETE FROM {term_node} WHERE nid = %d AND tid = %d', $tag->nid, $tag->tid);
+     }

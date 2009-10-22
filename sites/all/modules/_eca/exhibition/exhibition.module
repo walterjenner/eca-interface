@@ -1,0 +1,290 @@
+<?php
+// $Id$
+
+//NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
+
+//include the file with the helper functions
+db_set_active('default');
+require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
+
+/**
+ * @file
+ * Wrapper-Node-Type to the Exhibition in the compArt DB
+ */
+
+function exhibition_node_info() {
+  return array(
+    'exhibition' => array(
+      'name' => t('Exhibition'),
+      'module' => 'exhibition',
+      'description' => "Wrapper-Node-Type to the Exhibition in the compArt DB",
+      'has_body' => FALSE,
+      'title_label' => t('Name'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function exhibition_help($path, $arg) {
+  $output = ''; 
+  switch ($path) {
+    case "admin/help#exhibition":
+      $output = '<p>'.  t("Wrapper-Node-Type to the Exhibition in the compArt DB.") .'</p>';
+      $output .= '<p>'.  t("It was developed for the ") 
+        . '<a href="http://www.compart.informatik.uni-bremen.de/" title="compArt Project">compArt Project</a>' 
+        . t(" at University Bremen.") .'</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Called everytime cron.php is run. 
+ * Updates the mapping if the timespan since last update is greater then 12h.
+ * 
+ * @return 
+ */
+function exhibition_cron()
+{
+  $last_run = variable_get('cron_last', time());
+
+  //if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_EXHIBITION_SYNC ){
+  if( true ){
+    variable_set('cron_last', time() );
+    global $userMapping;
+     
+    //1-DELETE if there is a mapping which is not in compart db anymore
+    $selectDeprecated = "SELECT e.nid
+                          FROM exhibition e
+                          LEFT JOIN compartdb.exhibition ca_e
+                          ON e.exhibition_id = ca_e.exhibition_id
+                          WHERE ca_e.exhibition_id IS NULL";
+                          
+    $resultDeprecated = db_query( $selectDeprecated );
+    while( $toDelete = db_fetch_object( $resultDeprecated ) ){
+      node_delete( $toDelete->nid );
+      drupal_set_message( "Deleted exhibition: nid: $toDelete->nid");
+    }
+    
+    //2-INSERT if there is no mapping for an exhibition sofar.
+    $selectNew = "SELECT ca_e.exhibition_id, ca_e.name, ca_et.name as exhibition_type_name, ca_e.owner_id
+                          FROM compartdb.exhibition ca_e
+                          LEFT JOIN exhibition e
+                          ON e.exhibition_id = ca_e.exhibition_id
+                          LEFT JOIN compartdb.exhibition_type ca_et
+                          ON ca_e.exhibition_type_id = ca_et.exhibition_type_id
+                          WHERE e.exhibition_id IS NULL";
+                          
+    $resultNew = db_query( $selectNew );
+    while( $toInsert = db_fetch_object( $resultNew ) ){
+      $toInsert->title = $toInsert->name;
+      $toInsert->type = 'exhibition';
+      $toInsert->comment = 2;
+      $toInsert->uid = isset($userMapping[$toInsert->owner_id])?$userMapping[$toInsert->owner_id]:0;
+      node_save( $toInsert );      
+      drupal_set_message( "Inserted exhibition: nid: $toInsert->nid, title: $toInsert->title");
+      
+      //update search index     
+      _node_index_node( $toInsert ); 
+    }    
+      
+    //3-UPDATE if the data is newer
+    $selectUpdated = "SELECT ca_e.exhibition_id, ca_e.name, e.nid as nid, ca_et.name as exhibition_type_name, ca_e.owner_id
+                FROM compartdb.exhibition ca_e
+                LEFT JOIN exhibition e
+                ON ca_e.exhibition_id = e.exhibition_id
+                LEFT JOIN node n
+                ON e.nid = n.nid
+                LEFT JOIN compartdb.exhibition_type ca_et
+                ON ca_e.exhibition_type_id = ca_et.exhibition_type_id";
+                //WHERE UNIX_TIMESTAMP(ca_e.last_change) > n.changed";
+    
+    $resultUpdated = db_query( $selectUpdated );
+    while( $updated = db_fetch_object($resultUpdated) ){
+      $n = new stdClass();
+      $n->nid = $updated->nid;
+      $n->vid = $n->nid; //to ensure that the title in revision table is also updated.
+      $n->title = $updated->name;
+      $n->uid = isset($userMapping[$updated->owner_id])?$userMapping[$updated->owner_id]:0;
+      node_save( $n );
+      drupal_set_message( "Updated exhibition: nid: $n->nid, title: $n->title");
+      
+      //update search index
+      _node_index_node( $n );
+    }
+  }  
+}
+
+/**
+* Implementation of hook_delete
+ */
+function exhibition_delete($node) {
+  //delete terms // happens automatically
+  db_query("DELETE FROM exhibition WHERE nid = $node->nid");
+}
+
+/**
+* Implementation of hook_insert
+ */
+function exhibition_insert($node) {
+  drupal_write_record( 'exhibition', $node );
+  
+  //TODO add automatic vocabulary creation, if v with name 'artwork_type' is not existing, insert into v, insert voc_node_type: this voc, artwork
+  if( isset($node->exhibition_type_name) )  {
+      $terms = array('tags' => array('6' => $node->exhibition_type_name ));
+      taxonomy_node_save($node, $terms);   
+  }
+}
+
+/**
+ * Implementation of hook_update
+ */
+function exhibition_update($node) {
+  //UPDATE the terms for the node //NOTE: the node itself is changed already node_update() (=kind of super() function of this)
+  if( isset($node->exhibition_type_name) )  {
+      $terms = array('tags' => array('6' => $node->exhibition_type_name ));
+      taxonomy_node_save($node, $terms);
+   }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function exhibition_perm() {
+  return array('administer exhibitions');
+}
+
+/**
+ * Implementation of hook_access
+ */
+function exhibition_access($op, $node, $account) {
+  switch($op) {
+    case 'create':
+      return false;
+    case 'update';
+      return user_access('administer exhibitions');
+    case 'delete':
+      return user_access('administer exhibitions');       
+  }
+}
+
+/**
+ * 
+ * 
+ * @return an array with all additional properties of this node-type
+ * @param object $node
+ */
+function exhibition_load($node) {
+  $selectExhibition = "SELECT e.exhibition_id, e.nid, ca_e.name as exhibition_name, ca_e.description, ca_et.name as exhibition_type_name
+                        FROM exhibition e 
+                        LEFT JOIN compartdb.exhibition ca_e 
+                        ON e.exhibition_id = ca_e.exhibition_id
+                        LEFT JOIN compartdb.exhibition_type ca_et
+                        ON ca_e.exhibition_type_id = ca_et.exhibition_type_id
+                        WHERE nid=$node->nid";
+  $resultExhibition = db_query($selectExhibition);
+  if( $exhibition = db_fetch_object($resultExhibition ) ){  
+    //print_r($exhibition);
+    
+    //getMedia
+    $exhibition->media = eca_get_media(17, $exhibition->exhibition_id);
+    
+    //getInstitutions (where this exhibition was shown)
+    $exhibition->institutions = array();
+    $selectInstitutions = "SELECT  ca_i.name, ca_h.institution_id, ca_h.from_date, ca_h.to_date
+                          FROM compartdb.happening ca_h
+                          LEFT JOIN compartdb.institution ca_i
+                          ON ca_h.institution_id = ca_i.institution_id
+                          WHERE ca_h.exhibition_id = $exhibition->exhibition_id";
+    
+    $resultInstitutions = db_query( $selectInstitutions );
+    while( $institution = db_fetch_object( $resultInstitutions ) ){
+      array_push( $exhibition->institutions, $institution );
+    }
+    
+    //getCitations (that are owned by this i.)
+    $exhibition->citations = array();
+    $selectCitations = "SELECT ca_p.title, ca_ec.publication_id 
+                          FROM compartdb.exhibition_citation ca_ec
+                          LEFT JOIN compartdb.publication ca_p
+                          ON ca_ec.publication_id = ca_p.publication_id  
+                          WHERE ca_ec.exhibition_id = $exhibition->exhibition_id";
+    $resultCitations = db_query( $selectCitations );
+    while( $citation = db_fetch_object($resultCitations) ){
+      array_push( $exhibition->citations, $citation );
+    }
+    
+    //getOrganizers
+    $exhibition->organizers = array( 'agent' => array(), 'institution' => array() );
+    $selectOrganizers = "SELECT agent_id, institution_id FROM compartdb.organizing WHERE exhibition_id = $exhibition->exhibition_id";
+    $resultOrganizers = db_query( $selectOrganizers );  
+    while( $organizer = db_fetch_object($resultOrganizers) ){
+      if($organizer->agent_id != 0){
+        if( $organizer_detail = db_fetch_object( db_query( "SELECT n.title, n.nid FROM agent a LEFT JOIN node n ON a.nid = n.nid WHERE a.agent_id = $organizer->agent_id" ) )){
+          array_push( $exhibition->organizers['agent'], $organizer_detail );
+        }
+      }
+      else if( $organizer->institution_id != 0 ){
+        if( $organizer_detail = db_fetch_object( db_query( "SELECT i.name, i.institution_id FROM compartdb.institution i WHERE i.institution_id = $organizer->institution_id" ) )){
+          array_push( $exhibition->organizers['institution'], $organizer_detail );
+        }
+      }          
+      //dvr($exhibition->organizers);
+    }
+    
+    return $exhibition;
+  }  
+}
+
+/**
+* Implementation of hook_block
+* @param string $op one of "list", "view", "save" and "configure"
+* @param integer $delta code to identify the block
+* @param array $edit only for "save" operation
+**/
+function exhibition_block($op = 'list', $delta = 0, $edit = array()) { 
+
+  // YOUR MODULE CODE HERE
+
+} 
+
+/**
+ * Implementation of hook_menu().
+ *
+ * You must implement hook_menu() to emit items to place in the main menu.
+ * This is a required step for modules wishing to display their own pages,
+ * because the process of creating the links also tells Drupal what
+ * callback function to use for a given URL. The menu items returned
+ * here provide this information to the menu system.
+ *
+ * With the below menu definitions, URLs will be interpreted as follows:
+ *
+ * If the user accesses http://example.com/?q=foo, then the menu system
+ * will first look for a menu item with that path. In this case it will
+ * find a match, and execute agent_foo().
+ *
+ * If the user accesses http://example.com/?q=bar, no match will be found,
+ * and a 404 page will be displayed.
+ *
+ * If the user accesses http://example.com/?q=bar/baz, the menu system
+ * will find a match and execute agent_baz().
+ *
+ * If the user accesses http://example.com/?q=bar/baz/1/2, the menu system
+ * will first look for bar/baz/1/2. Not finding a match, it will look for
+ * bar/baz/1/%. Again not finding a match, it will look for bar/baz/%/2. Yet
+ * again not finding a match, it will look for bar/baz/%/%. This time it finds
+ * a match, and so will execute agent_baz(1, 2). Note the parameters
+ * being passed; this is a very useful technique.
+ */
+function exhibition_menu() {
+  // This is the minimum information you can provide for a menu item.
+  
+}
+
+function exhibition_views_api(){
+  return array(
+    'api' => 2
+  );
+}

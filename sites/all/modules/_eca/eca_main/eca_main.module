@@ -1,0 +1,344 @@
+<?php
+// $Id$
+
+//NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
+
+define(MAX_LINK_TEXT_LENGTH, 20);
+
+/**
+ * Implementation of hook_help().
+ */
+function eca_main_help($path, $arg) {
+  $output = ''; 
+  switch ($path) {
+    case "admin/help#eca_main":
+      $output = '<p>'.  t("Main Module to wrap compArt DB.") .'</p>';
+      $output .= '<p>'.  t("It was developed for the ") 
+        . '<a href="http://www.compart.informatik.uni-bremen.de/" title="compArt Project">compArt Project</a>' 
+        . t(" at University Bremen.") .'</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Called everytime cron.php is run. 
+ * 
+ * @return 
+ */
+function eca_main_cron()
+{
+  
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function eca_main_perm() {
+  return array('administer eca_main');
+}
+
+/**
+* Implementation of hook_block
+* @param string $op one of "list", "view", "save" and "configure"
+* @param integer $delta code to identify the block
+* @param array $edit only for "save" operation
+**/
+function eca_main_block($op = 'list', $delta = 0, $edit = array()) { 
+  
+  global $nid;
+
+  if ($op == "list") {
+    // Generate listing of blocks from this module, for the admin/block page
+    $block = array();
+    $block[0]["info"] = t('Artists Block');
+    $block[0]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[1]["info"] = t('Artworks Block');
+    $block[1]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[2]["info"] = t('Exhibitions Block');
+    $block[2]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[3]["info"] = t('Publications Block'); 
+    $block[3]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[4]["info"] = t('Part of Series Block');
+    $block[4]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[5]["info"] = t('Part of Collective Block');  
+    $block[5]["cache"] = BLOCK_CACHE_PER_PAGE;     
+        
+    return $block;
+  }
+  else if($op == "view")
+  {
+    
+    if ($node = menu_get_object()) {
+      //$block['subject'] = 'This is the Subject';
+      switch( $delta )
+      {
+        //ARTISTS BLOCK
+        case 0:
+          if($node->type == 'exhibition') {          
+            $block['title'] = t('Artists shown');            
+            $selectArtists = "SELECT ca_a.agent_id, ca_a.first_name, ca_a.last_name, a.nid FROM compartdb.agent ca_a LEFT JOIN agent a ON ca_a.agent_id = a.agent_id WHERE ca_a.agent_id IN (SELECT ca_ei.agent_id FROM compartdb.exhibits_in ca_ei WHERE ca_ei.exhibition_id = $node->exhibition_id) ORDER BY ca_a.last_name";
+            $resultAgent = db_query($selectArtists);
+            $numRes = 0;
+            while ($agent = db_fetch_object($resultAgent)) {
+              $numRes++;
+              $block['content'] .= '<span class="tag tag-agent">' . l($agent->first_name . ' ' . $agent->last_name, 'node/'.$agent->nid, array('attributes' => array('title' => $agent->first_name . ' ' . $agent->last_name)) ) . '&nbsp;</span>';  
+            }                        
+            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>View all</span>', "agents/", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
+          }
+          break;
+        // ARTWORKS BLOCK
+        case 1:
+          if($node->type == 'exhibition') {
+            $block['title'] = t('Artworks shown');
+            $fromTable = "compartdb.showing_artwork";
+            $whereField = "exhibition_id = $node->exhibition_id";
+            $moreLinkHref = "artworks_at/";
+            $query = "args=$node->exhibition_id";
+          }
+          else if($node->type == 'agent'){
+            $block['title'] = t('Artworks created');
+            $fromTable = "compartdb.creating";
+            $whereField = "agent_id = $node->agent_id";
+            $moreLinkHref = "artworks/";
+            $query = "args=$node->agent_id";
+          }
+          else
+            break; //if it is not agent or exhibition dont show this block
+            
+          //artworks
+          $selectAw = "SELECT ca_a.artwork_id, ca_a.title, a.nid FROM compartdb.artwork ca_a LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id WHERE ca_a.artwork_id IN (SELECT artwork_id FROM $fromTable WHERE $whereField) ORDER BY ca_a.title";
+          $resultAw = db_query($selectAw);
+          $numRes = 0;
+          while ($artwork = db_fetch_object($resultAw)) {            
+            $numRes ++;
+            $block['content'] .= '<span class="tag tag-artwork">' . l(_trim_length($artwork->title), 'node/'.$artwork->nid, array('attributes' => array('title' => $artwork->title))) . '</span>';    
+          }
+          //collections
+          if($node->type == 'exhibition'){
+            $selectColl = "SELECT ca_c.collection_id, ca_c.name FROM compartdb.collection ca_c WHERE ca_c.collection_id IN (SELECT ca_sc.collection_id FROM compartdb.showing_collection ca_sc WHERE ca_sc.exhibition_id = $node->exhibition_id)";
+            $resultColl = db_query($selectColl);
+            $first = true;
+            while ($collection = db_fetch_object($resultColl)) {
+              if($first){ 
+                $first = false; 
+                $block['content'] .= '<h4>Collections shown:</h4>';
+              }
+              $numRes ++;              
+              $block['content'] .= '<span class="tag tag-artwork">' . l(_trim_length($collection->name), 'collection/'.$collection->collection_id, array('attributes' => array('title' => $collection->name, 'class' => 'dialog-link'))) . '</span>';
+            }              
+          }
+          $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>View all</span>', $moreLinkHref, array('query'=>$query, 'html' => true) ) . '</div>';
+                              
+          break;
+          //EXHIBITION BLOCK
+          case 2:
+            if($node->type == 'agent') {       
+              $block['title'] = t('Exhibitions participated');
+              $fromTable = 'compartdb.exhibits_in';
+              $whereField = "agent_id = $node->agent_id";
+            }
+            else if ($node->type == 'artwork'){
+              $block['title'] = t('Shown at these Exhibitions');
+              $fromTable = 'compartdb.showing_artwork';
+              $whereField = "artwork_id = $node->artwork_id";
+            }
+            else {
+              break; //if it is not agent or artwork dont show this block
+            }
+            $selectEx = "SELECT ca_e.exhibition_id, ca_e.name, e.nid FROM compartdb.exhibition ca_e LEFT JOIN exhibition e ON ca_e.exhibition_id = e.exhibition_id WHERE ca_e.exhibition_id IN (SELECT exhibition_id FROM $fromTable WHERE $whereField) ORDER BY ca_e.name";
+            $resultEx = db_query($selectEx);
+            $numRes = 0;
+            while ($exhibition = db_fetch_object($resultEx)) {
+              $numRes++;
+              $block['content'] .= '<span class="tag tag-exhibition">' . l(_trim_length($exhibition->name), 'node/'.$exhibition->nid, array('attributes' => array('title' => $exhibition->name))) . '</span>';
+            }
+            
+            if($node->type=="agent")
+              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>View all</span>', "exhibitions/", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
+                                          
+            break;
+          //PUBLICATIONS BLOCK
+          case 3:
+            if($node->type == 'agent') {
+              $block['title'] = t('Publications');
+              $selectPub = "SELECT publication_id, title FROM compartdb.publication WHERE publication_id IN (SELECT publication_id FROM compartdb.authorship WHERE agent_id = $node->agent_id) ORDER BY title";
+              $resultPub = db_query($selectPub);
+              $numRes = 0;
+              while ($dataPub = db_fetch_object($resultPub)) {
+                $numRes++;
+                $block['content'] .= '<span class="tag tag-publication">' . l( _trim_length($dataPub->title) , 'publication/'.$dataPub->publication_id, array( 'attributes' => array('title' => $dataPub->title, 'class' => 'dialog-link') )) . '</span>';
+              }
+              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>View all</span>', 'publications/', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
+            }
+            break;
+            //'PART OF SERIES' BLOCK
+            case 4:
+              if($node->type == 'artwork' && $node->artwork_series_id != 0) {
+                $block['title'] = t('Part of Series');
+                $resultSer = db_query("SELECT ca_as.name, ca_as.description FROM compartdb.artwork_series ca_as WHERE ca_as.artwork_series_id = $node->artwork_series_id ORDER BY ca_as.name");
+                if ($series = db_fetch_object($resultSer)) {
+                  $block['content'] .= '<h3>'. $series->name . '</h3>';
+                  $block['content'] .= '<p>'. $series->description . '</p>';
+                }                
+                $resultWorks = db_query("SELECT ca_a.artwork_id, ca_a.title, a.nid FROM compartdb.artwork ca_a LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id WHERE ca_a.artwork_series_id = $node->artwork_series_id ORDER BY ca_a.title");
+                $numRes = 0;
+                while ($artwork = db_fetch_object($resultWorks)) {
+                  $numRes++;
+                  if($numRes==1){
+                     $block['content'] .= '<h4>'. t('All works from this series') . '</h4>'; 
+                  }
+                  if($node->nid == $artwork->nid)
+                    $block['content'] .= '<span class="tag tag-artwork-active">' . _trim_length($artwork->title) . '</span>';
+                  else
+                    $block['content'] .= '<span class="tag tag-artwork">' . l( _trim_length($artwork->title) , 'node/'.$artwork->nid, array( 'attributes' => array('title' => $artwork->title) )) . '</span>';
+                }
+              }
+              break;
+              //'PART OF COLLECTIVE' BLOCK
+            case 5:
+              if($node->type == 'agent') {
+                $block['title'] = t('Part of Collective');
+                //get collective, of which this artist is part of
+                $resultColl = db_query("SELECT ca_c.name, ca_c.description, ca_c.collective_id FROM compartdb.collective ca_c WHERE ca_c.collective_id IN (SELECT collective_id FROM compartdb.agent_is_part_of WHERE agent_id = $node->agent_id) ORDER BY ca_c.name");
+                while ($collective = db_fetch_object($resultColl)) {
+                  $block['content'] .= '<h3>'. $collective->name . '</h3>';
+                  $block['content'] .= '<p>'. _textile_process(array( 1 => $collective->description)) . '</p>';
+                  
+                  //get all artists from this collective
+                  $resultA = db_query("SELECT ca_a.first_name, ca_a.last_name, a.nid FROM compartdb.agent_is_part_of ca_aipo LEFT JOIN compartdb.agent ca_a ON ca_aipo.agent_id = ca_a.agent_id LEFT JOIN agent a ON ca_a.agent_id = a.agent_id WHERE ca_aipo.collective_id = $collective->collective_id ORDER BY ca_a.last_name");
+                  $numRes = 0;
+                  while ($artist = db_fetch_object($resultA)) {
+                    $numRes++;
+                    if($numRes==1){
+                       $block['content'] .= '<h4>'. t('All members') . '</h4>'; 
+                    }  
+                    if($node->nid == $artist->nid)
+                      $block['content'] .= '<span class="tag tag-agent-active">' .  _trim_length($artist->first_name . ' ' . $artist->last_name) . '</span>';
+                    else
+                      $block['content'] .= '<span class="tag tag-agent">' . l( _trim_length($artist->first_name . ' ' . $artist->last_name) , 'node/'.$artist->nid, array( 'attributes' => array('title' => $artist->first_name . ' ' . $artist->last_name) )) . '</span>';
+                  }                  
+                }
+              }
+              break;
+      }       
+      if($numRes == 0)
+        $block = 0; 
+          
+      return $block;
+    }       
+  } //endif $op == view
+} 
+
+
+/**
+ * Implementation of hook_menu().
+ *
+ * You must implement hook_menu() to emit items to place in the main menu.
+ * This is a required step for modules wishing to display their own pages,
+ * because the process of creating the links also tells Drupal what
+ * callback function to use for a given URL. The menu items returned
+ * here provide this information to the menu system.
+ *
+ * With the below menu definitions, URLs will be interpreted as follows:
+ *
+ * If the user accesses http://example.com/?q=foo, then the menu system
+ * will first look for a menu item with that path. In this case it will
+ * find a match, and execute agent_foo().
+ *
+ * If the user accesses http://example.com/?q=bar, no match will be found,
+ * and a 404 page will be displayed.
+ *
+ * If the user accesses http://example.com/?q=bar/baz, the menu system
+ * will find a match and execute agent_baz().
+ *
+ * If the user accesses http://example.com/?q=bar/baz/1/2, the menu system
+ * will first look for bar/baz/1/2. Not finding a match, it will look for
+ * bar/baz/1/%. Again not finding a match, it will look for bar/baz/%/2. Yet
+ * again not finding a match, it will look for bar/baz/%/%. This time it finds
+ * a match, and so will execute agent_baz(1, 2). Note the parameters
+ * being passed; this is a very useful technique.
+ */
+function eca_main_menu() {
+  $items['agent'] = array(
+    'title' => 'Agent',
+    'page callback' => 'eca_main_agent',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['exhibition'] = array(
+    'title' => 'Exhibition',
+    'page callback' => 'eca_main_exhibition',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['artwork'] = array(
+    'title' => 'Artwork',
+    'page callback' => 'eca_main_artwork',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['award'] = array(
+    'title' => 'Award',
+    'page callback' => 'eca_main_award',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['publication'] = array(
+    'title' => 'Publication',
+    'page callback' => 'eca_main_publication',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['collective'] = array(
+    'title' => 'Collective',
+    'page callback' => 'eca_main_collective',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['institution'] = array(
+    'title' => 'Institution',
+    'page callback' => 'eca_main_institution',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['algorithm'] = array(
+    'title' => 'Algorithm',
+    'page callback' => 'eca_main_algorithm',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  $items['collection'] = array(
+    'title' => 'Collection',
+    'page callback' => 'eca_main_collection',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'pages.inc',
+  );
+  return $items;  
+}
+
+function eca_main_views_api(){
+  return array(
+    'api' => 2
+  );
+}
+
+function _trim_length($linkText){
+  if( strlen($linkText) >= MAX_LINK_TEXT_LENGTH )
+  {
+    $linkText = substr($linkText, 0,  MAX_LINK_TEXT_LENGTH-3);
+    $linkText .= "...";
+  }
+  return $linkText;
+}
+  
+

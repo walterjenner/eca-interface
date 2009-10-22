@@ -1,0 +1,178 @@
+html, body{
+	height: 100%;
+	/*background: url(img/bg.png) #cccccc  repeat;*/
+  background: url(img/bg_.png) #e6e6e6  repeat-x;
+	margin:0;
+	padding:0;	
+}
+
+#skip-to-nav, #print-info {
+	display:none;
+}
+
+#page, #footer {
+    /*
+     * If you want to make the page a fixed width and centered in the viewport,
+     * this is the standards-compliant way to do that. See also the ie.css file
+     * for the necessary IE5 hack to center a div.
+     */
+    margin-left: auto;
+    margin-right: auto;
+    width: 960px;	
+}
+
+#footer {
+  width: 960px;
+}
+
+#header, #content-inner, #footer, #sidebar-left-inner .content, #sidebar-right-inner .content {
+   background: #fff;
+}
+
+#sidebar-left-inner .content, #sidebar-right-inner .content, #content, #header {
+  margin-bottom: 10px;
+}
+
+#logo-title {
+  width: 250px;
+  height: 75px;
+  float:left;
+}
+
+#navbar {
+  width: 710px;
+  height: 75px;
+  float: right;
+}
+
+#navbar-inner {
+  padding-top: 35px;
+}
+
+#search-box {
+  width: 150px;
+  float: right;
+  margin: 0;
+  padding: 0;
+}
+
+#search-box .form-submit {
+ display: none;
+}
+
+/* PRIMARY **********/
+#primary {
+  width: 530px;  
+  float: left; 
+  overflow: hidden;
+}
+
+#primary li{
+ display: block;
+ float: left;
+ margin: 0;
+}
+
+#primary a {
+  display: block;
+}
+
+/* SECONDARY **********/
+#secondary ul li {
+   display: block;
+   float: left; 
+}
+
+#secondary a span {
+  display: block;
+  float: left;
+}
+
+/** main (container for everything else) **/
+#main
+{
+  position: relative;
+}
+
+#main-inner
+{
+}
+
+/* CONTENT + SIDEBARS *********************************************/
+
+#content-inner {
+  padding: 5px;
+}
+
+/** content **/
+#content,
+.no-sidebars #content
+{
+  float: left;
+  width: 960px;
+  margin-left: 0;
+  margin-right: -960px; /* Negative value of #content's width + left margin. */
+  padding: 0; /* DO NOT CHANGE. Add padding or margin to #content-inner. */
+}
+
+.sidebar-left #content
+{
+  width: 710px;
+  margin-left: 250px; /* The width of #sidebar-left. */
+  margin-right: -960px; /* Negative value of #content's width + left margin. */
+}
+
+.sidebar-right #content
+{
+  width: 710px;
+  margin-left: 0;
+  margin-right: -710px; /* Negative value of #content's width + left margin. */
+}
+
+.two-sidebars #content
+{
+  width: 460px;
+  margin-left: 250px; /* The width of #sidebar-left */
+  margin-right: -710px; /* Negative value of #content's width + left margin. */
+}
+
+#content-inner
+{
+  margin: 0;
+}
+
+/** sidebar-left **/
+#sidebar-left
+{
+  float: left;
+  width: 250px;
+  margin-left: 0;
+  margin-right: -250px; /* Negative value of #sidebar-left's width + left margin. */
+  padding: 0; /* DO NOT CHANGE. Add padding or margin to #sidebar-left-inner. */
+}
+
+#sidebar-left-inner
+{
+  margin: 0 10px 0 0;
+}
+
+/** sidebar-right **/
+#sidebar-right
+{
+  float: left;
+  width: 250px;
+  margin-left: 710px; /* Width of content + sidebar-left. */
+  margin-right: -960px; /* Negative value of #sidebar-right's width + left margin. */
+  padding: 0; /* DO NOT CHANGE. Add padding or margin to #sidebar-right-inner. */
+}
+
+#sidebar-right-inner
+{
+  margin: 0 0 0 10px;  
+}
+
+/* FOOTER *********************************************/
+#footer-message {
+	padding: 5px  20px 5px 20px;
+}
+
