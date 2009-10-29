@@ -83,7 +83,7 @@
     </div>
   <?php endif; ?>
 
-  <div class="content">
+  <div class="content-class">
     <?php print $content; ?>
   </div>
 
