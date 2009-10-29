@@ -39,7 +39,7 @@
     <a href="#" title="Expand/Collapse this block" class="expand-button tooltip"><span></span></a>
   <?php endif; ?>
   
-  <div class="content">
+  <div class="content-class">
     <?php print $block->content; ?>
   </div>
 

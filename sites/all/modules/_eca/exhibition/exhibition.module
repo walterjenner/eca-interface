@@ -98,8 +98,8 @@ function exhibition_cron()
                 LEFT JOIN node n
                 ON e.nid = n.nid
                 LEFT JOIN compartdb.exhibition_type ca_et
-                ON ca_e.exhibition_type_id = ca_et.exhibition_type_id";
-                //WHERE UNIX_TIMESTAMP(ca_e.last_change) > n.changed";
+                ON ca_e.exhibition_type_id = ca_et.exhibition_type_id
+                WHERE UNIX_TIMESTAMP(ca_e.last_change) > n.changed";
     
     $resultUpdated = db_query( $selectUpdated );
     while( $updated = db_fetch_object($resultUpdated) ){

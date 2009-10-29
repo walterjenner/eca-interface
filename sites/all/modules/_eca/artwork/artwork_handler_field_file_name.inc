@@ -14,7 +14,7 @@ class artwork_handler_field_file_name extends views_handler_field {
   } 
 
   function pre_render( $values ){
-   // print_r($this->aliases);
+   //print_r($this->aliases);
    //print_r($values);
   }
 
@@ -34,7 +34,7 @@ class artwork_handler_field_file_name extends views_handler_field {
       
       $output .= "<img src=\"$path\" alt=\"$media->file_name\" />";
       
-      return $output;
+      return $path;
     }
     else
       return '';

@@ -25,11 +25,11 @@ html, body{
   width: 960px;
 }
 
-#header, #content-inner, #footer, #sidebar-left-inner .content, #sidebar-right-inner .content {
+#header, #content-inner, #footer, #sidebar-left-inner .content-class, #sidebar-right-inner .content-class {
    background: #fff;
 }
 
-#sidebar-left-inner .content, #sidebar-right-inner .content, #content, #header {
+#sidebar-left-inner .content-class, #sidebar-right-inner .content-class, #content, #header {
   margin-bottom: 10px;
 }
 

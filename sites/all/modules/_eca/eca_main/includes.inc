@@ -25,6 +25,7 @@
   $formatFolder = array('png' => "imageUploads", 
                         'jpg' => "imageUploads", 
                         'gif' => "imageUploads",
+                        'tif' => "imageUploads",
                         'flv' => "videoUploads", 
                         'mp3' => "soundUploads",
                         'pdf' => "docUploads" );

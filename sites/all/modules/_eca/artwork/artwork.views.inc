@@ -34,16 +34,15 @@ function artwork_views_data(){
     'left_table' => 'artwork',
     'left_field' => 'artwork_id',
     'field' => 'row_id',
-    'type' => 'inner',
+    /*'type' => 'inner', */ //to view just does nodes which have any media_file (might be a non-image)
     'extra' => array( 'table_id' => array(
                          'field' => 'table_id',
-                         ' operator' => '=',
+                         'operator' => '=',
                          'value' => '5',
                          'numeric' => true,
                        ),
                     ),
-  );
-  
+  );  
   $data['compartdb_media_file']['table']['join']['node'] = array(
     'left_table' => 'compartdb_illustrated_by',
     'left_field' => 'media_file_id',
@@ -51,22 +50,7 @@ function artwork_views_data(){
   );  
   
   //fields
-  $data['compartdb_illustrated_by']['media_file_id'] = array(
-    'title' => t('media_file_id'),
-    'help' => t('media_file_id'),
-    'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
-    ),
-  );  
-  $data['compartdb_media_file']['file_name'] = array(
-    'title' => t('file_name'),
-    'help' => t('file_name'),
-    'field' => array(
-      'handler' => 'artwork_handler_field_file_name',
-      'click sortable' => TRUE,
-    ),
-  );
+  
   /*
   $data['agent']['table']['group'] = t('Creating table');
   $data['agent']['table']['title'] = t('Creating table');
@@ -143,6 +127,23 @@ function artwork_views_data(){
       'numeric' => TRUE,
     ),
    );
+  
+  $data['compartdb_illustrated_by']['media_file_id'] = array(
+    'title' => t('media_file_id'),
+    'help' => t('media_file_id'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+  );  
+  $data['compartdb_media_file']['file_name'] = array(
+    'title' => t('file_name'),
+    'help' => t('file_name'),
+    'field' => array(
+      'handler' => 'artwork_handler_field_file_name',
+      'click sortable' => TRUE,
+    ),
+  );
   
   /*
   $data['agent']['agent_id'] = array(
