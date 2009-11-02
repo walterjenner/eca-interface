@@ -41,8 +41,6 @@ function community_tags_views_data()
         'relationship'=> array (
           'base'=>'users',
           'base field'=>'uid',
-          'relationship field'=>'uid',
-          'label'=>t('Community Taxonomy Tagging User'),
           ),
         ),
 
@@ -80,6 +78,10 @@ function community_tags_views_data()
         'argument'=> array (
           'handler'=>'views_handler_argument_numeric',
           ),
+	'relationship'=> array (
+ 	 	   'base'=>'node',
+		   'base field'=>'nid',
+	    ),
         ),
 
       'tid'=> array (
@@ -108,8 +110,6 @@ function community_tags_views_data()
         'relationship'=> array (
           'base'=>'term_data',
           'base field'=>'tid',
-          'relationship field'=>'tid',
-          'label'=>t('Community Taxonomy Tagged Term'),
           ),
         ),
 
