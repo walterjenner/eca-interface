@@ -1,5 +1,5 @@
 <?php
-// $Id: community_tags.ajax.inc,v 1.1.2.2 2008/07/19 20:10:18 herc Exp $
+// $Id: community_tags.ajax.inc,v 1.1.2.3 2008/08/23 03:04:47 herc Exp $
 
 /**
  * @file
@@ -21,7 +21,7 @@ function community_tags_from_js($node) {
   $tags = (isset($_POST['tags']) && is_array($_POST['tags'])) ? $_POST['tags'] : array();
 
   // Merge in new tag and save.
-  $tags = array_unique(array_merge($tags, taxonomy_explode_tags($_POST['add'])));
+  $tags = array_unique(array_merge($tags, drupal_explode_tags($_POST['add'])));
   $vid = array_shift(community_tags_vids_for_node($node));
   community_tags_taxonomy_node_save($node, array('tags' => array($vid => $tags)), FALSE, $user->uid);
 

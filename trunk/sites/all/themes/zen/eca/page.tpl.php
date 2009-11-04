@@ -115,6 +115,7 @@
 
         <div id="content-area">
           <?php print $content; ?>
+          <div class="clear-both"></div>
         </div>
 
         <?php if ($feed_icons): ?>

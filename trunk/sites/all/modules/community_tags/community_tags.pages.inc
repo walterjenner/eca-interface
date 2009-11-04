@@ -1,5 +1,5 @@
 <?php
-// $Id: community_tags.pages.inc,v 1.1.2.1 2008/07/19 20:10:18 herc Exp $
+// $Id: community_tags.pages.inc,v 1.1.2.4 2009/08/29 17:32:45 entrigan Exp $
 
 /**
  * @file
@@ -41,7 +41,7 @@ function community_tags_form($form_state, $edit, $title = NULL) {
     $destination = drupal_get_destination();
     $form['login'] = array(
       '#type' => 'markup',
-      '#value' => '<div>'. t('<a href="@login">Login</a> or <a href="@register">register</a> to tag items', array('@login' => url('user/login', array('query' => $destination) ), '@register' => url('user/register', array('query' => $destination)))) .'</div>',
+      '#value' => '<div>'. t('<a href="@login">Login</a> or <a href="@register">register</a> to tag items', array('@login' => url('user/login', array('query' => $destination)), '@register' => url('user/register', array('query' => $destination)))) .'</div>',
     );
   }
 
@@ -57,7 +57,8 @@ function community_tags_form($form_state, $edit, $title = NULL) {
   );
   
   $form['nid'] = array(
-    '#type' => 'value',
+    '#type' => 'hidden',
+    '#title' => t('NID'),
     '#value' => $edit['nid'],
   );
 
@@ -145,30 +146,3 @@ function community_tags_settings() {
   return $form;
 }
 
-// Patch for Drupal 5.x. Remove for 6.x.
-if (!function_exists('taxonomy_explode_tags')) {
-
-  /**
-   * Explode a string of given tags into an array.
-   */
-  function taxonomy_explode_tags($tags) {
-    // This regexp allows the following types of user input:
-    // this, "somecompany, llc", "and ""this"" w,o.rks", foo bar
-    $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
-    preg_match_all($regexp, $tags, $matches);
-    $typed_tags = array_unique($matches[1]);
-
-    $tags = array();
-    foreach ($typed_tags as $tag) {
-      // If a user has escaped a term (to demonstrate that it is a group,
-      // or includes a comma or quote character), we remove the escape
-      // formatting so to save the term into the database as the user intends.
-      $tag = trim(str_replace('""', '"', preg_replace('/^"(.*)"$/', '\1', $tag)));
-      if ($tag != "") {
-        $tags[] = $tag;
-      }
-    }
-
-    return $tags;
-  }
-}
