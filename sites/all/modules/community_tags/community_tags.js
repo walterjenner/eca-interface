@@ -33,7 +33,7 @@ Drupal.behaviors.communityTags = function(context) {
       $('input[type=submit]', this.form).hide();
 
       // Fetch settings.
-      var nid = $('input[@name=nid]', this.form).val();
+      var nid = $('input[name=nid]', this.form).val();
       var o = Drupal.settings.communityTags['n_' + nid];
 
       var sequence = 0;

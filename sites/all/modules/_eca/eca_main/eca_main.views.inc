@@ -12,7 +12,6 @@ function eca_main_views_data(){
     'help' => t('The unique ID of a publication in the compart DB'),
     'database' => 'compart',
     'weight' => -10,
-
   );
   
   //TABLES

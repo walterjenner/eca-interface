@@ -78,6 +78,10 @@ html, body{
 }
 
 /* SECONDARY **********/
+.no-sidebars #secondary, .sidebar-right #secondary {
+  margin-left:250px;
+}
+
 #secondary ul li {
    display: block;
    float: left; 

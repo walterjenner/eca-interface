@@ -100,7 +100,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
             $block['title'] = t('Artworks created');
             $fromTable = "compartdb.creating";
             $whereField = "agent_id = $node->agent_id";
-            $moreLinkHref = "artworks/";
+            $moreLinkHref = "node/2498/";
             $query = "args=$node->agent_id";
           }
           else

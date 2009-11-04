@@ -37,6 +37,8 @@
  */
 ?>
 
+
+
 <form action="<?php print $base_path; ?>"  accept-charset="UTF-8" method="post" id="search-theme-form" name="search-form-name">
 	<input type="text" maxlength="50" name="search_theme_form" id="edit-search-theme-form-1" size="10" value="search..." onfocus="this.value=''" title="Enter the terms you wish to search for." class="form-text" />
 	<?php print $search['submit']; ?>

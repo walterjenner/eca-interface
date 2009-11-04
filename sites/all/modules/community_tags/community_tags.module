@@ -1,5 +1,5 @@
 <?php
-// $Id: community_tags.module,v 1.37.2.3 2008/07/19 20:10:18 herc Exp $
+// $Id: community_tags.module,v 1.37.2.8 2009/08/29 17:32:45 entrigan Exp $
 
 /**
  * @file
@@ -279,7 +279,7 @@ function community_tags_taxonomy_node_save($node, $terms, $is_owner, $uid) {
     unset($terms['tags']);
 
     foreach ($typed_input as $vid => $vid_value) {
-      $typed_terms = is_array($vid_value) ? $vid_value : taxonomy_explode_tags($vid_value);
+      $typed_terms = is_array($vid_value) ? $vid_value : drupal_explode_tags($vid_value);
       foreach ($typed_terms as $typed_term) {
         // See if the term exists in the chosen vocabulary
         // and return the tid, otherwise, add a new record.
@@ -476,10 +476,10 @@ function community_tags_node_view($node, $inline = TRUE) {
   }
   else {
     // Sorry, no more adding tags for you!
-    $output .= '<p>'. t('You have already tagged this post. Your tags: ') . theme('community_tags', 'user_node', NULL, $user->uid, $node->nid) .'</p>';
+    $output .= '<p>'. t('You have already tagged this post. Your tags: ') . theme('community_tags', $tags) .'</p>';
   }
 
-  drupal_add_js(array('communityTags' => array('tags' => $names, 'url' => url('community-tags/js/'. $node->nid), 'add' => t('Add'))), 'setting');
+  drupal_add_js(array('communityTags' => array('n_'. $node->nid => array('tags' => $names, 'url' => url('community-tags/js/'. $node->nid), 'add' => t('Add')))), 'setting');
 
   return $output;
 }
@@ -502,34 +502,6 @@ function community_tags_display($type = 'global', $limit = NULL, $arg1 = NULL, $
  */
 function theme_community_tags($tags) {
   return '<div class="cloud">'. (count($tags) ? theme('tagadelic_weighted', $tags) : t('None')) .'</div>';
-}
-
-// Patch for Drupal 5.x. Remove for 6.x.
-if (!function_exists('taxonomy_explode_tags')) {
-
-  /**
-   * Explode a string of given tags into an array.
-   */
-  function taxonomy_explode_tags($tags) {
-    // This regexp allows the following types of user input:
-    // this, "somecompany, llc", "and ""this"" w,o.rks", foo bar
-    $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
-    preg_match_all($regexp, $tags, $matches);
-    $typed_tags = array_unique($matches[1]);
-
-    $tags = array();
-    foreach ($typed_tags as $tag) {
-      // If a user has escaped a term (to demonstrate that it is a group,
-      // or includes a comma or quote character), we remove the escape
-      // formatting so to save the term into the database as the user intends.
-      $tag = trim(str_replace('""', '"', preg_replace('/^"(.*)"$/', '\1', $tag)));
-      if ($tag != "") {
-        $tags[] = $tag;
-      }
-    }
-
-    return $tags;
-  }
 }
 
 /**
@@ -560,129 +532,13 @@ function community_tags_flatten($tags) {
   return $names;
 }
 
-function community_tags_views_data()
-{
- $data = array (
-   'community_tags'=> array (
-     'table'=> array (
-     'group'=>t('Community Tags'),
-     'base'=> array (
-       'field'=>'tid',
-       'title'=>t('Community Tags Entries'),
-       'help'=>t("Records of who tagged what when (for Community Tag vocabularies)"),
-     ),
-   'join'=> array (
-     'node'=> array (
-       'left_field'=>'nid',
-       'field'=>'nid',
-     ),
-   ),
-    'join'=> array (
-     'term_data'=> array (
-       'left_field'=>'tid',
-       'field'=>'tid',
-     ),
-   ),      
-
-   ),
-		
-		// @TODO  Test All of these User Handlers!
-   'uid'=> array (
-     'title'=>t('Tagging User'),
-     'help'=>t('The UID of the user who created the tag instance'),
-     'field' => array(
-       'handler' => 'views_handler_field_user',
-       'click sortable' => TRUE,
-     ),
-     'argument' => array(
-       'handler' => 'views_handler_argument_user_uid',
-       'name field' => 'name', 
-     ),
-     'filter' => array(
-       'title' => t('Name'),
-       'handler' => 'views_handler_filter_user_name',
-     ),
-     'sort' => array(
-       'handler' => 'views_handler_sort',
-     ),
-	  'relationship'=> array (
-	 	   'base'=>'users',
- 		   'base field'=>'uid',
-     ),
-   ),
-
-   'date'=> array (
-     'title'=>t('Tagging Time'),
-     'help'=>t('When the tag instance happened'),
-     'field'=> array (
-       'handler'=>'views_handler_field_date',
-       'click sortable'=>TRUE,
-     ),
-     'sort'=> array (
-       'handler'=>'views_handler_sort_date',
-     ),
-     'filter'=> array (
-       'handler'=>'views_handler_filter_date',
-     ),
-		 'argument' => array(
-       'handler' => 'views_handler_argument_date',
-     ),
-   ),
-
-   'nid'=> array (
-     'title'=>t('Tagged Node'),
-     'help'=>t('Node which was tagged'),
-     'field'=> array (
-       'handler'=>'views_handler_field_numeric',
-       'click sortable'=>TRUE,
-     ),
-     'sort'=> array (
-       'handler'=>'views_handler_sort_numeric',
-     ),
-     'filter'=> array (
-       'handler'=>'views_handler_filter_numeric',
-     ),
-	    'argument' => array(
-       'handler' => 'views_handler_argument_numeric',
-     ),
-     'relationship'=> array (
- 	 	   'base'=>'node',
-	 		 'base field'=>'nid',
-	    ),
-   ),
-
-   'tid'=> array (
-     'title'=>t('Tag ID'),
-     'help'=>t('The TID of the Tag'),
-     'field'=> array (
-       'handler'=>'views_handler_field',
-       'click sortable'=>TRUE,
-     ),
-     'sort'=> array (
-       'handler'=>'views_handler_sort_numeric',
-     ),
-     'filter'=> array (
-       'handler'=>'views_handler_filter_numeric',
-     ),
-		 'argument' => array(
-       'handler' => 'views_handler_argument_numeric',
-       'skip base' => array('node', 'node_revision'),
-     ),
-		 'relationship'=> array (
-   	 	   'base'=>'term_data',
-  	 		 'base field'=>'tid',
-	     ),
-   ),
-
- ),
-);
-
-   return $data;
-}
-
+/**
+ * Implementation of hook_views_api
+ * See community_tags.views.inc for the actual views integration
+ */
 function community_tags_views_api()
 {
-   return array (
-   'api'=>2,
-   );
+  return array (
+  'api'=>2,
+  );
 }
