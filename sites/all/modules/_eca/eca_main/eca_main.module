@@ -84,7 +84,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
               $numRes++;
               $block['content'] .= '<span class="tag tag-agent">' . l($agent->first_name . ' ' . $agent->last_name, 'node/'.$agent->nid, array('attributes' => array('title' => $agent->first_name . ' ' . $agent->last_name)) ) . '&nbsp;</span>';  
             }                        
-            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>View all</span>', "agents/", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
+            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>View all</span>', "node/2497", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
           }
           break;
         // ARTWORKS BLOCK

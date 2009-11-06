@@ -1,0 +1,12 @@
+; $Id: finder_user.info,v 1.1.2.22 2009/11/01 03:33:13 danielb Exp $
+name = Finder User
+description = "Enables finder to find users."
+core = 6.x
+package = "Finder"
+dependencies[] = finder
+; Information added by drupal.org packaging script on 2009-11-01
+version = "6.x-1.5"
+core = "6.x"
+project = "finder"
+datestamp = "1257046829"
+
