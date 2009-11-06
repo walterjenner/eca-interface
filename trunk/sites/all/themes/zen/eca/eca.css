@@ -320,6 +320,7 @@ span.tag {
 span.tag a{
   font-size:0.9em;
   color: #333;
+  text-decoration: none;
 }
 span.tag a:hover{
   background: #333;

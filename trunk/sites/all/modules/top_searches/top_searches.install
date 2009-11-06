@@ -1,9 +1,11 @@
 <?php
-// $Id: top_searches.install,v 1.1.4.1 2008/12/29 07:37:09 zstolar Exp $
+// $Id: top_searches.install,v 1.1.4.2 2009/11/05 10:13:33 zstolar Exp $
 
 function top_searches_install() {
   // Create tables.
   drupal_install_schema('top_searches');
+  variable_set('top_searches_show_counters', 0);
+  variable_set('top_searches_block_items', 50);
   drupal_set_message(t('Top searches module installed successfully.'));
 }
 
@@ -49,4 +51,21 @@ function top_searches_schema() {
     'primary key' => array('qid')
   );
   return $schema;
+}
+
+function top_searches_update_6001() {
+  $ret = array();
+  // Remove all non-valid search phrases from the DB (according to http://drupal.org/node/621842)
+  $result = db_query('SELECT * FROM {top_searches}');
+  while ($row = db_fetch_array($result)) {
+    $valid = _top_searches_valid_phrase($row['q']);
+    if (!$valid) {
+      $ret[] = update_sql("DELETE FROM {top_searches} WHERE qid = {$row['qid']}");
+      $removed[] = $row['q'];
+    }
+  }
+  if (!empty($removed)) {
+    drupal_set_message (t('The following non-valid phrases were removed from Top Searches table: %s', array('%s' => implode(', ', $removed))));
+  }
+  return $ret;
 }

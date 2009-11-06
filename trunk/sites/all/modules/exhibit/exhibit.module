@@ -67,6 +67,18 @@ function exhibit_menu() {
       'page callback' => 'exhibit_output_history',
       'file' => 'exhibit.pages.inc',
     ),
+     'node/%node/__history__.html' => array(
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access exhibits'),
+      'page callback' => 'exhibit_output_history',
+      'file' => 'exhibit.pages.inc',
+    ),
+     '__history__.html' => array(
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access exhibits'),
+      'page callback' => 'exhibit_output_history',
+      'file' => 'exhibit.pages.inc',
+    ),
     'exhibit/tsv/%' => array(
       'type' => MENU_CALLBACK,
       'access arguments' => array('access exhibits'),
