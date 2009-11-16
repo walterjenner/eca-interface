@@ -177,7 +177,8 @@ function exhibition_access($op, $node, $account) {
  * @param object $node
  */
 function exhibition_load($node) {
-  $selectExhibition = "SELECT e.exhibition_id, e.nid, ca_e.name as exhibition_name, ca_e.description, ca_et.name as exhibition_type_name
+  $selectExhibition = "SELECT e.exhibition_id, e.nid, ca_e.name as exhibition_name, ca_e.description, ca_et.name as exhibition_type_name,
+                        UNIX_TIMESTAMP(ca_e.last_change) as last_change 
                         FROM exhibition e 
                         LEFT JOIN compartdb.exhibition ca_e 
                         ON e.exhibition_id = ca_e.exhibition_id
@@ -230,7 +231,15 @@ function exhibition_load($node) {
         if( $organizer_detail = db_fetch_object( db_query( "SELECT i.name, i.institution_id FROM compartdb.institution i WHERE i.institution_id = $organizer->institution_id" ) )){
           array_push( $exhibition->organizers['institution'], $organizer_detail );
         }
-      }          
+      } 
+      
+      //everything in the content array will be indexed for the search
+      $exhibition->content = array();
+      $exhibition->content['description'] = array(
+        '#value' => eca_add_space($exhibition->description),
+        '#weight' => 0,
+      );
+               
       //dvr($exhibition->organizers);
     }
     

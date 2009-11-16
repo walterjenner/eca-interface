@@ -39,7 +39,10 @@ if($teaser){
       <?php print flag_create_link('bookmarks', $node->nid);  ?>
       <ul>
           <li><a href="#info-tab" title="View basic infos about this artwork." rel="address:/"><span>Info</span></a></li>
-          <?php if(count($node->media)): ?>
+          <?php if ($content_bottom): ?> 
+            <li><a href="#related-tab" title="View related items of this artwork." rel="address:/related-tab"><span>Related Items</span></a></li>
+          <?php endif; ?>
+          <?php if(count($node->media)>1): ?>
             <li><a href="#media-tab" title="View pictures of this artwork." rel="address:/media-tab"><span>Media (<?php print count($node->media); ?>)</span></a></li>
           <?php endif; ?>
           <li><a href="#comment-tab" title="View comments on this person." rel="address:/comment-tab"><span>Comments (<?php print $comment_count; ?>)</span></a></li>
@@ -53,13 +56,15 @@ if($teaser){
             $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
             print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
           }
-          print("<p>Content Author: $name</p>");
-          print_agents($node->artists);
+                   
+          if(strlen($title) < strlen($node->title) )
+            print_value($node->title, "Full title");
           
-          print_value($node->title, "Full title");
+          print_value(return_agents_by_node($node->artists), 'Artist(s)');
+          
+          print_value(_textile_process(array(1 => $node->description)), "Description", true);
+          print_value($node->creation_year . return_location( $node->ca_l_city, $node->ca_l_country), 'Created');
           print_value($node->ca_at_name, 'Artwork Type' );
-          print_value(_textile_process(array(1 => $node->description)), "Description");
-          print_value($node->creation_year, "Year of creation");
           print_value($node->material, "Material");
           print_value($node->rights, "Rights");
           
@@ -72,45 +77,24 @@ if($teaser){
                            ),
                         'Algorithm'  
              );
-          }
+          }          
+         
+          print_value(return_agents_by_node( $node->owners['agents'] ) . ' ' . return_institutions( $node->owners['institutions'] ), 'Owner(s)');
+          print_value( return_publications($node->citations), 'Cited in' );          
+          print_value(return_collections( $node->collections ), 'Part of Collection');   
           
-          //LOCATION 
-          if($node->creation_location_id != 0 && $node->creation_location_id != ''){
-            print '<h4>Created in</h4>';
-            //print_value($node->creation_location_id, "creation_location_id");
-            print_value("$node->ca_l_city, $node->ca_l_country", "Location");
-            print_value($node->ca_l_description, "Description");
-          }
-          
-          //OWNERS
-          $owner_str = '';
-          foreach( $node->owners['agents'] as $agent ){
-            if($owner_str != '')
-              $owner_str .= ', ';
-            $owner_str .= l($agent->title, "node/$agent->nid", array('attributes' => array('title' => $agent->title)));
-          }
-          foreach( $node->owners['institutions'] as $institution ){
-            if($owner_str != '')
-              $owner_str .= ', ';
-            $owner_str .= l($institution->name, "institution/$institution->institution_id", array('attributes' => array('title' => $institution->name, 'class' => 'dialog-link')));
-          }
-          print_value($owner_str, 'Owner(s)');          
-          
-          //CITATIONS
-          $citation_str = return_publications($node->citations);
-          print_value($citation_str, 'Cited in');          
-          
-          //COLLECTIONS
-          $collection_str = return_collections( $node->collections );
-          print_value($collection_str, 'Part of Collection');   
-          
-          //print_value($node->algorithm_id, "Algorithm ID");  
+         //print_value($node->algorithm_id, "Algorithm ID");  
         ?>
-        <h3>Assigned Tags</h3> 
-          <?php print $node->content['community_tags']['#value']; ?>
+        
       </div>  
       
-      <?php if(count($node->media)): ?>     
+      <?php if($content_bottom): ?>
+        <div id="related-tab">
+            <?php print $content_bottom; ?>    
+        </div>
+      <?php endif; ?>
+      
+      <?php if(count($node->media)>1): ?>     
         <div id="media-tab" class="ui-tabs-panel">
           <?php 
             foreach($node->media as $media){
@@ -129,6 +113,9 @@ if($teaser){
           ?>
           <div class="clear-both">&nbsp;</div> 
       </div>
+      
+      <div class="node-submitted">Last change by <?php print($name); ?> on <?php print(format_date($node->last_change, 'small')); ?></div>
+      
     </div>
   </div>
     

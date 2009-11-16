@@ -1,5 +1,10 @@
 <?php
-// $Id: custom_breadcrumbs.module,v 1.6.2.4 2008/09/22 02:25:43 eaton Exp $
+// $Id: custom_breadcrumbs.module,v 1.6.2.8 2009/09/30 12:12:11 mgn Exp $
+
+/**
+ * @file
+ * Provide custom breadcrumbs for node-type pages.
+ */
 
 /**
  * Implementation of hook_menu().
@@ -43,6 +48,13 @@ function custom_breadcrumbs_perm() {
   return array('administer custom breadcrumbs', 'use php in custom breadcrumbs');
 }
 
+/**
+ * Implementation of hook_theme().
+ */
+function custom_breadcrumbs_theme() {
+  return array('custom_breadcrumbs_help_identifiers' => array('arguments' => array()));
+}
+
 function custom_breadcrumbs_nodeapi($node, $op, $teaser, $page) {
   if ($op == 'alter' && !$teaser && $page) {
     if ($breadcrumb = _custom_breadcrumbs_load_for_type($node)) {
@@ -53,28 +65,16 @@ function custom_breadcrumbs_nodeapi($node, $op, $teaser, $page) {
       $paths = module_exists('token') ? token_replace($paths, 'node', $node) : $paths;
 
       $trail = array(l(t('Home'), '<front>'));
-      $location = array();
       for ($i = 0; $i < count($titles); $i++) {
-        // Skip empty titles
-        if ($title = trim($titles[$i])) {
-          // Output plaintext instead of a link if there is a title without a path.
-          $path = trim($paths[$i]);
-          if (strlen($path) > 0 && $path != '<none>') {
-            $trail[] = l($title, trim($paths[$i]));
-            $location[$i] = menu_get_item(drupal_get_normal_path($paths[$i]));          }
-          else {
-            $trail[] = check_plain($title);
-          }
+        $title = trim($titles[$i]);
+        if (($title != '') && ($title != '<none>')) {
+          // Create breadcrumb only if there is a title.
+          $trail[] = _custom_breadcrumbs_create_crumb($title, trim($paths[$i]));
         }
       }
       drupal_set_breadcrumb($trail);
-      if ($breadcrumb->set_active_menu) {
-        $location[] = menu_get_item();
-        menu_set_active_trail($location);
-      }
     }
   }
-
 }
 
 function _custom_breadcrumbs_load_breadcrumb($bid) {
@@ -91,9 +91,9 @@ function _custom_breadcrumbs_load_for_type($node) {
     if (!empty($breadcrumb->visibility_php)) {
       // Use PHP code to check the visibility.
       ob_start();
-      $result = eval(trim($breadcrumb->visibility_php));
+      $visibility = eval(trim($breadcrumb->visibility_php));
       ob_end_clean();
-      if ($result == TRUE) {
+      if ($visibility == TRUE) {
         return $breadcrumb;
       }
     }
@@ -136,4 +136,66 @@ function custom_breadcrumbs_save_breadcrumb($breadcrumb = NULL) {
 function _custom_breadcrumbs_delete_breadcrumb($bid) {
   $sql = 'DELETE FROM {custom_breadcrumb} WHERE bid = %d';
   db_query($sql, $bid);
+}
+/**
+ * Private function for custom breadcrumb to create a crumb item
+ *
+ * @param $title
+ *   The human readable title to be rendered by the browser
+ * @param $original_path
+ *   The desired URI and/or special identifier
+ */
+function _custom_breadcrumbs_create_crumb($title, $original_path) {
+  // Collapse double slashes to one.
+  $original_path = preg_replace('/\/+/', '/', $original_path);
+  // Removing leading and trailing slashes.
+  $original_path = preg_replace('/^\/|\/+$/', '', $original_path);
+  list($identifier, $path) = explode("|", $original_path, 2);
+
+  if ($path) {
+    switch ($identifier) {
+      case '<pathauto>':
+        if (module_exists('pathauto'))
+          $crumb = l($title, pathauto_cleanstring($path, FALSE));
+        break;
+      default:
+        $crumb = l($title, $original_path);
+    }
+  }
+  else {
+    // This may be just be a single identifier.
+    switch ($identifier) {
+      case '<none>':
+        $crumb = $title;
+        break;
+      default:
+        $crumb = l($title, $original_path);
+    }
+  }
+
+  return $crumb;
+}
+
+/**
+ * Builds a table of identifiers and their behaviors
+ */
+function theme_custom_breadcrumbs_help_identifiers() {
+  $headers = array(t('Identifier'), t('Behaviour'));
+  $rows = array();
+
+  // <none> identifier
+  $row = array();
+  $row[] = check_plain('<none>');
+  $row[] = 'This will result in a plain text crumb. This identifier should not be used with the pipe (|) symbol.';
+  $rows[] = $row;
+
+  // <pathauto> identifier
+  if (module_exists('pathauto')) {
+    $row = array();
+    $row[] = check_plain('<pathauto>');
+    $row[] = 'Cleans the given path using your pathauto replacement rules.';
+    $rows[] = $row;
+  }
+
+  return theme('table', $headers, $rows, array('class' => 'description'));
 }

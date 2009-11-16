@@ -39,6 +39,7 @@ function agent_views_data(){
       'click sortable' => TRUE,
     ),
   );
+  //set up the exhibit_in field to use it as an argument. (to get a list of agents per exhibition)
   $data['compartdb_exhibits_in2']['exhibition_id'] = array(
      'title' => t('Exhibition ID'),
      'help' => t('Exhibition ID'),
@@ -53,96 +54,7 @@ function agent_views_data(){
       'empty field name' => t('No Agent'),
       'numeric' => TRUE,
     ),
-   ); 
-  
-  
-  //$data['compartdb_exhibits_in']['table']['group'] = t('Exhibits In'); 
-  
-  //link authorship with publication table
-  /*$data['compartdb_exhibits_in']['table']['join']['node'] = array(    
-    'left_table' => 'agent',
-    'left_field' => 'agent_id',
-    'field' => 'agent_id',
-  );*/
-  //link authorship with agent table
-  //$data['authorship']['table']['join']['agent'] = array(    
-  //  'left_field' => 'agent_id',
-  //  'field' => 'agent_id',
-  //);
-  
-  /*$data['compartdb_exhibits_in']['exhibition_id'] = array(
-    'real_field' => 'exhibition_id',
-    'title' => t('Exhibition ID'),
-    'help' => t('Exhibition ID'),    
-    'field' => array(
-      'title' => t('Participated at exhibitions'),
-      'help' => t('Display all exhibitions where this agent was part of.'),
-      'handler' => 'agent_handler_field_exhibition_list',
-    ),
-    'argument' => array(
-      'handler' => 'agent_handler_argument_exhibition_id',
-      'name table' => 'node',
-      'name field' => 'title',
-      'empty field name' => t('No exhibition'),
-      'numeric' => TRUE,
-    ),
-  );*/
- 
-  /* remove all connections for now
-  $data['compartdb_creating']['table']['group'] = t('Creating');
-  $data['compartdb_creating']['table']['title'] = t('Creating');
-  $data['compartdb_creating']['table']['help'] = t('Creating: The Agent-Artwork Mapping table');
-  
-  //connect the creating table with the drupal agent table
-  $data['compartdb_creating']['table']['join']['node'] = array(
-    'left_table' => 'agent',
-    'left_field' => 'agent_id',
-    'field' => 'agent_id',
-  );
-  
-  $data['compartdb_creating']['artwork_id'] = array(    
-    'title' => t('artwork id'),
-    'help' => t('artwork id'), 
-    'field' => array(
-      'title' => 'Artworks by Agent',
-      'help' => 'The artworks this agent has created',
-      'handler' => 'agent_handler_field_agent_artworks',
-    ),
-  );
-  
-  $data['compartdb_creating']['artwork_count'] = array(   
-    'field' => array(
-      'title' => 'Artwork Count',
-      'help' => 'Number of Artworks by this Agent',
-      'handler' => 'agent_handler_field_agent_artworks_count',
-      'click sortable' => TRUE,
-    ),
-  );
-  
-  
-  
-  
-  */
- /*
-  //the drupal artwork table
-  $data['artwork']['table']['group'] = t('Artwork');
-  $data['artwork']['table']['title'] = t('Artwork');
-  $data['artwork']['table']['help'] = t('The Drupal Artwork table');
-  
-  //connect the creating table with the drupal artwork table
-  $data['compartdb_creating']['table']['join']['artwork'] = array(
-    'left_field' => 'artwork_id',
-    'field' => 'artwork_id',
-  );
-  
- $data['artwork']['nid'] = array(
-    'title' => t('Agent ID'),
-    'help' => t('Agent ID'), 
-    'field' => array(
-      'handler' => 'views_handler_field_node',
-      'click sortable' => TRUE,
-    ),
-  ); */
+   );  
   
   //print_r($data);
   return $data;
@@ -163,7 +75,7 @@ function agent_views_handlers() {
         'agent_handler_field_agent_artworks_count' => array(
           'parent' => 'views_handler_field_numeric' ),*/
         'agent_handler_field_roles' => array(
-          'parent' => 'views_handler_field' ),
+          'parent' => 'views_handler_field_prerender_list' ),
         /*'agent_handler_field_exhibition_list' => array(
           'parent' => 'views_handler_field_prerender_list', ),
         'agent_handler_argument_exhibition_id' => array(

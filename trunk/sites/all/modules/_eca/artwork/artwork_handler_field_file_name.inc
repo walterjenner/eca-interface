@@ -6,6 +6,9 @@ require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
 
 /**
  * Field handler artwork thumbnail
+ * 
+ * Add creates the complete path to a thumbnail,
+ * which includes the folder, and the format.
  */
 class artwork_handler_field_file_name extends views_handler_field {
  function construct() {

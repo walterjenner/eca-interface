@@ -59,19 +59,26 @@
   /*
    * return a markup-snippet to embed a media file
    */
-  function eca_get_media_markup($media, $size){
+  function eca_get_media_markup($media, $size, $image_link = false){
     $path = eca_get_media_path($media->format, $size);
-    if($size != '' && eca_is_image($media)) //note: seems like all thumbs and medium images are jpg's
+    if(!isEmpty($size) && eca_is_image($media)) //note: seems like all thumbs and medium images are jpg's
       $path .= $media->file_name . '.' . jpg;
     else
       $path .= $media->file_name . '.' . $media->format;
-    $output = "";
+    
+    $output = '';
     if( eca_is_image($media) )
     {
-      $output .= "<div>";
-      $output .= "<img src=\"$path\" alt=\"$media->file_name\" />";
-      $output .= "<br/>$media->description</div>";
-      return $output;
+      if( $image_link ){
+        $output .= l($media->file_name, $path);
+        return $output;
+      }
+      else {
+        $output .= '<div>';
+        $output .= "<img src=\"$path\" alt=\"$media->file_name\" />";
+        $output .= "<br/>$media->description</div>";
+        return $output; 
+      }
     }
     else if($media->format == 'pdf'){
       return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name.$media->format</a>";
@@ -101,31 +108,103 @@
     else
       $path .= 'formatUnkown' . '/';
       
-    if( !empty($size) && $size != '' && $format != 'pdf' )
+    if( !isEmpty($size) && $format != 'pdf' )
       $path .= $size . '/';
-    else
-       $path .= '/';
+    //else
+       //$path .= '/';
        
     return $path;
   }
   
-  /*
-   * prints a markup-snippet, with a list of artists
-   */
-  function print_agents($agents){
-    $output = 'Artist(s): ';
-    foreach($agents as $agent){
-      $output .= l($agent->title, 'node/' . $agent->nid, array( 'attributes' => array('title' => $agent->title)) ) . ' ';
+  function DEP_print_awards($awards){
+    $output = 'Award(s): ';
+    foreach($awards as $award){
+      $output .= l($award->title, 'award/' . $award->award_id, array( 'attributes' => array('title' => $award->description, 'class' => 'dialog-link')) ) . ' ';
     }
     print $output;
   }
   
-  function print_awards($awards){
-    $output = 'Awards(s): ';
+  function return_media_links( $media ){    
+    if(count($media)==0)
+      return;
+    
+    $output = '';
+    foreach($media as $mediafile ){
+      if($output != '')
+        $output .= ', ';
+      $output .= eca_get_media_markup($mediafile,'medium',true); 
+    }
+    return $output;
+  }
+  
+  function return_address($street, $zip, $city, $country, $pobox = '', $additional = ''){
+    $output = '<div class="address"><br/>';
+    $noAddress = true;
+    if( !isEmpty($street) ){
+      $output .= $street . '<br/>';
+      $noAddress = false;
+    }
+    if( !isEmpty($additional) ){
+      $output .= $additional . '<br/>';
+      $noAddress = false;
+    }
+    if( !isEmpty($pobox) ){
+      $output .= $pobox . '<br/>';
+      $noAddress = false;
+    }
+    if( !isEmpty($zip) ){
+      $output .= $zip;
+      $noAddress = false;
+    }
+    if( !isEmpty($city) ){
+      if(!isEmpty($zip))
+        $output .= ' - ';
+      $output .= $city;
+      $noAddress = false;      
+    }
+    if( !isEmpty($country) ){
+        $output .= '<br/>' . $country; 
+        $noAddress = false;
+    }
+    $output .= '</div>';
+    
+    if( $noAddress )
+      return;
+    else  
+      return $output;
+  }
+  
+  function return_location($city, $country){
+    $output = '';
+    if(!isEmpty($city)){
+      $output .= ' in ' . $city;
+      if( isEmpty($country) )
+        $output .= '.';
+    }
+    if(!isEmpty($country)){
+      if($output != ''){
+        $output .= ', ';
+      }
+      else {
+        $output .= ' in ';
+      }
+      $output .= $country . '.';
+    }
+     return $output; 
+  }
+  
+  function return_collectives($items){
+    foreach($items as $item){
+      $output .= l($item->name, 'collective/' . $item->collective_id, array( 'attributes' => array('title' => $item->description, 'class' => 'dialog-link')) ) . ' ';
+    }
+    return $output;
+  }
+  
+  function return_awards($awards){
     foreach($awards as $award){
       $output .= l($award->title, 'award/' . $award->award_id, array( 'attributes' => array('title' => $award->title, 'class' => 'dialog-link')) ) . ' ';
     }
-    print $output;
+    return $output;
   }
   
   function return_artworks( $artworks ){
@@ -171,6 +250,19 @@
       $output .= l(_filter_url_trim($item->name, URL_LENGTH), 'collection/' . $item->collection_id, array( 'attributes' => array('title' => $item->name, 'class' => 'dialog-link')) );
     }
     return $output;  
+  }
+  
+  /*
+   * returns a markup-snippet, with a list of artists
+   */
+  function return_agents_by_node($agents){
+    $output = '';
+    foreach($agents as $agent){
+      if($output != '')
+        $output .= ', ';
+      $output .= l($agent->title, 'node/' . $agent->nid, array( 'attributes' => array('title' => $agent->title)) );
+    }
+    return $output;
   }
   
   function return_agents( $items ){
@@ -234,28 +326,42 @@
   }
   
   function return_organizers( $items ){
-    $output = 'People: ' . return_nodes( $items['agent'] ) . '. Institutions: ' . return_institutions( $items['institution'] );
+    $output = '';
+    $people_str = return_nodes( $items['agent'] );
+    $inst_str = return_institutions( $items['institution'] );
+    if($people_str)
+      $output .= $people_str . '. ';
+    if( $inst_str ){
+      if($output!=''){
+        $output .= '(Institution: ' . $inst_str . ').';
+      }
+      else { 
+        $output .= $inst_str . '.';
+      }
+    }    
+    
     return $output;
   }
   
   /*
    * prints a markup-snipped with a value-label couple
    */
-  function print_value($value, $label){
-   if(!empty($value) ) { 
-     if(strcasecmp($label, "description") == 0)
-       $value = _textile_process( array(1 =>$value) ); 
-   ?>
-     <div><span class="label"><?php print $label; ?>: &nbsp;</span><span class="value"> <?php print $value; ?></span></div>
-   <?php } 
+  function print_value($value, $label, $multiline = false){
+    print( return_value($value, $label, $multiline) );
   }
-  function return_value($value, $label){
-   if(!empty($value) ) {
-     if(strcasecmp($label, "description") == 0)
+  
+  function return_value($value, $label, $multiline = false, $class_str = ''){
+    if(!isEmpty($value) ) { 
+     if(strcasecmp($label, "description") == 0){
        $value = _textile_process( array(1 =>$value) );
-       
-     $output .= "<div><span class=\"label\">$label: &nbsp;</span><span class=\"value\">$value</span></div>";
+       $multiline = true;
+     }
+   
+    $output .= '<div class="label_value_pair"><span class="label">' . $label . ': &nbsp;</span>';
+    $output .= ($multiline)?'<br/>':'';
+    $output .= '<span class="value ' . $class_str . '">' . $value .'</span></div>';
     }
+    
     return $output; 
   }
 
@@ -266,3 +372,21 @@
     
     return $pub->title;
   }
+  
+  function isEmpty($string) {
+    return (strlen(trim($string)) == 0);	
+  }
+  
+  function eca_add_space( $string ){
+    return ' ' . $string . ' ';
+  }
+  
+  function implode2($glue="", $var){
+    if ($var){
+        foreach ($var as $value){
+            $array[]=strval($value);
+        }
+        return implode($glue, $array);
+    }
+    else return false;
+ } 

@@ -14,7 +14,7 @@ require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
 function agent_node_info() {
   return array(
     'agent' => array(
-      'name' => t('Agent'),
+      'name' => t('Person'),
       'module' => 'agent',
       'description' => "Wrapper-Node-Type to the Agent in the compArt DB",
       'has_body' => FALSE,
@@ -155,11 +155,18 @@ function agent_access($op, $node, $account) {
  */
 function agent_load($node) {
   $selectAgent = "SELECT a.agent_id, a.nid, ca_a.death_location_id, ca_a.birth_location_id, ca_a.last_name, 
+                  UNIX_TIMESTAMP(ca_a.last_change) as last_change, 
                   ca_a.first_name, ca_a.title, ca_a.pseudonym, ca_a.gender, ca_a.email, ca_a.url, ca_a.birth_date, 
-                  ca_a.death_date, ca_a.biography, ca_a.description , ca_a.agent_id as ca_a_agent_id
+                  ca_a.death_date, ca_a.biography, ca_a.description , ca_a.agent_id as ca_a_agent_id,
+                  ca_l.city as ca_l_city, ca_l.country as ca_l_country, ca_l.description as ca_l_description,
+                  ca_dl.city as ca_dl_city, ca_dl.country as ca_dl_country, ca_dl.description as ca_dl_description
                   FROM agent a 
                   LEFT JOIN compartdb.agent ca_a 
                   ON a.agent_id = ca_a.agent_id 
+                  LEFT JOIN compartdb.location as ca_l
+                  ON ca_a.birth_location_id = ca_l.location_id
+                  LEFT JOIN compartdb.location as ca_dl
+                  ON ca_a.death_location_id = ca_dl.location_id
                   WHERE nid=$node->nid";
                   
   $resultAgent = db_query($selectAgent);
@@ -178,7 +185,7 @@ function agent_load($node) {
     
     //getAwards
     $agent->awards = array();
-    $selectAwards = "SELECT ca_r.at_date, ca_aw.title, ca_aw.award_id 
+    $selectAwards = "SELECT ca_r.at_date, ca_aw.title, ca_aw.description, ca_aw.award_id 
                       FROM compartdb.receiving ca_r
                       LEFT JOIN compartdb.award ca_aw
                       ON ca_r.award_id = ca_aw.award_id
@@ -201,10 +208,77 @@ function agent_load($node) {
     $resInstitutions = db_query( $selectInstitutions );
     while( $institution = db_fetch_object($resInstitutions) ){
       array_push( $agent->institutions, $institution );
-    }                 
+    } 
     
+    //getCitations
+    $agent->citations = array();
+    $selectCitations = "SELECT ca_p.title, ca_ac.publication_id 
+                        FROM compartdb.agent_citation ca_ac 
+                        LEFT JOIN compartdb.publication ca_p
+                        ON ca_ac.publication_id = ca_p.publication_id
+                        WHERE ca_ac.agent_id = $agent->agent_id";
+    $resCitations = db_query($selectCitations);
+    while( $citation = db_fetch_object($resCitations) ) {
+      array_push($agent->citations, $citation);                  
+    }
+    
+    //getCollective
+    $agent->collectives = array();
+    $resCollectives = db_query("SELECT ca_c.name, ca_c.description, ca_c.collective_id 
+                                  FROM compartdb.collective ca_c 
+                                  WHERE ca_c.collective_id 
+                                    IN (SELECT collective_id 
+                                          FROM compartdb.agent_is_part_of 
+                                          WHERE agent_id = $agent->agent_id) 
+                                  ORDER BY ca_c.name");
+    while ($collective = db_fetch_object($resCollectives)) {
+      array_push($agent->collectives, $collective);   
+    }
+    
+    //getExhibitions (that were organized by this agent)
+    $agent->exhibitions = array();
+    $selectExhibitions = "SELECT ca_e.name, ca_o.exhibition_id 
+                          FROM compartdb.organizing ca_o
+                          LEFT JOIN compartdb.exhibition ca_e
+                          ON ca_o.exhibition_id = ca_e.exhibition_id  
+                          WHERE ca_o.agent_id = $agent->agent_id";
+    $resultExhibitions = db_query( $selectExhibitions );
+    while( $exhibition = db_fetch_object($resultExhibitions) ){
+      array_push( $agent->exhibitions, $exhibition );
+    }
     //dvr( $agent );
-       
+    
+    //everything in the content array will be indexed for the search
+    $agent->content = array();
+    $agent->content['description'] = array(
+      '#value' => eca_add_space($agent->description),
+      '#weight' => 0,
+    );
+    if(!isEmpty($agent->pseudonym)){
+      $agent->content['pseudonym'] = array(
+        '#value' => 'Pseudonymous:' . eca_add_space($agent->pseudonym),
+        '#weight' => 0,
+      ); 
+    }
+    if(count($agent->institutions)){   
+      $agent->content['institutions'] = array(
+        '#value' => 'Member of institution(s):' . eca_add_space(return_institutions($agent->institutions)),
+        '#weight' => 0,
+      );
+    }
+    if(count($agent->collectives)){
+      $agent->content['collective'] = array(
+        '#value' => 'Part of collective(s):' . eca_add_space(return_collectives($agent->collectives)),
+        '#weight' => 0,
+      );
+    }
+    if(!isEmpty($agent->ca_l_city) || !isEmpty($agent->ca_l_country)){
+      $agent->content['birth_location'] = array(
+        '#value' => 'Born in' . eca_add_space($agent->ca_l_city . ' ' . $agent->ca_l_country),
+        '#weight' => 0,
+      );
+    }
+    
     return $agent;
   } 
 }

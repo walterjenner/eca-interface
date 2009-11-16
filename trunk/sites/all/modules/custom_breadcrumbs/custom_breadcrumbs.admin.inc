@@ -1,7 +1,14 @@
 <?php
-// $Id: custom_breadcrumbs.admin.inc,v 1.1.2.2 2008/09/19 00:57:24 eaton Exp $
+// $Id: custom_breadcrumbs.admin.inc,v 1.1.2.5 2009/09/30 12:12:11 mgn Exp $
 
-// Lists all current custom breadcrumbs, and provides a link to the edit page.
+/**
+ * @file
+ * Admin page callback file for the custom_breadcrumbs module.
+ */
+
+/**
+ *  Lists all current custom breadcrumbs, and provides a link to the edit page.
+ */
 function custom_breadcrumbs_page() {
   $breadcrumbs = _custom_breadcrumbs_load_all_breadcrumbs(TRUE);
 
@@ -23,8 +30,9 @@ function custom_breadcrumbs_page() {
   return theme('table', $header, $rows);
 }
 
-
-// Displays an edit form for a custom breadcrumb record.
+/**
+ * Display an edit form for a custom breadcrumb record.
+ */
 function custom_breadcrumbs_form() {
   $bid = arg(4);
   if (isset($bid)) {
@@ -52,7 +60,7 @@ function custom_breadcrumbs_form() {
   $form['visibility_php'] = array(
     '#type' => 'textarea',
     '#title' => t('Breadcrumb visibility'),
-    '#access' => user_access('use php in custom pagers'),
+    '#access' => user_access('use php in custom breadcrumbs'),
     '#description' => t('Determine whether this breadcrumb should be displayed by using a snippet of PHP to return TRUE or FALSE. Note that this code has access to the $node variable, and can check its type or any other property.'),
     '#default_value' => $bid ? $breadcrumb->visibility_php : '',
   );
@@ -91,15 +99,15 @@ function custom_breadcrumbs_form() {
     $form['help']['#collapsible'] = FALSE;
     $form['help']['#collapsed'] = FALSE;
   }
-  
-  $form['set_active_menu'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Override menu path'),
-    '#description' => t("If checked, the node's default location in the menu hierarchy will be forced to match the breadcrumb trail. This does not automatically add an entry for the node to existing menus, but will cause those menus to be displayed as 'active' when the node in question is viewed."),
-    '#return_value' => TRUE,
-    '#default_value' => $bid ? $breadcrumb->set_active_menu : FALSE
+
+  $form['help2'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Special identifiers'),
+    '#description' => t("The following identifiers can be used to achieve a special behavior. Identifiers should be added to the paths area in the following format:  identifier|path.<br />For example: %pathauto_id|[ogname-raw]", array('%pathauto_id' => '<pathauto>')),
   );
-  
+  $form['help2']['tokens'] = array('#value' => theme('custom_breadcrumbs_help_identifiers'), );
 
   $form['buttons']['submit'] = array(
     '#type' => 'submit',
@@ -117,10 +125,11 @@ function custom_breadcrumbs_form() {
 }
 
 function custom_breadcrumbs_form_validate($form, &$form_state) {
-  $path_count = count(explode("\n", $form_state['values']['paths']));
-  $title_count = count(explode("\n", $form_state['values']['titles']));
+  $path_count = count(explode("\n", trim($form_state['values']['paths'])));
+  $title_count = count(explode("\n", trim($form_state['values']['titles'])));
   if ($title_count != $path_count) {
-    form_set_error(t('Every link path must have a matching title. There are !paths paths, and !titles titles.', array('!paths' => $path_count, '!titles' => $title_count)));
+    $error_field = ($title_count < $path_count) ? 'titles' : 'paths';
+    form_set_error($error_field, t('Every link path must have a matching title. There are !paths paths, and !titles titles.', array('!paths' => $path_count, '!titles' => $title_count)));
   }
 }
 

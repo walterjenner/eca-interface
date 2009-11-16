@@ -44,7 +44,7 @@ $(document).ready(function(){
    });
    
    //EXPAND / COLLAPSE
-    $(".expand-button").toggle( 
+    /*$(".expand-button").toggle( 
       function(){
         $(this).parent().height( $(this).parent().data("initialHeight") );
         $(this).css("background-position", "0px -60px");
@@ -70,7 +70,7 @@ $(document).ready(function(){
       else {
         $(this).children(".expand-button").hide();
       }       
-    });
+    });*/
     
     //DIALOG
     $('a.dialog-link').click( function(){
@@ -92,12 +92,15 @@ $(document).ready(function(){
         loader.remove();
         $('#page').prepend(data);          
         $('#dialog-box').dialog({
-          modal: true, title: '', show: 'clip', close: removeDialog, width: 450
+          modal: true, title: '', show: 'clip', close: removeDialog, width: 550
         });        
       }      
       
       //start the ajax request
       $.ajax({ type: 'POST', url: this.href, dataType: 'html', success: pageLoaded, data: 'js=1' });
+      
+      //add class to fake :visited state for this link - problem: reload
+      //$(this).addClass("visited");
       
       //prevent 'normal' link behaviour
       return false;      
