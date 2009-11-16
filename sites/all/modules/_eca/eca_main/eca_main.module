@@ -3,7 +3,7 @@
 
 //NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
 
-define(MAX_LINK_TEXT_LENGTH, 20);
+define(MAX_LINK_TEXT_LENGTH, 30);
 
 /**
  * Implementation of hook_help().
@@ -62,7 +62,9 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
     $block[4]["info"] = t('Part of Series Block');
     $block[4]["cache"] = BLOCK_CACHE_PER_PAGE;
     $block[5]["info"] = t('Part of Collective Block');  
-    $block[5]["cache"] = BLOCK_CACHE_PER_PAGE;     
+    $block[5]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[6]["info"] = t('Artworks owned Block');  
+    $block[6]["cache"] = BLOCK_CACHE_PER_PAGE;         
         
     return $block;
   }
@@ -84,7 +86,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
               $numRes++;
               $block['content'] .= '<span class="tag tag-agent">' . l($agent->first_name . ' ' . $agent->last_name, 'node/'.$agent->nid, array('attributes' => array('title' => $agent->first_name . ' ' . $agent->last_name)) ) . '&nbsp;</span>';  
             }                        
-            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>View all</span>', "node/2497", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
+            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>Open Overview</span>', "node/2497", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
           }
           break;
         // ARTWORKS BLOCK
@@ -116,7 +118,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
           }
           //collections
           if($node->type == 'exhibition'){
-            $selectColl = "SELECT ca_c.collection_id, ca_c.name FROM compartdb.collection ca_c WHERE ca_c.collection_id IN (SELECT ca_sc.collection_id FROM compartdb.showing_collection ca_sc WHERE ca_sc.exhibition_id = $node->exhibition_id)";
+            $selectColl = "SELECT ca_c.collection_id, ca_c.name FROM compartdb.collection ca_c WHERE ca_c.collection_id IN (SELECT ca_sc.collection_id FROM compartdb.showing_collection ca_sc WHERE ca_sc.exhibition_id = $node->exhibition_id) ORDER BY ca_c.name";
             $resultColl = db_query($selectColl);
             $first = true;
             while ($collection = db_fetch_object($resultColl)) {
@@ -125,10 +127,13 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 $block['content'] .= '<h4>Collections shown:</h4>';
               }
               $numRes ++;              
-              $block['content'] .= '<span class="tag tag-artwork">' . l(_trim_length($collection->name), 'collection/'.$collection->collection_id, array('attributes' => array('title' => $collection->name, 'class' => 'dialog-link'))) . '</span>';
+              $block['content'] .= return_collection( $collection );
             }              
           }
-          $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>View all</span>', $moreLinkHref, array('query'=>$query, 'html' => true) ) . '</div>';
+          $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>Open Overview</span>', $moreLinkHref, array('query'=>$query, 'html' => true) ) . '</div>';
+          
+          if( $node->type == 'agent' )
+            $block['content'] .= '<a href="../artwork_list2/' . $node->agent_id .'">Gallery</a>';
                               
           break;
           //EXHIBITION BLOCK
@@ -155,7 +160,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
             }
             
             if($node->type=="agent")
-              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>View all</span>', "exhibitions/", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
+              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>Open Overview</span>', "exhibitions/", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
                                           
             break;
           //PUBLICATIONS BLOCK
@@ -169,7 +174,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 $numRes++;
                 $block['content'] .= '<span class="tag tag-publication">' . l( _trim_length($dataPub->title) , 'publication/'.$dataPub->publication_id, array( 'attributes' => array('title' => $dataPub->title, 'class' => 'dialog-link') )) . '</span>';
               }
-              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>View all</span>', 'publications/', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
+              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>Open Overview</span>', 'publications/', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
             }
             break;
             //'PART OF SERIES' BLOCK
@@ -179,7 +184,8 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 $resultSer = db_query("SELECT ca_as.name, ca_as.description FROM compartdb.artwork_series ca_as WHERE ca_as.artwork_series_id = $node->artwork_series_id ORDER BY ca_as.name");
                 if ($series = db_fetch_object($resultSer)) {
                   $block['content'] .= '<h3>'. $series->name . '</h3>';
-                  $block['content'] .= '<p>'. $series->description . '</p>';
+                  if( $series->description != '' )
+                    $block['content'] .= _textile_process(array( 1 => $series->description ));
                 }                
                 $resultWorks = db_query("SELECT ca_a.artwork_id, ca_a.title, a.nid FROM compartdb.artwork ca_a LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id WHERE ca_a.artwork_series_id = $node->artwork_series_id ORDER BY ca_a.title");
                 $numRes = 0;
@@ -189,21 +195,22 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                      $block['content'] .= '<h4>'. t('All works from this series') . '</h4>'; 
                   }
                   if($node->nid == $artwork->nid)
-                    $block['content'] .= '<span class="tag tag-artwork-active">' . _trim_length($artwork->title) . '</span>';
+                     $block['content'] .= return_artwork( $artwork, false );
                   else
-                    $block['content'] .= '<span class="tag tag-artwork">' . l( _trim_length($artwork->title) , 'node/'.$artwork->nid, array( 'attributes' => array('title' => $artwork->title) )) . '</span>';
+                     $block['content'] .= return_artwork( $artwork );
                 }
               }
               break;
-              //'PART OF COLLECTIVE' BLOCK
+            //'PART OF COLLECTIVE' BLOCK
             case 5:
               if($node->type == 'agent') {
                 $block['title'] = t('Part of Collective');
                 //get collective, of which this artist is part of
                 $resultColl = db_query("SELECT ca_c.name, ca_c.description, ca_c.collective_id FROM compartdb.collective ca_c WHERE ca_c.collective_id IN (SELECT collective_id FROM compartdb.agent_is_part_of WHERE agent_id = $node->agent_id) ORDER BY ca_c.name");
                 while ($collective = db_fetch_object($resultColl)) {
-                  $block['content'] .= '<h3>'. $collective->name . '</h3>';
-                  $block['content'] .= '<p>'. _textile_process(array( 1 => $collective->description)) . '</p>';
+                  $block['content'] .= '<h4>'. $collective->name . '</h4>';
+                  if( $collective->description != '' )
+                    $block['content'] .= _textile_process(array( 1 => $collective->description));
                   
                   //get all artists from this collective
                   $resultA = db_query("SELECT ca_a.first_name, ca_a.last_name, a.nid FROM compartdb.agent_is_part_of ca_aipo LEFT JOIN compartdb.agent ca_a ON ca_aipo.agent_id = ca_a.agent_id LEFT JOIN agent a ON ca_a.agent_id = a.agent_id WHERE ca_aipo.collective_id = $collective->collective_id ORDER BY ca_a.last_name");
@@ -211,7 +218,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                   while ($artist = db_fetch_object($resultA)) {
                     $numRes++;
                     if($numRes==1){
-                       $block['content'] .= '<h4>'. t('All members') . '</h4>'; 
+                       $block['content'] .= '<span class="label">'. t('All members') . ':&nbsp;</span>'; 
                     }  
                     if($node->nid == $artist->nid)
                       $block['content'] .= '<span class="tag tag-agent-active">' .  _trim_length($artist->first_name . ' ' . $artist->last_name) . '</span>';
@@ -221,6 +228,42 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 }
               }
               break;
+            //'ARTWORKS OWNED' BLOCK
+            case 6:
+              if($node->type == 'agent') {
+                $block['title'] = t('Artworks owned');
+                $selArtworks = "SELECT ca_a.artwork_id, ca_a.title, a.nid 
+                                FROM compartdb.artwork ca_a 
+                                LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id 
+                                WHERE ca_a.artwork_id IN 
+                                  (SELECT artwork_id FROM compartdb.artwork_ownership ca_ao WHERE ca_ao.agent_id = $node->agent_id) 
+                                ORDER BY ca_a.title";
+                
+                $resArtworks = db_query( $selArtworks );
+                $numRes = 0;
+                while( $artwork = db_fetch_object( $resArtworks ) ){
+                  $numRes++;
+                  $block['content'] .= return_artwork( $artwork );  
+                }
+                
+                $selCollections = "SELECT ca_c.collection_id, ca_c.name 
+                                    FROM compartdb.collection ca_c 
+                                    WHERE ca_c.collection_id IN 
+                                      (SELECT ca_co.collection_id FROM compartdb.collection_ownership ca_co WHERE ca_co.agent_id = $node->agent_id)
+                                    ORDER BY ca_c.name";
+                                    
+                $resCollections = db_query( $selCollections );
+                $numRes2 = 0;
+                while( $collection = db_fetch_object( $resCollections ) ){
+                  if($numRes2 == 0 )
+                    $block['content'] .= '<h4>' . t(Collections) . '</h4>';
+                   
+                  $numRes2++; 
+                  $block['content'] .= return_collection( $collection );   
+                }                    
+                $numRes += $numRes2;                
+              }
+            break;
       }       
       if($numRes == 0)
         $block = 0; 
@@ -331,6 +374,25 @@ function eca_main_views_api(){
     'api' => 2
   );
 }
+
+function return_collection( $collection ){
+  $output = '';
+  $output .= '<span class="tag tag-artwork">'; 
+  $output .= l(  _trim_length($collection->name), 
+                'collection/'.$collection->collection_id, 
+                 array('attributes' => array('title' => $collection->name, 'class' => 'dialog-link')));
+  $output .= '</span>';
+  return $output;
+}
+
+function return_artwork( $node, $link = true ){
+  $output = '';
+  if($link)
+    $output .= '<span class="tag tag-artwork">' . l( _trim_length($node->title) , 'node/'.$node->nid, array( 'attributes' => array('title' => $node->title) )) . '</span>';
+  else
+    $output .= '<span class="tag tag-artwork-active">' . _trim_length($node->title) . '</span>';
+  return $output;
+} 
 
 function _trim_length($linkText){
   if( strlen($linkText) >= MAX_LINK_TEXT_LENGTH )

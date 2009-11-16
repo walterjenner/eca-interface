@@ -3,9 +3,9 @@ name = Custom Breadcrumbs
 description = Allows administrators to define custom breadcrumb trails for each node type.
 core = 6.x
 
-; Information added by drupal.org packaging script on 2008-10-16
-version = "6.x-1.4"
+; Information added by drupal.org packaging script on 2009-09-30
+version = "6.x-1.5"
 core = "6.x"
 project = "custom_breadcrumbs"
-datestamp = "1224181814"
+datestamp = "1254352214"
 

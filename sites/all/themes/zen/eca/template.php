@@ -164,7 +164,10 @@ function eca_preprocess_node(&$vars) {
   if (function_exists('comment_render') && !empty($vars['node']) && $vars['node']->comment) {
     $arg2 = arg(2);
     $vars['comments'] .= comment_render($vars['node'], ($arg2 && is_numeric($arg2) ? $arg2 : NULL));
-   }  
+   } 
+   
+   //make the content_bottom block available in the node templates
+   $vars['content_bottom'] = theme('blocks', 'content_bottom'); 
 }
 
 /**

@@ -39,6 +39,9 @@ if($teaser){
           <?php if($node->biography!=''): ?>
             <li><a href="#biography-tab" title="View biography of this person." rel="address:/biography-tab"><span>Biography</span></a></li>
           <?php endif; ?>
+          <?php if ($content_bottom): ?> 
+            <li><a href="#related-tab" title="View related items of this person." rel="address:/related-tab"><span>Related Items</span></a></li>
+          <?php endif; ?>
           <?php if(count($node->media)): ?>
             <li><a href="#media-tab" title="View pictures of this person." rel="address:/media-tab"><span>Media (<?php print count($node->media); ?>)</span></a></li>
           <?php endif; ?>
@@ -48,23 +51,38 @@ if($teaser){
       <div class="hr-grey"></div>
       <div id="info-tab" class="ui-tabs-panel">
         <?php
-          print("<p>Content Author: $name</p>");
-          print_value($node->birth_date, "Birthday");
-          print_value($node->death_date, "Died on");
-          print_value($node->pseudonym, "Pseudonym");
-          print_value( _textile_process(array(1 =>$node->description)), "Description");
-          print_value($node->email, "Email (NOTE: remove?)");
-          print_value( l($node->url, $node->url ), "Webpage");  
-          print_awards($node->awards);
-          print_value( return_institutions($node->institutions), "Member of institution(s)" );
+          if(count($node->media)){
+            $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
+            print "<div class=\"agent-image\">$mediaMarkup</div>\n";
+          }
+          
+          print_value($node->birth_date . return_location( $node->ca_l_city, $node->ca_l_country ), "Born");
+          print_value($node->death_date . return_location( $node->ca_dl_city, $node->ca_dl_country ), "Died");
+          print_value($node->pseudonym, "Pseudonymous");
+          print_value( _textile_process(array(1 =>$node->description)), "Description", true);
+          //print_value($node->email, "Email (NOTE: remove?)");
+          if($node->url)
+            print_value( l($node->url, 'http://'.$node->url ), 'Webpage');  
+          print_value( return_awards($node->awards), 'Award(s)');
+          print_value( return_institutions($node->institutions), 'Member of institution(s)' );  
+          print_value( return_publications($node->citations), 'Cited in');
+          print_value( return_collectives($node->collectives), 'Part of collective(s)');
+          print_value( return_exhibitions($node->exhibitions), 'Exhibitions organized');              
         ?>
-        <h3>Assigned Tags</h3> 
-          <?php print $node->content['community_tags']['#value']; ?>
+        
+              
+                 
       </div>  
       
       <?php if($node->biography!=''): ?>
         <div id="biography-tab" class="ui-tabs-panel">
           <?php print _textile_process(array(1 =>$node->biography)); ?>
+        </div>
+      <?php endif; ?>
+      
+      <?php if($content_bottom): ?>
+        <div id="related-tab">
+            <?php print $content_bottom; ?>    
         </div>
       <?php endif; ?>
       
@@ -87,7 +105,10 @@ if($teaser){
               print $links;      
           ?>
           <div class="clear-both">&nbsp;</div> 
-      </div>
+      </div> 
+      
+      <div class="node-submitted">Last change by <?php print($name); ?> on <?php print(format_date($node->last_change, 'small')); ?></div>  
+          
     </div>
   </div>
     

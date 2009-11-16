@@ -178,7 +178,7 @@ function artwork_load($node) {
   $selectArtwork = "SELECT a.artwork_id, a.nid, 
                     ca_a.title, ca_a.creation_location_id, ca_a.artwork_series_id, ca_a.artwork_id as ca_a_artwork_id,
                     ca_a.algorithm_id, ca_a.artwork_type_id, ca_a.creation_year, ca_a.description, ca_a.material, 
-                    ca_a.rights, ca_al.name as ca_al_name, ca_at.name as ca_at_name,
+                    ca_a.rights, UNIX_TIMESTAMP(ca_a.last_change) as last_change, ca_al.name as ca_al_name, ca_at.name as ca_at_name,
                     ca_l.city as ca_l_city, ca_l.country as ca_l_country, ca_l.description as ca_l_description
                     FROM artwork a 
                     LEFT JOIN compartdb.artwork ca_a 
@@ -255,6 +255,25 @@ function artwork_load($node) {
     $resCollections = db_query($selectCollections);
     while( $collection = db_fetch_object($resCollections) ) {
       array_push($artwork->collections, $collection);  
+    }
+    
+    //everything in the content array will be indexed for the search
+    $artwork->content = array();
+    $artwork->content['description'] = array(
+      '#value' => eca_add_space($artwork->description),
+      '#weight' => 0,
+    );
+    if(count($artwork->artists)){   
+      $artwork->content['artists'] = array(
+        '#value' => 'Artist(s):' . eca_add_space(return_agents_by_node($artwork->artists)),
+        '#weight' => 0,
+      );
+    }
+    if(!isEmpty($artwork->ca_l_city) || !isEmpty($artwork->ca_l_country)){
+      $artwork->content['location'] = array(
+        '#value' => 'Created in' . eca_add_space($artwork->ca_l_city . ' ' . $artwork->ca_l_country),
+        '#weight' => 0,
+      );
     }
     
     return $artwork;

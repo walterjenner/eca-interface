@@ -36,9 +36,9 @@ class views_plugin_row_fields_exhibit extends views_plugin_row {
         $value = $field->advanced_render($row); //WALTER advanced_render instead of render
       }
 
-      if (!empty($value)) {
+      //if (!empty($value)) { //WALTER, then empty values are rendered as '0'
         $output[$id] = $value;
-      }
+      //}
     }
 
     return $output;

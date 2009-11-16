@@ -29,11 +29,7 @@ if($teaser){
 } else { 
   
   //trim title
-  if(strlen($node->title) > 40 + 3 )
-    $title = substr(check_plain($node->title), 0, 43) . '...';
-  else
-    $title = $node->title;
-
+ $title = _filter_url_trim($node->title, URL_LENGTH);
 
 ?>
 
@@ -43,6 +39,9 @@ if($teaser){
       <?php print flag_create_link('bookmarks', $node->nid);  ?>   
       <ul>
           <li><a href="#info-tab" title="View basic infos about this exhibition." rel="address:/"><span>Info</span></a></li>
+          <?php if($content_bottom): ?>
+            <li><a href="#related-tab" title="View related items of this exhibition." rel="address:/related-tab"><span>Related Items</span></a></li>
+          <?php endif; ?>
           <?php if(count($node->media)): ?>
             <li><a href="#media-tab" title="View pictures of this exhibition." rel="address:/media-tab"><span>Media (<?php print count($node->media); ?>)</span></a></li>
           <?php endif; ?>
@@ -56,21 +55,26 @@ if($teaser){
           if(count($node->media)){
             if( eca_is_image( $node->media[0] ) ){
               $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
-              print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
+              print "<div class=\"agent-image\">$mediaMarkup</div>\n";
             }  
           }          
-           print("<p>Content Author: $name</p>");
-          print_value($node->title, "Full title"); 
+          if(strlen($title) < strlen($node->title) )
+            print_value($node->title, "Full title"); 
           print_value( _textile_process(array(1 =>$node->description)), "Description");
           
           print_value( return_institutions($node->institutions), 'Shown at');
           print_value( return_publications($node->citations), 'Cited in');
-           print_value( return_organizers($node->organizers), 'Organizer(s)');
+          print_value( return_organizers($node->organizers), 'Organizer(s)');
           
         ?>
-        <h3>Assigned Tags</h3> 
-          <?php print $node->content['community_tags']['#value']; ?>
+        
       </div>  
+      
+      <?php if($content_bottom): ?>
+        <div id="related-tab">
+            <?php print $content_bottom; ?>    
+        </div>
+      <?php endif; ?>
       
       <?php if(count($node->media)): ?>      
         <div id="media-tab" class="ui-tabs-panel">
@@ -92,6 +96,9 @@ if($teaser){
           ?>
           <div class="clear-both">&nbsp;</div> 
       </div>
+      
+      <div class="node-submitted">Last change by <?php print($name); ?> on <?php print(format_date($node->last_change, 'small')); ?></div>
+      
     </div>
   </div>
     

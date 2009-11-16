@@ -57,6 +57,11 @@
 <div class="search-result clear-both search-result-<?php print $info_split['type']; ?>">
   <div class="node-type"><span><?php print $info_split['type']; ?></span></div> 
   <h2><a href="<?php print $url; ?>"><?php print $title; ?></a></h2>
+  
+  <?php if ($snippet) : ?>
+    <p class="search-snippet"><?php print $snippet; ?></p>
+  <?php endif; ?>
+  
   <div class="clear-both"></div>
 
 </div>

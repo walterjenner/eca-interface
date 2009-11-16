@@ -19,20 +19,51 @@ function eca_main_publication( $id = 0 ){
   
   if( !$print_as_page )
     $output .= '<div id="dialog-box">';
-    
-  $output .= "<h3>Publication</h3>";
-  foreach($item as $key => $field){
-    if( $key == 'authors' )
-      $output .= return_value( return_agents($field) , 'Author(s)' );
-    else if( $key == 'media' ){
-      $output .= 'Files:';
-      foreach($field as $mediafile){
-        $output .= $mediafile->file_name . '.' . $mediafile->format . ', ';
-      }
-    }
+  
+  if( !$print_as_page )
+    $output .= '<h2>' . $item->title . '</h2>';
+  
+  if(isEmpty($item->type_name))
+    $output .= "<h3>Publication</h3>";
+  else
+    $output .= "<h3>$item->type_name</h3>";
+  
+  if(count($item->media) && eca_is_image($item->media[0]) ){
+    $mediaMarkup = eca_get_media_markup($item->media[0], "medium");
+    $output .= "<div class=\"agent-image\">$mediaMarkup</div>\n";
+  }
+  
+  $output .= return_value( return_agents($item->authors) , 'Author(s)' );
+  $output .= return_value( $item->description , 'Description', true );
+  
+  $output .= return_value( $item->year , 'Year'); //TODO month sometimes is also there
+  $output .= return_value( $item->address , 'Place');
+  $output .= return_value( $item->publisher , 'Publisher');      
+  $output .= return_value( $item->isbn , 'ISBN');     
+  
+  if(!isEmpty($item->url)){
+    if(!isEmpty($item->last_seen))
+      $output .=  return_value( l($item->url, $item->url) . ' (retrieved: ' . $item->last_seen . ')' , 'URL');
     else
-      $output .= return_value( $field, $key);
-  }  
+      $output .= return_value( l($item->url, $item->url) , 'URL');
+  }
+  $output .= return_value( $item->book_title , 'Book title');
+  $output .= return_value( $item->keywords , 'Keywords');
+  $output .= return_value( $item->journal , 'Journal');  
+  $output .= return_value( $item->volume , 'Volume');
+  $output .= return_value( $item->edition , 'Edition');
+  $output .= return_value( $item->on_pages , 'On pages');            
+  $output .= return_value( $item->nr_pages , 'Pages');
+  $output .= return_value( $item->format , 'Format');          
+ 
+  $output .= return_value( return_media_links($item->media), 'File(s)' );
+  
+  if( !$print_as_page ){
+    global $base_path;
+    global $base_root;
+    $url = $base_root . $base_path . 'publication/' .$item->publication_id;
+    $output .= '<div class="node-submitted">URL for this page: ' . l($url, $url) .'</div>';
+  }
   
   if( !$print_as_page )
     $output .= '</div>';
@@ -62,18 +93,27 @@ function eca_main_collective( $id = 0 ){
   if(!$print_as_page)
     $output .= '<div id="dialog-box">';
   
-  foreach($item as $key => $field){
-    if($key == 'agents')
-      $output .= return_value( return_agents( $item['agents'] ), 'Members' );
-    else
-      $output .= return_value( $field, $key);
-  } 
+  if( !$print_as_page ){
+    $output .= "<h2>$item->name</h2>";
+  }
+  
+  $output .= '<h3>Collective</h3>';
+  
+  $output .= return_value($item->description, 'Description');
+  $output .= return_value(return_agents($item->agents),'Members');  
+  
+  if( !$print_as_page ){
+    global $base_path;
+    global $base_root;
+    $url = $base_root . $base_path . 'collective/' .$item->collective_id;
+    $output .= '<div class="node-submitted">URL for this page: ' . l($url, $url) .'</div>';
+  }
   
   if( !$print_as_page )
     $output .= '</div>';
   
   if(empty($_POST['js'])){
-    drupal_set_title($item['name']);  
+    drupal_set_title($item->name);  
     print theme('page', $output);
   }
   else{
@@ -97,11 +137,20 @@ function eca_main_award( $id = 0 ){
   if( !$print_as_page )
     $output .= '<div id="dialog-box">';
 
-  foreach($item as $key => $field){
-    if($key == 'agents')
-      $output .= return_value( return_agents( $item['agents'] ), 'Winners' );
-    else
-      $output .= return_value( $field, $key);
+  if( !$print_as_page ){
+    $output .= "<h2>$item->title</h2>";
+  }
+  
+  $output .= '<h3>Award</h3>';
+  
+  $output .= return_value($item->description, 'Description');
+  $output .= return_value(return_agents($item->agents),'Winners');  
+  
+  if( !$print_as_page ){
+    global $base_path;
+    global $base_root;
+    $url = $base_root . $base_path . 'award/' .$item->award_id;
+    $output .= '<div class="node-submitted">URL for this page: ' . l($url, $url) .'</div>';
   }
   
   if( !$print_as_page )
@@ -109,7 +158,7 @@ function eca_main_award( $id = 0 ){
   
   //Check if it is a js call or not  
   if(empty($_POST['js'])){
-    drupal_set_title($item['title']);
+    drupal_set_title($item->title);
     print theme('page', $output);
   }
   else{
@@ -130,23 +179,34 @@ function eca_main_institution( $id = 0 ){
   
   $print_as_page = empty($_POST['js']);
   
-  if(!$print_as_page)
+  if(!$print_as_page){
     $output .= '<div id="dialog-box">';
-  
-  foreach($item as $key => $field){
-    if($key == 'happenings')
-      $output .= return_value( return_happenings( $field ), "Happening(s)" ); 
-    else if($key == 'exhibitions')
-      $output .= return_value( return_happenings( $field ), "Exhibition(s) organized" );
-    else if($key == 'artworks')
-      $output .= return_value( return_artworks( $field ), "Artwork(s) owned" );  
-    else if($key == 'collections')
-      $output .= return_value( return_collections( $field ), "Collection(s) owned" );
-    else if($key == 'citations')
-      $output .= return_value( return_publications( $field ), "Cited in" );
-    else
-      $output .= return_value( $field, $key);
+    $output .= "<h2>$item->name</h2>";
   }
+  if(isEmpty($item->it_name))
+    $output .= "<h3>Publication</h3>";
+  else
+    $output .= "<h3>$item->it_name</h3>";
+  
+  $output .= return_value($item->description, 'Description');
+  if(!isEmpty($item->url))
+    $output .= return_value(l($item->url,'http://' . $item->url), 'URL');
+  $output .= return_value(return_address($item->street, $item->zip, $item->city, $item->country), 'Address');
+  
+  $output .= return_value( return_happenings( $item->happenings ), "Happening(s)" );
+  $output .= return_value( return_happenings( $item->exhibitions ), "Exhibition(s) organized" );
+  $output .= return_value( return_artworks( $item->artworks ), "Artwork(s) owned" );
+  $output .= return_value( return_collections( $item->collections ), "Collection(s) owned" );
+  $output .= return_value( return_publications( $item->citations ), "Cited in" );
+  
+  if( !$print_as_page ){
+    global $base_path;
+    global $base_root;
+    $url = $base_root . $base_path . 'institution/' .$item->institution_id;
+    $output .= '<div class="node-submitted">URL for this page: ' . l($url, $url) .'</div>';
+  }
+  
+  //print_r($item);
   
   if(!$print_as_page)
     $output .= '</div>';
@@ -168,10 +228,28 @@ function eca_main_algorithm( $id = 0 ){
 
   $item = _load_algorithm($id);
   
-  $output .= '<div id="dialog-box">';
+  $print_as_page = empty($_POST['js']);
   
-  foreach($item as $key => $field){
+  if(!$print_as_page){
+    $output .= '<div id="dialog-box">';
+    $output .= "<h2>$item->ca_al_name</h2>";
+  }
+  
+  $output .= "<h3>Algorithm</h3>";
+  
+  $output .= return_value( $item->ca_al_description, 'Description' );
+  $output .= return_value( $item->ca_lang_name . ' (' . $item->ca_lang_description .')', 'Programming Language' );
+  $output .= return_value( $item->ca_al_code, 'Code', true, "code" );
+  
+  /*foreach($item as $key => $field){
     $output .= return_value( $field, $key);
+  }*/
+  
+  if( !$print_as_page ){
+    global $base_path;
+    global $base_root;
+    $url = $base_root . $base_path . 'algorithm/' .$item->algorithm_id;
+    $output .= '<div class="node-submitted">URL for this page: ' . l($url, $url) .'</div>';
   }
   
   $output .= '</div>';
@@ -209,6 +287,13 @@ function eca_main_collection( $id = 0 ){
       $output .= return_value( return_exhibitions( $field ), "Shown at(s)" );
     else
       $output .= return_value( $field, $key);
+  }
+  
+  if( !$print_as_page ){
+    global $base_path;
+    global $base_root;
+    $url = $base_root . $base_path . 'collection/' .$item->collection_id;
+    $output .= '<div class="node-submitted">URL for this page: ' . l($url, $url) .'</div>';
   }
   
   if(!$print_as_page)
@@ -310,10 +395,10 @@ function _load_collective( $id ){
     return $cached->data;
   }
   
-  $collective = array();
-  $collective['agents'] = array();
+  $collective = new stdClass;
+  $collective->agents = array();
   
-  $select = "SELECT c.name, c.description, a.last_name, a.first_name, aipa.agent_id
+  $select = "SELECT c.collective_id, c.name, c.description, a.last_name, a.first_name, aipa.agent_id
              FROM compartdb.collective c
              LEFT JOIN compartdb.agent_is_part_of aipa
              ON c.collective_id = aipa.collective_id
@@ -323,9 +408,10 @@ function _load_collective( $id ){
 
   $res = db_query($select);
   while( $agent = db_fetch_object($res) ){
-    $collective['name'] = $agent->name;
-    $collective['description'] = $agent->description; 
-    array_push($collective['agents'], $agent);
+    $collective->collective_id = $agent->collective_id;
+    $collective->name = $agent->name;
+    $collective->description = $agent->description; 
+    array_push($collective->agents, $agent);
   }
   
   cache_set("collective:$id", $collective ,'cache_eca', time() + MIN_CACHE_LIFETIME);
@@ -339,11 +425,11 @@ function _load_award( $id ){
   if ($cached = cache_get("award:$id", 'cache_eca')) {
     return $cached->data;
   }
-  
-  $award = array();
-  $award['agents'] = array();
-             
-  $select = "SELECT aw.title, r.at_date, ag.last_name, ag.first_name, r.agent_id                
+    
+  $award = new stdClass;
+  $award->agents = array();
+               
+  $select = "SELECT aw.award_id, aw.title, aw.description, r.at_date, ag.last_name, ag.first_name, r.agent_id                
              FROM compartdb.award aw
              LEFT JOIN compartdb.receiving r
              ON aw.award_id = r.award_id
@@ -352,9 +438,13 @@ function _load_award( $id ){
              WHERE aw.award_id = $id";
 
   $res = db_query($select);
+    
   while( $agent = db_fetch_object($res) ){
-    $award['title'] = $agent->title;
-    array_push($award['agents'], $agent);
+    //NOTE: slightly stoopid. but then i just need on SELECT
+    $award->award_id = $agent->award_id;
+    $award->title = $agent->title;
+    $award->description = $agent->description;
+    array_push($award->agents, $agent);
   }
   
   cache_set("award:$id", $award ,'cache_eca', time() + MIN_CACHE_LIFETIME);
@@ -369,7 +459,7 @@ function _load_institution( $id ){
     return $cached->data;
   }
   
-  $select = "SELECT i.name, i.url, i.email, i.description, it.name it_name, a.street, a.zip, a.pobox, a.additional, l.city, l.country            
+  $select = "SELECT i.institution_id, i.name, i.url, i.email, i.description, it.name it_name, a.street, a.zip, a.pobox, a.additional, l.city, l.country            
              FROM compartdb.institution i
              LEFT JOIN compartdb.institution_type it
              ON i.institution_type_id = it.institution_type_id
@@ -441,7 +531,7 @@ function _load_institution( $id ){
         array_push( $institution->citations, $citation );
       }
       
-      cache_set("institution:$id", $institution ,'cache_eca', time() + MIN_CACHE_LIFETIME);
+      cache_set("institution:$id", $institution , 'cache_eca', time() + MIN_CACHE_LIFETIME);
       
       return $institution;
    }
@@ -454,7 +544,7 @@ function _load_algorithm( $id ){
     return $cached->data;
   }
   
-  $select = "SELECT ca_al.name as ca_al_name, ca_al.description as ca_al_description, ca_al.code as ca_al_code, 
+  $select = "SELECT ca_al.algorithm_id, ca_al.name as ca_al_name, ca_al.description as ca_al_description, ca_al.code as ca_al_code, 
               ca_lang.name as ca_lang_name, ca_lang.description as ca_lang_description
               FROM compartdb.algorithm ca_al
               LEFT JOIN compartdb.language_type ca_lang
@@ -473,7 +563,7 @@ function _load_collection( $id ){
     return $cached->data;
   }
   
-  $select = "SELECT name, description FROM compartdb.collection WHERE collection_id = $id";
+  $select = "SELECT collection_id, name, description FROM compartdb.collection WHERE collection_id = $id";
   
   $res = db_query($select);
   if( $collection = db_fetch_object($res) ){

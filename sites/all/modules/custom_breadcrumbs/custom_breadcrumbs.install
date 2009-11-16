@@ -1,5 +1,10 @@
 <?php
-// $Id: custom_breadcrumbs.install,v 1.3.2.2 2008/09/19 01:00:12 eaton Exp $
+// $Id: custom_breadcrumbs.install,v 1.3.2.7 2009/09/30 12:12:11 mgn Exp $
+
+/**
+ * @file
+ * Install file for the custom_breadcrumbs module.
+ */
 
 /**
  * Implementation of hook_install().
@@ -10,46 +15,39 @@ function custom_breadcrumbs_install() {
 
 function custom_breadcrumbs_schema() {
   $schema['custom_breadcrumb'] = array(
-    'description' => t('Stores custom breadcrumb trail overrides.'),
+    'description' => 'Stores custom breadcrumb trail overrides.',
     'fields' => array(
       'bid' => array(
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('Unique identifier for the {custom_breadcrumb}.'),
+        'description' => 'Unique identifier for the {custom_breadcrumb}.',
       ),
       'titles' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("A return-delimited list of titles for the breadcrumb links.")
+        'description' => 'A return-delimited list of titles for the breadcrumb links.',
       ),
       'paths' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => FALSE,
-        'description' => t("A return-delimited list of url paths for the breadcrumb links."),
+        'description' => 'A return-delimited list of url paths for the breadcrumb links.',
       ),
       'visibility_php' => array(
         'type' => 'text',
         'not null' => TRUE,
         'size' => 'medium',
-        'default' => '',
-        'description' => t('An optional PHP snippet to control the {custom_breadcrumb} visibility.'),
+        'description' => 'An optional PHP snippet to control the {custom_breadcrumb} visibility.',
       ),
       'node_type' => array(
         'type' => 'varchar',
         'length' => 64,
         'not null' => FALSE,
         'default' => 'AND',
-        'description' => t("Node types the {custom_breadcrumb} should apply to."),
-      ),
-      'set_active_menu' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 1,
-        'description' => t("Whether this {custom_breadcrumb} should override the node's default menu location."),
+        'description' => 'Node types the {custom_breadcrumb} should apply to.',
       ),
     ),
     'primary key' => array('bid'),
@@ -103,19 +101,26 @@ function custom_breadcrumbs_update_2() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {custom_breadcrumb} ADD visibility_php text");
+      $ret[] = update_sql("ALTER TABLE {custom_breadcrumb} ADD visibility_php text NOT NULL default ''");
       break;
     case 'pgsql':
-      db_add_column($ret, 'custom_breadcrumb', 'visibility_php', 'text', array('default' => ''));
+      db_add_column($ret, 'custom_breadcrumb', 'visibility_php', 'text', array('not null' => TRUE, 'default' => "''"));
       break;
   }
   return $ret;
 }
 
-// Add the menu flag
+// Add the menu flag.
 function custom_breadcrumbs_update_6001() {
   $ret = array();
-  db_add_column($ret, 'custom_breadcrumb', 'set_active_menu', 'int', array('default' => 1, 'NOT NULL' => TRUE));
+  db_add_field($ret, 'custom_breadcrumb', 'set_active_menu', array('type' => 'int', 'default' => 1, 'NOT NULL' => TRUE));
+  return $ret;
+}
+
+// Remove the menu flag.
+function custom_breadcrumbs_update_6101() {
+  $ret = array();
+  db_drop_field($ret, 'custom_breadcrumb', 'set_active_menu');
   return $ret;
 }
 

@@ -25,18 +25,21 @@ p {
 }
 
 a {
-	color: #0071BC;
+	/*color: #0071BC;*/
+ color: #000;
+ text-decoration: none;
+ 
 }
 
 a:hover {
-  color: #2E3192;
+  /*color: #2E3192;*/
 }
 
 a:active {
-  color: #2E3192;
+  /*color: #2E3192;*/
 }
 
-a:visited {
+a:visited, a.visited {
   color: #666;
 }
 

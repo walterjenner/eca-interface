@@ -114,18 +114,26 @@
         <?php endif; ?>
 
         <div id="content-area">
-          <?php print $content; ?>
+          <?php print $content; ?>          
+                   
+          <?php 
+          // if there is content _bottom, and the node type none of the listed, print. 
+          //(in the listed node-type $content_bottom is output in the node.tpl.php)
+          if( $content_bottom && !(strpos($body_classes, 'node-type-agent') 
+                    || strpos($body_classes, 'node-type-exhibition') 
+                    || strpos($body_classes, 'node-type-artwork')) ): ?>    
+            
+            <div id="content-bottom" class="region region-content_bottom">
+              <?php print $content_bottom; ?>
+            </div> <!-- /#content-bottom -->            
+          <?php endif; ?> 
+          
           <div class="clear-both"></div>
+        
         </div>
-
+        
         <?php if ($feed_icons): ?>
           <div class="feed-icons"><?php print $feed_icons; ?></div>
-        <?php endif; ?>
-
-        <?php if ($content_bottom): ?>
-          <div id="content-bottom" class="region region-content_bottom">
-            <?php print $content_bottom; ?>
-          </div> <!-- /#content-bottom -->
         <?php endif; ?>
 
       </div></div> <!-- /#content-inner, /#content -->
@@ -148,7 +156,7 @@
       <div id="footer"><div id="footer-inner" class="region region-footer">
 
         <?php if ($footer_message): ?>
-          <div id="footer-message"><?php print $footer_message; ?></div>
+          <!-- <div id="footer-message"><?php print $footer_message; ?></div> -->
         <?php endif; ?>
 
         <?php print $footer; ?>
