@@ -123,7 +123,7 @@ class TextileExt extends Textile
 // -------------------------------------------------------------
     function sourceLink($id, $t)
     {
-        $title = _eca_get_publication_title($id);
+        $title = get_publication_title($id);
         $output .= '[Source: ';
         $output .= l(_filter_url_trim($title, URL_LENGTH), 'publication/' . $id, array( 'attributes' => array('title' => $title, 'class' => 'dialog-link' )) );
         $output .= ', p. ' .$t .']';
