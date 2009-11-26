@@ -292,10 +292,10 @@ Drupal.ACDB.prototype.search = function (searchString) {
           }
           db.owner.setStatus('found');
         }
-      },
+      }/*,
       error: function (xmlhttp) {
         alert(Drupal.ahahError(xmlhttp, db.uri));
-      }
+      }*/
     });
   }, this.delay);
 };
