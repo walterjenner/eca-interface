@@ -7,7 +7,7 @@
 define('EXHIBIT_DATE_FORMAT',        '%Y-%m-%dT%H:%M:%SZ');
 define('EXHIBIT_XMLNS_URL',          'http://simile.mit.edu/2006/11/exhibit#');  // TODO:  What's this for? This needs to be updated or removed
 //define('EXHIBIT_JS_URL',             variable_get('exhibit_js_url', 'http://api.simile-widgets.org/exhibit/2.2.0/exhibit-api.js'));
-define('EXHIBIT_JS_URL',             'http://localhost/www/exhibit/api/exhibit-api.js?bundle=false');
+define('EXHIBIT_JS_URL',             'http://localhost/www/exhibit/api/exhibit-api.js');
 define('EXHIBIT_MAP_JS_URL',         variable_get('exhibit_map_js_url', 'http://api.simile-widgets.org/exhibit/2.2.0/extensions/map/map-extension.js'));
 define('EXHIBIT_BARCHART_JS_URL',    variable_get('exhibit_barchart_js_url', 'http://api.simile-widgets.org/exhibit/2.2.0/extensions/chart/chart-extension.js'));
 define('EXHIBIT_SCATTERPLOT_JS_URL', variable_get('exhibit_scatterplot_js_url', 'http://api.simile-widgets.org/exhibit/2.2.0/extensions/chart/chart-extension.js'));
