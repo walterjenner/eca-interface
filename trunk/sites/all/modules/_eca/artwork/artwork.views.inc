@@ -62,8 +62,9 @@ function artwork_views_data(){
     'title' => t('creation_year'),
     'help' => t('A string describing the creation year'),
     'field' => array(
-      'handler' => 'views_handler_field',
+      'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
+      'numeric' => TRUE
     ),
   );
   

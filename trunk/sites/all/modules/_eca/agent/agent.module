@@ -251,30 +251,30 @@ function agent_load($node) {
     //everything in the content array will be indexed for the search
     $agent->content = array();
     $agent->content['description'] = array(
-      '#value' => eca_add_space($agent->description),
+      '#value' => add_space($agent->description),
       '#weight' => 0,
     );
-    if(!isEmpty($agent->pseudonym)){
+    if(!is_empty($agent->pseudonym)){
       $agent->content['pseudonym'] = array(
-        '#value' => 'Pseudonymous:' . eca_add_space($agent->pseudonym),
+        '#value' => 'Pseudonymous:' . add_space($agent->pseudonym),
         '#weight' => 0,
       ); 
     }
     if(count($agent->institutions)){   
       $agent->content['institutions'] = array(
-        '#value' => 'Member of institution(s):' . eca_add_space(return_institutions($agent->institutions)),
+        '#value' => 'Member of institution(s):' . add_space(return_institutions($agent->institutions)),
         '#weight' => 0,
       );
     }
     if(count($agent->collectives)){
       $agent->content['collective'] = array(
-        '#value' => 'Part of collective(s):' . eca_add_space(return_collectives($agent->collectives)),
+        '#value' => 'Part of collective(s):' . add_space(return_collectives($agent->collectives)),
         '#weight' => 0,
       );
     }
-    if(!isEmpty($agent->ca_l_city) || !isEmpty($agent->ca_l_country)){
+    if(!is_empty($agent->ca_l_city) || !is_empty($agent->ca_l_country)){
       $agent->content['birth_location'] = array(
-        '#value' => 'Born in' . eca_add_space($agent->ca_l_city . ' ' . $agent->ca_l_country),
+        '#value' => 'Born in' . add_space($agent->ca_l_city . ' ' . $agent->ca_l_country),
         '#weight' => 0,
       );
     }

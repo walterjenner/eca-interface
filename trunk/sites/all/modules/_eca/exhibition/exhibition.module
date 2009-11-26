@@ -236,7 +236,7 @@ function exhibition_load($node) {
       //everything in the content array will be indexed for the search
       $exhibition->content = array();
       $exhibition->content['description'] = array(
-        '#value' => eca_add_space($exhibition->description),
+        '#value' => add_space($exhibition->description),
         '#weight' => 0,
       );
                

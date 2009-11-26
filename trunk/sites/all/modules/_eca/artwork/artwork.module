@@ -260,18 +260,18 @@ function artwork_load($node) {
     //everything in the content array will be indexed for the search
     $artwork->content = array();
     $artwork->content['description'] = array(
-      '#value' => eca_add_space($artwork->description),
+      '#value' => add_space($artwork->description),
       '#weight' => 0,
     );
     if(count($artwork->artists)){   
       $artwork->content['artists'] = array(
-        '#value' => 'Artist(s):' . eca_add_space(return_agents_by_node($artwork->artists)),
+        '#value' => 'Artist(s):' . add_space(return_agents_by_node($artwork->artists)),
         '#weight' => 0,
       );
     }
-    if(!isEmpty($artwork->ca_l_city) || !isEmpty($artwork->ca_l_country)){
+    if(!is_empty($artwork->ca_l_city) || !is_empty($artwork->ca_l_country)){
       $artwork->content['location'] = array(
-        '#value' => 'Created in' . eca_add_space($artwork->ca_l_city . ' ' . $artwork->ca_l_country),
+        '#value' => 'Created in' . add_space($artwork->ca_l_city . ' ' . $artwork->ca_l_country),
         '#weight' => 0,
       );
     }
