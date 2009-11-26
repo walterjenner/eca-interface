@@ -184,7 +184,7 @@ function eca_main_institution( $id = 0 ){
     $output .= "<h2>$item->name</h2>";
   }
   if(is_empty($item->it_name))
-    $output .= '<h3>Publication</h3>';
+    $output .= '<h3>Institution</h3>';
   else
     $output .= "<h3>$item->it_name</h3>";
   
