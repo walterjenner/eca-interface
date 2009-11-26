@@ -29,13 +29,13 @@ if($teaser){
 } else { 
   
   //trim title
- $title = _filter_url_trim($node->title, URL_LENGTH);
+ $title = _filter_url_trim($node->title, TITLE_LENGTH);
 
 ?>
 
   <div class="exhibition-node">
     <div id="tabs">
-      <h2 class="node-title"><?php print check_plain($title); ?></h2>
+      <h1 class="node-title"><?php print check_plain($title); ?></h1>
       <?php print flag_create_link('bookmarks', $node->nid);  ?>   
       <ul>
           <li><a href="#info-tab" title="View basic infos about this exhibition." rel="address:/"><span>Info</span></a></li>
@@ -48,7 +48,7 @@ if($teaser){
           <li><a href="#comment-tab" title="View comments on this exhibition." rel="address:/comment-tab"><span>Comments (<?php print $comment_count; ?>)</span></a></li>
       </ul>
        
-      <div class="hr-grey"></div>
+     
       <div id="info-tab" class="ui-tabs-panel">
         <?php
                   

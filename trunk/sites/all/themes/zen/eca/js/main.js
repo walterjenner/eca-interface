@@ -2,11 +2,54 @@
  * @author valderama
  */
 
+function onArtworkShow( obj ){
+  //$(obj).child("")tooltip();
+  // console.log( "get child with is the link and add the tooltip" + obj );
+  $(obj).find(".artwork-tooltip").tooltip({ 
+    bodyHandler: function() { 
+        return $( $(obj).find(".desc").html() ); 
+    }, 
+    showURL: false 
+});
+}
+
 $(document).ready(function(){    
   
   var tabs;
+  var carouselLength = 6;  
   
-    
+  
+  //SERIES CAROUSEL
+  var numArtworks = $('div#artwork-series-carousel > .carousel > ul').children().size(); 
+  if( numArtworks > carouselLength ){
+    $('div#artwork-series-carousel > .carousel').carousel({
+      visible:carouselLength, circular: false, scroll:3, speed:1000
+    });
+    $('div#artwork-series-carousel > .carousel-prev').click(function() { $('div#artwork-series-carousel > .carousel').carousel('prev') });
+    $('div#artwork-series-carousel > .carousel-next').click(function() { $('div#artwork-series-carousel > .carousel').carousel('next') });
+  }
+  else{
+    $('div#artwork-series-carousel > .carousel-prev').hide();
+    $('div#artwork-series-carousel > .carousel-next').hide();
+  }
+  
+  //ARTWORKS CAROUSEL
+  numArtworks = $('div#artworks-carousel > .carousel > ul').children().size(); 
+  if( numArtworks > 6 ){
+    $('div#artworks-carousel > .carousel').carousel({
+      visible:6, circular: false, scroll:3, speed:1000
+    });
+    $('div#artworks-carousel > .carousel-prev').click(function() { $('div#artworks-carousel > .carousel').carousel('prev') });
+    $('div#artworks-carousel > .carousel-next').click(function() { $('div#artworks-carousel > .carousel').carousel('next') });
+  }
+  else{
+    $('div#artworks-carousel > .carousel-prev').hide();
+    $('div#artworks-carousel > .carousel-next').hide();
+  }
+  
+   //TOOLTIPS for carosel pictures
+  $('.artwork-tooltip').tooltip( {showURL: false, showBody: ' - '} );
+  
   $.address.init(function(event) {   
       //TABS
       tabs = $('#tabs').tabs({
@@ -106,7 +149,3 @@ $(document).ready(function(){
       return false;      
     });    
 });
-
-function expand_block(){
-  alert("do something!");
-}
