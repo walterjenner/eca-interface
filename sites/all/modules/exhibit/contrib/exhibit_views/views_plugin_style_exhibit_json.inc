@@ -128,6 +128,21 @@ class views_plugin_style_exhibit_json extends views_plugin_style {
       else {
         $items[$row->$base_field] = array_merge(array('label' => $row->$base_field, 'type' => $this->view->base_table), $item);
       }
+	 
+	  if(count($items[$row->$base_field]['tid'])){ // walter
+		foreach($items[$row->$base_field]['tid'] as $id => $item){ // walter, added this for each
+			if(is_array($items[$row->$base_field]['tid'][$id])){
+			  $items[$row->$base_field]['tid'][$id] = $items[$row->$base_field]['tid'][$id]['name'];
+			}
+		}
+	  }
+	  if(count($items[$row->$base_field]['tid_1'] )){ // walter
+		foreach($items[$row->$base_field]['tid_1'] as $id => $item){ // walter, added this for each
+		if(is_array($items[$row->$base_field]['tid_1'][$id])){
+		  $items[$row->$base_field]['tid_1'][$id] = $items[$row->$base_field]['tid_1'][$id]['name'];
+		}
+	  }
+	}
     }
     
 
