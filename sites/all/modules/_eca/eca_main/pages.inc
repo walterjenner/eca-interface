@@ -23,13 +23,13 @@ function eca_main_publication( $id = 0 ){
   if( !$print_as_page )
     $output .= '<h2>' . $item->title . '</h2>';
   
-  if(isEmpty($item->type_name))
-    $output .= "<h3>Publication</h3>";
+  if(is_empty($item->type_name))
+    $output .= '<h3>Publication</h3>';
   else
     $output .= "<h3>$item->type_name</h3>";
   
   if(count($item->media) && eca_is_image($item->media[0]) ){
-    $mediaMarkup = eca_get_media_markup($item->media[0], "medium");
+    $mediaMarkup = eca_get_media_markup($item->media[0], 'medium');
     $output .= "<div class=\"agent-image\">$mediaMarkup</div>\n";
   }
   
@@ -41,8 +41,8 @@ function eca_main_publication( $id = 0 ){
   $output .= return_value( $item->publisher , 'Publisher');      
   $output .= return_value( $item->isbn , 'ISBN');     
   
-  if(!isEmpty($item->url)){
-    if(!isEmpty($item->last_seen))
+  if(!is_empty($item->url)){
+    if(!is_empty($item->last_seen))
       $output .=  return_value( l($item->url, $item->url) . ' (retrieved: ' . $item->last_seen . ')' , 'URL');
     else
       $output .= return_value( l($item->url, $item->url) , 'URL');
@@ -183,21 +183,21 @@ function eca_main_institution( $id = 0 ){
     $output .= '<div id="dialog-box">';
     $output .= "<h2>$item->name</h2>";
   }
-  if(isEmpty($item->it_name))
-    $output .= "<h3>Publication</h3>";
+  if(is_empty($item->it_name))
+    $output .= '<h3>Publication</h3>';
   else
     $output .= "<h3>$item->it_name</h3>";
   
   $output .= return_value($item->description, 'Description');
-  if(!isEmpty($item->url))
+  if(!is_empty($item->url))
     $output .= return_value(l($item->url,'http://' . $item->url), 'URL');
   $output .= return_value(return_address($item->street, $item->zip, $item->city, $item->country), 'Address');
   
-  $output .= return_value( return_happenings( $item->happenings ), "Happening(s)" );
-  $output .= return_value( return_happenings( $item->exhibitions ), "Exhibition(s) organized" );
-  $output .= return_value( return_artworks( $item->artworks ), "Artwork(s) owned" );
-  $output .= return_value( return_collections( $item->collections ), "Collection(s) owned" );
-  $output .= return_value( return_publications( $item->citations ), "Cited in" );
+  $output .= return_value( return_happenings( $item->happenings ), 'Happening(s)' );
+  $output .= return_value( return_happenings( $item->exhibitions ), 'Exhibition(s) organized' );
+  $output .= return_value( return_artworks( $item->artworks ), 'Artwork(s) owned' );
+  $output .= return_value( return_collections( $item->collections ), 'Collection(s) owned' );
+  $output .= return_value( return_publications( $item->citations ), 'Cited in' );
   
   if( !$print_as_page ){
     global $base_path;
@@ -235,7 +235,7 @@ function eca_main_algorithm( $id = 0 ){
     $output .= "<h2>$item->ca_al_name</h2>";
   }
   
-  $output .= "<h3>Algorithm</h3>";
+  $output .= '<h3>Algorithm</h3>';
   
   $output .= return_value( $item->ca_al_description, 'Description' );
   $output .= return_value( $item->ca_lang_name . ' (' . $item->ca_lang_description .')', 'Programming Language' );
@@ -275,19 +275,16 @@ function eca_main_collection( $id = 0 ){
   
   //dpr($item);
   
-  if(!$print_as_page)
+  if(!$print_as_page){
     $output .= '<div id="dialog-box">';
-  
-  foreach($item as $key => $field){
-    if($key == 'artworks')
-      $output .= return_value( return_artworks( $field ), "Artwork(s)" );  
-    else if($key == 'owners')
-      $output .= return_value( return_owners( $field ), "Owner(s)" );
-    else if($key == 'exhibitions')
-      $output .= return_value( return_exhibitions( $field ), "Shown at(s)" );
-    else
-      $output .= return_value( $field, $key);
+    $output .= "<h2>$item->name</h2>";
   }
+  
+  $output .= '<h3>Collection</h3>';  
+  $output .= return_value( return_owners( $item->description ), 'Description' );
+  $output .= return_value( return_owners( $item->owners ), 'Owner(s)' );
+  $output .= return_value( return_artworks( $item->artworks ), 'Artwork(s)' );  
+  $output .= return_value( return_exhibitions( $item->exhibitions ), 'Shown at' );
   
   if( !$print_as_page ){
     global $base_path;

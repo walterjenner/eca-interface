@@ -3,8 +3,6 @@
 
 //NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
 
-define(MAX_LINK_TEXT_LENGTH, 30);
-
 /**
  * Implementation of hook_help().
  */
@@ -28,7 +26,11 @@ function eca_main_help($path, $arg) {
  */
 function eca_main_cron()
 {
-  
+  //clear block cache and eca cache
+  cache_clear_all( NULL, 'cache_block' );
+  //note: those items have a minimum lifetime, 
+  //before that has passed they won't be flushed. see includes.inc
+  cache_clear_all( NULL, 'cache_eca' );
 }
 
 /**
@@ -79,28 +81,42 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
         case 0:
           if($node->type == 'exhibition') {          
             $block['title'] = t('Artists shown');            
-            $selectArtists = "SELECT ca_a.agent_id, ca_a.first_name, ca_a.last_name, a.nid FROM compartdb.agent ca_a LEFT JOIN agent a ON ca_a.agent_id = a.agent_id WHERE ca_a.agent_id IN (SELECT ca_ei.agent_id FROM compartdb.exhibits_in ca_ei WHERE ca_ei.exhibition_id = $node->exhibition_id) ORDER BY ca_a.last_name";
+            $selectArtists = "SELECT SQL_CALC_FOUND_ROWS ca_a.agent_id, ca_a.first_name, ca_a.last_name, a.nid 
+                                FROM compartdb.agent ca_a LEFT JOIN agent a ON ca_a.agent_id = a.agent_id 
+                                WHERE ca_a.agent_id IN 
+                                  (SELECT ca_ei.agent_id FROM compartdb.exhibits_in ca_ei 
+                                    WHERE ca_ei.exhibition_id = $node->exhibition_id) 
+                                ORDER BY ca_a.last_name 
+                                LIMIT " . RELATED_ITEM_LIMIT;
             $resultAgent = db_query($selectArtists);
+            //fetch the total num of result ignoring the LIMIT statement
+            $selectTotalRows = db_query("SELECT FOUND_ROWS()");
+            if( $totalNum = db_fetch_array( $selectTotalRows ) )
+              $totalNum = $totalNum['FOUND_ROWS()'];
+              
+            if($totalNum > RELATED_ITEM_LIMIT )
+              $block['numSnippet'] .= ' (showing '.RELATED_ITEM_LIMIT . ' of '.$totalNum.')';
+              
             $numRes = 0;
             while ($agent = db_fetch_object($resultAgent)) {
               $numRes++;
               $block['content'] .= '<span class="tag tag-agent">' . l($agent->first_name . ' ' . $agent->last_name, 'node/'.$agent->nid, array('attributes' => array('title' => $agent->first_name . ' ' . $agent->last_name)) ) . '&nbsp;</span>';  
             }                        
-            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>Open Overview</span>', "node/2497", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
+            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>Show all ' . $totalNum . ' Artists</span>', "node/2497", array('query' => "args=$node->exhibition_id", 'html' => true)) . '</div>';        
           }
           break;
         // ARTWORKS BLOCK
         case 1:
           if($node->type == 'exhibition') {
             $block['title'] = t('Artworks shown');
-            $fromTable = "compartdb.showing_artwork";
+            $fromTable = "compartdb.showing_artwork ft";
             $whereField = "exhibition_id = $node->exhibition_id";
             $moreLinkHref = "artworks_at/";
             $query = "args=$node->exhibition_id";
           }
           else if($node->type == 'agent'){
             $block['title'] = t('Artworks created');
-            $fromTable = "compartdb.creating";
+            $fromTable = "compartdb.creating ft";
             $whereField = "agent_id = $node->agent_id";
             $moreLinkHref = "node/2498/";
             $query = "args=$node->agent_id";
@@ -108,14 +124,36 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
           else
             break; //if it is not agent or exhibition dont show this block
             
-          //artworks
-          $selectAw = "SELECT ca_a.artwork_id, ca_a.title, a.nid FROM compartdb.artwork ca_a LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id WHERE ca_a.artwork_id IN (SELECT artwork_id FROM $fromTable WHERE $whereField) ORDER BY ca_a.title";
+          //artworks          
+          $selectAw = "SELECT SQL_CALC_FOUND_ROWS ca_a.artwork_id, ca_a.title, ca_a.creation_year, a.nid, ca_mf.file_name, ca_mf.format
+                       FROM $fromTable 
+                       LEFT JOIN artwork a ON a.artwork_id = ft.artwork_id
+                       LEFT JOIN compartdb.artwork ca_a ON ca_a.artwork_id = a.artwork_id  
+                       LEFT JOIN compartdb.illustrated_by ca_i ON (ca_i.row_id = a.artwork_id AND ca_i.table_id = 5)
+                       LEFT JOIN compartdb.media_file ca_mf ON ca_mf.media_file_id = ca_i.media_file_id 
+                       WHERE $whereField
+                       GROUP BY a.nid
+                       ORDER BY ca_a.title  
+                       LIMIT " . RELATED_ITEM_LIMIT;
+          
           $resultAw = db_query($selectAw);
+          //fetch the total num of result ignoring the LIMIT statement
+          $selectTotalRows = db_query("SELECT FOUND_ROWS()");
+          if( $totalNum = db_fetch_array( $selectTotalRows ) )
+            $totalNum = $totalNum['FOUND_ROWS()'];
+          
+          if($totalNum > RELATED_ITEM_LIMIT )
+            $block['numSnippet'] .= ' (showing '.RELATED_ITEM_LIMIT . ' of '.$totalNum.')';
+            
           $numRes = 0;
-          while ($artwork = db_fetch_object($resultAw)) {            
-            $numRes ++;
-            $block['content'] .= '<span class="tag tag-artwork">' . l(_trim_length($artwork->title), 'node/'.$artwork->nid, array('attributes' => array('title' => $artwork->title))) . '</span>';    
+          
+          $block['content'] .= '<div id="artworks-carousel"><div class="carousel-prev"></div><div class="carousel"><ul>';                
+          while ($artwork = db_fetch_object($resultAw)) {
+            $numRes++;
+            $block['content'] .= return_artwork_thumb( $artwork, $node->artwork_id != $artwork->artwork_id );                  
           }
+          $block['content'] .= '</ul></div><div class="carousel-next"></div></div><div class="clear-both"></div>';
+          
           //collections
           if($node->type == 'exhibition'){
             $selectColl = "SELECT ca_c.collection_id, ca_c.name FROM compartdb.collection ca_c WHERE ca_c.collection_id IN (SELECT ca_sc.collection_id FROM compartdb.showing_collection ca_sc WHERE ca_sc.exhibition_id = $node->exhibition_id) ORDER BY ca_c.name";
@@ -130,7 +168,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
               $block['content'] .= return_collection( $collection );
             }              
           }
-          $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>Open Overview</span>', $moreLinkHref, array('query'=>$query, 'html' => true) ) . '</div>';
+          $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>Show all ' . $totalNum . ' Artworks</span>', $moreLinkHref, array('query'=>$query, 'html' => true) ) . '</div>';
           
           if( $node->type == 'agent' )
             $block['content'] .= '<a href="../artwork_list2/' . $node->agent_id .'">Gallery</a>';
@@ -151,54 +189,88 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
             else {
               break; //if it is not agent or artwork dont show this block
             }
-            $selectEx = "SELECT ca_e.exhibition_id, ca_e.name, e.nid FROM compartdb.exhibition ca_e LEFT JOIN exhibition e ON ca_e.exhibition_id = e.exhibition_id WHERE ca_e.exhibition_id IN (SELECT exhibition_id FROM $fromTable WHERE $whereField) ORDER BY ca_e.name";
+            $selectEx = "SELECT SQL_CALC_FOUND_ROWS ca_e.exhibition_id, ca_e.name, e.nid 
+                          FROM compartdb.exhibition ca_e LEFT JOIN exhibition e ON ca_e.exhibition_id = e.exhibition_id 
+                          WHERE ca_e.exhibition_id IN 
+                            (SELECT exhibition_id FROM $fromTable WHERE $whereField) 
+                          ORDER BY ca_e.name 
+                          LIMIT " . RELATED_ITEM_LIMIT;
             $resultEx = db_query($selectEx);
+            //fetch the total num of result ignoring the LIMIT statement
+            $selectTotalRows = db_query("SELECT FOUND_ROWS()");
+            if( $totalNum = db_fetch_array( $selectTotalRows ) )
+              $totalNum = $totalNum['FOUND_ROWS()'];
+            
+            if($totalNum > RELATED_ITEM_LIMIT )
+              $block['numSnippet'] .= ' (showing '.RELATED_ITEM_LIMIT . ' of '.$totalNum.')';
+              
             $numRes = 0;
             while ($exhibition = db_fetch_object($resultEx)) {
               $numRes++;
-              $block['content'] .= '<span class="tag tag-exhibition">' . l(_trim_length($exhibition->name), 'node/'.$exhibition->nid, array('attributes' => array('title' => $exhibition->name))) . '</span>';
+              $block['content'] .= '<span class="tag tag-exhibition">' . l(_filter_url_trim($exhibition->name, URL_LENGTH), 'node/'.$exhibition->nid, array('attributes' => array('title' => $exhibition->name))) . '</span>';
             }
             
             if($node->type=="agent")
-              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>Open Overview</span>', "exhibitions/", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
+              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>Show all ' . $totalNum . ' Exhibitions</span>', "exhibitions/", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
                                           
             break;
           //PUBLICATIONS BLOCK
           case 3:
             if($node->type == 'agent') {
               $block['title'] = t('Publications');
-              $selectPub = "SELECT publication_id, title FROM compartdb.publication WHERE publication_id IN (SELECT publication_id FROM compartdb.authorship WHERE agent_id = $node->agent_id) ORDER BY title";
+              $selectPub = "SELECT SQL_CALC_FOUND_ROWS publication_id, title 
+                              FROM compartdb.publication WHERE publication_id IN 
+                              (SELECT publication_id FROM compartdb.authorship WHERE agent_id = $node->agent_id) 
+                           ORDER BY title 
+                           LIMIT " . RELATED_ITEM_LIMIT;
               $resultPub = db_query($selectPub);
+              //fetch the total num of result ignoring the LIMIT statement
+              $selectTotalRows = db_query("SELECT FOUND_ROWS()");
+              if( $totalNum = db_fetch_array( $selectTotalRows ) )
+                $totalNum = $totalNum['FOUND_ROWS()'];
+              
+              if($totalNum > RELATED_ITEM_LIMIT )
+                $block['numSnippet'] .= ' (showing '.RELATED_ITEM_LIMIT . ' of '.$totalNum.')';
+              
               $numRes = 0;
               while ($dataPub = db_fetch_object($resultPub)) {
                 $numRes++;
-                $block['content'] .= '<span class="tag tag-publication">' . l( _trim_length($dataPub->title) , 'publication/'.$dataPub->publication_id, array( 'attributes' => array('title' => $dataPub->title, 'class' => 'dialog-link') )) . '</span>';
+                $block['content'] .= '<span class="tag tag-publication">' . l( _filter_url_trim($dataPub->title, URL_LENGTH) , 'publication/'.$dataPub->publication_id, array( 'attributes' => array('title' => $dataPub->title, 'class' => 'dialog-link') )) . '</span>';
               }
-              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>Open Overview</span>', 'publications/', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
+              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>Show all ' . $totalNum . ' Publications</span>', 'publications/', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
             }
             break;
             //'PART OF SERIES' BLOCK
             case 4:
               if($node->type == 'artwork' && $node->artwork_series_id != 0) {
                 $block['title'] = t('Part of Series');
-                $resultSer = db_query("SELECT ca_as.name, ca_as.description FROM compartdb.artwork_series ca_as WHERE ca_as.artwork_series_id = $node->artwork_series_id ORDER BY ca_as.name");
+                $resultSer = db_query("SELECT ca_as.name, ca_as.description 
+                                        FROM compartdb.artwork_series ca_as 
+                                        WHERE ca_as.artwork_series_id = $node->artwork_series_id 
+                                        ORDER BY ca_as.name");
                 if ($series = db_fetch_object($resultSer)) {
                   $block['content'] .= '<h3>'. $series->name . '</h3>';
-                  if( $series->description != '' )
-                    $block['content'] .= _textile_process(array( 1 => $series->description ));
+                  if( !is_empty($series->description) )
+                    $block['content'] .= check_markup( $series->description, TEXTILE_FORMAT_ID, false );
                 }                
-                $resultWorks = db_query("SELECT ca_a.artwork_id, ca_a.title, a.nid FROM compartdb.artwork ca_a LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id WHERE ca_a.artwork_series_id = $node->artwork_series_id ORDER BY ca_a.title");
+                $resultWorks = db_query("SELECT ca_a.artwork_id, ca_a.title, ca_a.creation_year, a.nid, ca_mf.file_name, ca_mf.format 
+                                          FROM compartdb.artwork ca_a 
+                                          LEFT JOIN artwork a ON ca_a.artwork_id = a.artwork_id 
+                                          LEFT JOIN compartdb.illustrated_by ca_i ON (ca_i.row_id = a.artwork_id AND ca_i.table_id = 5)
+                                          LEFT JOIN compartdb.media_file ca_mf ON ca_mf.media_file_id = ca_i.media_file_id
+                                          WHERE ca_a.artwork_series_id = $node->artwork_series_id
+                                          GROUP BY a.nid 
+                                          ORDER BY ca_a.title");
                 $numRes = 0;
+                
+                //ALL WORKS FROM THIS SERIES
+                $block['content'] .= '<h4>'. t('All works from this series') . '</h4>'; 
+                $block['content'] .= '<div id="artwork-series-carousel"><div class="carousel-prev"></div><div class="carousel"><ul>';                
                 while ($artwork = db_fetch_object($resultWorks)) {
                   $numRes++;
-                  if($numRes==1){
-                     $block['content'] .= '<h4>'. t('All works from this series') . '</h4>'; 
-                  }
-                  if($node->nid == $artwork->nid)
-                     $block['content'] .= return_artwork( $artwork, false );
-                  else
-                     $block['content'] .= return_artwork( $artwork );
+                  $block['content'] .= return_artwork_thumb( $artwork, $node->artwork_id != $artwork->artwork_id );                  
                 }
+                $block['content'] .= '</ul></div><div class="carousel-next"></div></div><div class="clear-both"></div>';
               }
               break;
             //'PART OF COLLECTIVE' BLOCK
@@ -210,7 +282,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 while ($collective = db_fetch_object($resultColl)) {
                   $block['content'] .= '<h4>'. $collective->name . '</h4>';
                   if( $collective->description != '' )
-                    $block['content'] .= _textile_process(array( 1 => $collective->description));
+                    $block['content'] .= check_markup( $collective->description, TEXTILE_FORMAT_ID, false );
                   
                   //get all artists from this collective
                   $resultA = db_query("SELECT ca_a.first_name, ca_a.last_name, a.nid FROM compartdb.agent_is_part_of ca_aipo LEFT JOIN compartdb.agent ca_a ON ca_aipo.agent_id = ca_a.agent_id LEFT JOIN agent a ON ca_a.agent_id = a.agent_id WHERE ca_aipo.collective_id = $collective->collective_id ORDER BY ca_a.last_name");
@@ -221,9 +293,9 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                        $block['content'] .= '<span class="label">'. t('All members') . ':&nbsp;</span>'; 
                     }  
                     if($node->nid == $artist->nid)
-                      $block['content'] .= '<span class="tag tag-agent-active">' .  _trim_length($artist->first_name . ' ' . $artist->last_name) . '</span>';
+                      $block['content'] .= '<span class="tag tag-agent-active">' .  _filter_url_trim($artist->first_name . ' ' . $artist->last_name, URL_LENGTH) . '</span>';
                     else
-                      $block['content'] .= '<span class="tag tag-agent">' . l( _trim_length($artist->first_name . ' ' . $artist->last_name) , 'node/'.$artist->nid, array( 'attributes' => array('title' => $artist->first_name . ' ' . $artist->last_name) )) . '</span>';
+                      $block['content'] .= '<span class="tag tag-agent">' . l( _filter_url_trim($artist->first_name . ' ' . $artist->last_name, URL_LENGTH) , 'node/'.$artist->nid, array( 'attributes' => array('title' => $artist->first_name . ' ' . $artist->last_name) )) . '</span>';
                   }                  
                 }
               }
@@ -368,39 +440,14 @@ function eca_main_menu() {
   );
   return $items;  
 }
-
+/*
+ * Specifies that this module implements the Views API
+ * Then the views module is looking for hooks in here.
+ */
 function eca_main_views_api(){
   return array(
     'api' => 2
   );
-}
-
-function return_collection( $collection ){
-  $output = '';
-  $output .= '<span class="tag tag-artwork">'; 
-  $output .= l(  _trim_length($collection->name), 
-                'collection/'.$collection->collection_id, 
-                 array('attributes' => array('title' => $collection->name, 'class' => 'dialog-link')));
-  $output .= '</span>';
-  return $output;
-}
-
-function return_artwork( $node, $link = true ){
-  $output = '';
-  if($link)
-    $output .= '<span class="tag tag-artwork">' . l( _trim_length($node->title) , 'node/'.$node->nid, array( 'attributes' => array('title' => $node->title) )) . '</span>';
-  else
-    $output .= '<span class="tag tag-artwork-active">' . _trim_length($node->title) . '</span>';
-  return $output;
-} 
-
-function _trim_length($linkText){
-  if( strlen($linkText) >= MAX_LINK_TEXT_LENGTH )
-  {
-    $linkText = substr($linkText, 0,  MAX_LINK_TEXT_LENGTH-3);
-    $linkText .= "...";
-  }
-  return $linkText;
 }
   
 

@@ -2,6 +2,9 @@
   //the path to all media files
   define("MEDIA_PATH", "http://localhost/www/eca/public/");
   define("URL_LENGTH", 45);
+  define("TITLE_LENGTH", 30);
+  define("RELATED_ITEM_LIMIT", 10); //how many items should be shown in the "related items" tab.
+  define("TEXTILE_FORMAT_ID", 3); //the id of the input format (aka filter) of the Textile filter
   define("DO_AGENT_SYNC", TRUE);
   define("DO_ARTWORK_SYNC", TRUE);
   define("DO_EXHIBITION_SYNC", FALSE);
@@ -61,7 +64,7 @@
    */
   function eca_get_media_markup($media, $size, $image_link = false){
     $path = eca_get_media_path($media->format, $size);
-    if(!isEmpty($size) && eca_is_image($media)) //note: seems like all thumbs and medium images are jpg's
+    if(!is_empty($size) && eca_is_image($media)) //note: seems like all thumbs and medium images are jpg's
       $path .= $media->file_name . '.' . jpg;
     else
       $path .= $media->file_name . '.' . $media->format;
@@ -108,7 +111,7 @@
     else
       $path .= 'formatUnkown' . '/';
       
-    if( !isEmpty($size) && $format != 'pdf' )
+    if( !is_empty($size) && $format != 'pdf' )
       $path .= $size . '/';
     //else
        //$path .= '/';
@@ -140,29 +143,29 @@
   function return_address($street, $zip, $city, $country, $pobox = '', $additional = ''){
     $output = '<div class="address"><br/>';
     $noAddress = true;
-    if( !isEmpty($street) ){
+    if( !is_empty($street) ){
       $output .= $street . '<br/>';
       $noAddress = false;
     }
-    if( !isEmpty($additional) ){
+    if( !is_empty($additional) ){
       $output .= $additional . '<br/>';
       $noAddress = false;
     }
-    if( !isEmpty($pobox) ){
+    if( !is_empty($pobox) ){
       $output .= $pobox . '<br/>';
       $noAddress = false;
     }
-    if( !isEmpty($zip) ){
+    if( !is_empty($zip) ){
       $output .= $zip;
       $noAddress = false;
     }
-    if( !isEmpty($city) ){
-      if(!isEmpty($zip))
+    if( !is_empty($city) ){
+      if(!is_empty($zip))
         $output .= ' - ';
       $output .= $city;
       $noAddress = false;      
     }
-    if( !isEmpty($country) ){
+    if( !is_empty($country) ){
         $output .= '<br/>' . $country; 
         $noAddress = false;
     }
@@ -176,12 +179,12 @@
   
   function return_location($city, $country){
     $output = '';
-    if(!isEmpty($city)){
+    if(!is_empty($city)){
       $output .= ' in ' . $city;
-      if( isEmpty($country) )
+      if( is_empty($country) )
         $output .= '.';
     }
-    if(!isEmpty($country)){
+    if(!is_empty($country)){
       if($output != ''){
         $output .= ', ';
       }
@@ -207,6 +210,26 @@
     return $output;
   }
   
+  /*
+   * params: title, creation_year, nid, file_name, format
+   */
+  function return_artwork_thumb( $node, $link = true ){
+    $output .= '<li>';
+    
+    if(!is_empty($node->creation_year))
+      $yearString = ' - Date: ' . $node->creation_year;
+    
+    if($link){
+      $output .= l('<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.'.jpg" alt="'.$node->title.'" />', 
+                    "node/$node->nid", 
+                    array( 'html' => true, 'attributes' => array('title' => 'Title: ' . $node->title . $yearString, 'class' => 'artwork-tooltip' ) ));
+    }else {
+        $output .= '<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.'.jpg" alt="'.$node->title.'" class="current-item" />';
+    }
+    $output .= '</li>';
+    return $output;
+  }
+  
   function return_artworks( $artworks ){
     foreach($artworks as $artwork){
       if($output != '')
@@ -217,17 +240,40 @@
     return $output;  
   }
   
+  function return_collection( $collection ){
+    $output = '';
+    $output .= '<span class="tag tag-artwork">'; 
+    $output .= l(  _filter_url_trim($collection->name, URL_LENGTH), 
+                  'collection/'.$collection->collection_id, 
+                   array('attributes' => array('title' => $collection->name, 'class' => 'dialog-link')));
+    $output .= '</span>';
+    return $output;
+  }
+  
+  function return_artwork( $node, $link = true ){
+    $output = '';
+    if($link)
+      $output .= '<span class="tag tag-artwork">' . l( _filter_url_trim($node->title, URL_LENGTH) , 'node/'.$node->nid, array( 'attributes' => array('title' => $node->title) )) . '</span>';
+    else
+      $output .= '<span class="tag tag-artwork-active">' . _filter_url_trim($node->title, URL_LENGTH) . '</span>';
+    return $output;
+  }
+  
   function return_owners( $owners ){
     $owner_str = '';
-    foreach( $owners['agents'] as $agent ){
-      if($owner_str != '')
-        $owner_str .= ', ';
-      $owner_str .= l($agent->title, "node/$agent->nid", array('attributes' => array('title' => $agent->title)));
+    if( is_array($owners['agents']) ){
+      foreach( $owners['agents'] as $agent ){
+        if($owner_str != '')
+          $owner_str .= ', ';
+        $owner_str .= l($agent->title, "node/$agent->nid", array('attributes' => array('title' => $agent->title)));
+      }
     }
-    foreach( $owners['institutions'] as $institution ){
-      if($owner_str != '')
-        $owner_str .= ', ';
-      $owner_str .= l($institution->name, "institution/$institution->institution_id", array('attributes' => array('title' => $institution->name, 'class' => 'dialog-link')));
+    if( is_array($owners['institutions']) ){
+      foreach( $owners['institutions'] as $institution ){
+        if($owner_str != '')
+          $owner_str .= ', ';
+        $owner_str .= l($institution->name, "institution/$institution->institution_id", array('attributes' => array('title' => $institution->name, 'class' => 'dialog-link')));
+      }
     }
     return $owner_str;
   }
@@ -351,9 +397,9 @@
   }
   
   function return_value($value, $label, $multiline = false, $class_str = ''){
-    if(!isEmpty($value) ) { 
+    if(!is_empty($value) ) { 
      if(strcasecmp($label, "description") == 0){
-       $value = _textile_process( array(1 =>$value) );
+       $value = check_markup( $value, TEXTILE_FORMAT_ID, false );
        $multiline = true;
      }
    
@@ -365,19 +411,17 @@
     return $output; 
   }
 
-  function _eca_get_publication_title($id){
-    $res = db_query("SELECT title FROM compartdb.publication WHERE publication_id = $id");
-    
-    $pub = db_fetch_object($res);
-    
+  function get_publication_title($id){
+    $res = db_query("SELECT title FROM compartdb.publication WHERE publication_id = $id");    
+    $pub = db_fetch_object($res);    
     return $pub->title;
   }
   
-  function isEmpty($string) {
+  function is_empty($string) {
     return (strlen(trim($string)) == 0);	
   }
   
-  function eca_add_space( $string ){
+  function add_space( $string ){
     return ' ' . $string . ' ';
   }
   
