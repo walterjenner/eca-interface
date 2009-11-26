@@ -9,13 +9,16 @@
 
 body {
   font-family: Arial, sans-serif;
+  color: #2D1E1E;
 }
 
 h1, h2, h3, h4, h5, h6, .views-table caption {
-	color: #333;
+	color: #2D1E1E; /*brown, same as primary links*/
   font-family: Helvetica, Arial, sans-serif;
+  font-weight: normal;
 }
-
+h1 {  
+}
 h2, .views-table caption {
   font-size:1.5em;
 }
@@ -26,7 +29,7 @@ p {
 
 a {
 	/*color: #0071BC;*/
- color: #000;
+ color: #2D1E1E;
  text-decoration: none;
  
 }
@@ -40,11 +43,13 @@ a:active {
 }
 
 a:visited, a.visited {
-  color: #666;
+  color: #595959;
 }
 
 table {
   width: 100%; 
 }
+
+
 
  

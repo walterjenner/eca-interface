@@ -30,7 +30,7 @@ if($teaser){
 
   <div class="agent-node">
     <div id="tabs">
-      <h2 class="node-title"><?php print /*$node->academic_title . ' ' . */check_plain($node->title); ?></h2>
+      <h1 class="node-title"><?php print /*$node->academic_title . ' ' . */check_plain($node->title); ?></h1>
       
       <?php print flag_create_link('bookmarks', $node->nid);  ?>
             
@@ -48,7 +48,7 @@ if($teaser){
           <li><a href="#comment-tab" title="View comments on this person." rel="address:/comment-tab"><span>Comments (<?php print $comment_count; ?>)</span></a></li>
       </ul>
                 
-      <div class="hr-grey"></div>
+      
       <div id="info-tab" class="ui-tabs-panel">
         <?php
           if(count($node->media)){

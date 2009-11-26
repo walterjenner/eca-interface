@@ -32,15 +32,13 @@
 <div id="block-<?php print $block->module . '-' . $block->delta; ?>" class="<?php print $classes; ?>"><div class="block-inner <?php if($block->module == 'eca_main'){ print 'collapsible-sidebox'; }?> ">
 
   <?php if ($block->subject): ?>
-    <h2 class="title"><span class="span-block"><span class="span-block-inner"><?php print $block->subject; ?></span></span></h2>
+    <h2 class="title"><?php print $block->subject; ?><span class="numSnippet"><?php print $block->numSnippet; ?></span></h2>
   <?php endif; ?>
-  
-  <?php if($block->module == 'eca_main'): ?>
-    <a href="#" title="Expand/Collapse this block" class="expand-button tooltip"><span></span></a>
-  <?php endif; ?>
-  
+     
   <div class="content-class">
+  <div class="content"> 
     <?php print $block->content; ?>
+  </div>
   </div>
 
   <?php print $edit_links; ?>

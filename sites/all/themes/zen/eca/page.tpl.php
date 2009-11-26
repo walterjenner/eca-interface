@@ -21,15 +21,15 @@
     <?php if ($primary_links || $secondary_links || $navbar): ?>
       <div id="skip-to-nav"><a href="#navigation"><?php print t('Skip to Navigation'); ?></a></div>
     <?php endif; ?>
-
+    
     <div id="header"><div id="header-inner" class="clear-block">
 
       <?php if ($logo || $site_name || $site_slogan): ?>
         <div id="logo-title">
 
-          <?php if ($logo): ?>
-            <div id="logo"><a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" rel="home"><img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" id="logo-image" /></a></div>
-          <?php endif; ?>
+          
+          <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" rel="home"><span id="logo"></span></a>
+          
 
           <?php if ($site_name): ?>
             <div id="site-name"><strong>
@@ -55,13 +55,26 @@
             <div id="primary">
               <?php print theme('links', $primary_links); ?>
             </div> <!-- /#primary -->
+            
           <?php endif; ?>
           
           <?php if ($search_box): ?>
-            <div id="search-box">
-              <?php print $search_box; ?>
+            <div id="finder-box">
+              <?php /*print $search_box;*/ ?>
+              <?php 
+                 //drupal_add_js(drupal_get_path('module', finder_autocomplete) .'/finder_autocomplete.js');
+                print finder_view(finder_load(1), 'block'); 
+              ?>
             </div> <!-- /#search-box -->
           <?php endif; ?>
+          
+          <?php if ($secondary_links): ?>
+            <div id="secondary">
+              <?php print theme('links', $secondary_links); ?>
+            </div> <!-- /#secondary -->
+          <?php endif; ?>
+          
+          
 
           <?php print $navbar; ?>
 
@@ -75,16 +88,10 @@
       <?php endif; ?>
 
     </div></div> <!-- /#header-inner, /#header -->
-
+        
     <div id="main"><div id="main-inner" class="clear-block<?php if ($search_box || $primary_links || $secondary_links || $navbar) { print ' with-navbar'; } ?>">
       
     <div id="content">
-      
-      <?php if ($secondary_links): ?>
-        <div id="secondary">
-          <?php print theme('links', $secondary_links); ?>
-        </div> <!-- /#secondary -->
-      <?php endif; ?>
           
       <div id="content-inner" style="clear:both;">
         
@@ -128,7 +135,7 @@
             </div> <!-- /#content-bottom -->            
           <?php endif; ?> 
           
-          <div class="clear-both"></div>
+         <div class="clear-both"></div>
         
         </div>
         
