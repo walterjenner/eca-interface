@@ -1,0 +1,15 @@
+Index: slider.js
+===================================================================
+--- slider.js	(revision 2072)
++++ slider.js	(working copy)
+@@ -53,8 +53,8 @@
+     }
+         
+     if(histogram) {
+-	this._dom.histogram.style.height = this._dom.bar.offsetHeight;
+-	this._dom.histogram.style.width = this._dom.bar.offsetWidth;
++	this._dom.histogram.style.height = this._dom.bar.offsetHeight+'px';
++	this._dom.histogram.style.width = this._dom.bar.offsetWidth+'px';
+     }
+ 
+     if (horizontal) {
