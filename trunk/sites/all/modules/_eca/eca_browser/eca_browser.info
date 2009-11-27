@@ -1,7 +1,0 @@
-; 
-name = ECA Browser
-description = Provides the ECA browser interface under /browse.
-core = 6.x
-
-package = ECA
-version = 0.1
