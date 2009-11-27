@@ -1,0 +1,50 @@
+/*
+ * colors
+ * 
+ * link: hover: blue, active: dark-blue, visited: grey
+ * 
+ * 
+ */
+
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .views-table caption {
+	color: #333;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+h2, .views-table caption {
+  font-size:1.5em;
+}
+
+p {
+  
+}
+
+a {
+	/*color: #0071BC;*/
+ color: #000;
+ text-decoration: none;
+ 
+}
+
+a:hover {
+  /*color: #2E3192;*/
+}
+
+a:active {
+  /*color: #2E3192;*/
+}
+
+a:visited, a.visited {
+  color: #666;
+}
+
+table {
+  width: 100%; 
+}
+
+ 

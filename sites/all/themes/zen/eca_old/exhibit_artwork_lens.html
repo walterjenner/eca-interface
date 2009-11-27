@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>Untitled Document</title>
+	</head>
+	<body>
+	  
+    <div ex:role="lens">
+      <div class="node-teaser clear-both">
+       <div class="teaser-spacer">
+         <div class="teaser-thumb">
+            <img ex:src-content=".file_name" />               
+         </div>
+       </div>
+       <div class="teaser-body">
+         <div class="teaser-body-inner">
+           <div ex:if-exists=".timestamp"  class="teaser-updated">
+             <span ex:content=".timestamp"></span>
+           </div>
+           <h2 ex:content=".title"></h2>
+           <div ex:if-exists=".last_name">
+             <label >Artist(s): </label><span ex:content=".last_name" class="teaser-field"></span>
+           </div>
+           <span ex:if-exists=".creation_year">
+             <label>Date: </label><span ex:content=".creation_year" class="teaser-field"></span>
+           </span>
+           <span ex:if-exists=".comment_count">
+             <label>Comment(s): </label><span ex:content=".comment_count" class="teaser-field"></span>
+           </span>
+           <div ex:if-exists=".tid_1" class="teaser-type">
+             <span ex:content=".tid_1"></span>
+           </div>
+           
+         </div>         
+        </div>
+       <div class="teaser-spacer">
+          <div class="teaser-thumb">
+               <div class="center teaser-small-text">Starred by</div>
+                 <div ex:content="if((exists(.count)), .count, '0')" class="teaser-bookmark-count center"></div>
+               <div class="center teaser-small-text">people.</div>
+          </div>
+        </div>
+        
+        <div class="teaser-thumb">
+          <div class="center teaser-small-text">Viewed</div>
+            <div ex:content="if((exists(.totalcount)), .totalcount, '0')" class="teaser-count center"></div>
+          <div class="center teaser-small-text">times.</div>
+        </div>
+    
+      </div>
+    </div>
+    
+    
+	</body>
+</html>
