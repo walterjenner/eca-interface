@@ -89,9 +89,10 @@
  *   $db_url = 'mysqli://username:password@localhost/databasename';
  *   $db_url = 'pgsql://username:password@localhost/databasename';
  */
-$db_url['default'] = 'mysqli://root@localhost/ecaDrupal';
+$db_url['default'] = 'mysqli://root@localhost/ecadrupal';
 $db_url['compart']     = 'mysqli://root@localhost/compartdb';
-//$db_url['default'] = 'mysqli://root@localhost/ecaDrupal';
+//$db_url['default'] = 'mysqli://root@localhost/ecaDrupal'; //der user der für die ecaDrupal datenbank verwendet wird  
+                                                            //braucht auch zugriff auf compartdb!
 //$db_url['compart']     = 'mysqli://root@localhost/compartDB';
 $db_prefix = '';
 
