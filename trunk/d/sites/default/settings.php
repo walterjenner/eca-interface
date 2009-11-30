@@ -91,6 +91,8 @@
  */
 $db_url['default'] = 'mysqli://root@localhost/ecaDrupal';
 $db_url['compart']     = 'mysqli://root@localhost/compartdb';
+//$db_url['default'] = 'mysqli://root@localhost/ecaDrupal';
+//$db_url['compart']     = 'mysqli://root@localhost/compartDB';
 $db_prefix = '';
 
 /**

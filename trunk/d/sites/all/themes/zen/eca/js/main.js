@@ -16,7 +16,7 @@ function onArtworkShow( obj ){
 $(document).ready(function(){    
   
   var tabs;
-  var carouselLength = 6;  
+  var carouselLength = 8;  
   
   
   //SERIES CAROUSEL
@@ -35,9 +35,9 @@ $(document).ready(function(){
   
   //ARTWORKS CAROUSEL
   numArtworks = $('div#artworks-carousel > .carousel > ul').children().size(); 
-  if( numArtworks > 6 ){
+  if( numArtworks > carouselLength ){
     $('div#artworks-carousel > .carousel').carousel({
-      visible:6, circular: false, scroll:3, speed:1000
+      visible:carouselLength, circular: false, scroll:3, speed:1000
     });
     $('div#artworks-carousel > .carousel-prev').click(function() { $('div#artworks-carousel > .carousel').carousel('prev') });
     $('div#artworks-carousel > .carousel-next').click(function() { $('div#artworks-carousel > .carousel').carousel('next') });

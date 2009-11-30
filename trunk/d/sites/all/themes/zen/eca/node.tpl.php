@@ -87,6 +87,10 @@
     <?php print $content; ?>
   </div>
 
-  <?php print $links; ?>
+  <?php 
+    if ($node->type != 'webform') //to unkown reason diabling comments for this content type does not work the usal way.
+      print $links; 
+  
+  ?>
 
 </div></div> <!-- /node-inner, /node -->
