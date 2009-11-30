@@ -4,7 +4,6 @@
 //NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
 
 //include the file with the helper functions
-db_set_active('default');
 require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
 
 /**

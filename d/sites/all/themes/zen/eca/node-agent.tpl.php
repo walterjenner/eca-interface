@@ -19,12 +19,12 @@ if($teaser){
 ?>
 
   <div class="agent-node">
-    <div id="tabs">
+    <div id="tabs" class="ui-tabs">
       <h1 class="node-title agent"><?php print /*$node->academic_title . ' ' . */check_plain($node->title); ?></h1>
       
       <?php print flag_create_link('bookmarks', $node->nid);  ?>
             
-      <ul>
+      <ul class="ui-tabs-nav">
           <li><a href="#info-tab" title="View basic infos about this person." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
           <?php if($node->biography!=''): ?>
             <li><a href="#biography-tab" title="View biography of this person." rel="address:/biography-tab"><span><?php print t('Biography'); ?></span></a></li>

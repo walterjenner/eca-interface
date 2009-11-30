@@ -26,47 +26,111 @@
   
   //the folders where certain file types are stored
   global $formatFolder;
-  $formatFolder = array('png' => "imageUploads", 
-                        'jpg' => "imageUploads", 
-                        'gif' => "imageUploads",
-                        'tif' => "imageUploads",
+  $formatFolder = array('img' => "imageUploads",
                         'flv' => "videoUploads", 
                         'mp3' => "soundUploads",
                         'pdf' => "docUploads" );
   
   /*
-   * get an array with all media from the db
+   * return html markup for a flv/mp3 file embedded in a player
+   * 
+   * <object type="application/x-shockwave-flash" data="http://flv-player.net/medias/player_flv_maxi.swf" width="320" height="240">
+   *   <param name="movie" value="http://flv-player.net/medias/player_flv_maxi.swf" />
+   *   <param name="allowFullScreen" value="true" />
+   *   <param name="FlashVars" value="flv=http%3A//flv-player.net/medias/KyodaiNoGilga.flv" />
+   * </object>
+   * 
    */
-  function eca_get_media($table_id, $row_id){    
+  function return_video_markup( $media ){
+    global $formatFolder;
+    global $base_url;
     
-    $selectMedia = "SELECT mf.file_name, mf.format, mf.description FROM compartDB.illustrated_by LEFT JOIN compartDB.media_file mf ON illustrated_by.media_file_id = mf.media_file_id WHERE illustrated_by.row_id = $row_id AND illustrated_by.table_id = $table_id";
-    $resultMedia = db_query($selectMedia);
-    $media = array();
-    while ($dataMedia = db_fetch_object($resultMedia)) {
-      array_push($media, $dataMedia);
-    }
-    //ensure that the first media is an image
-    if( !eca_is_image( $media[0] ) ){
-      for($i = 0; $i < count($media); $i++){
-        if(eca_is_image( $media[$i] )){
-          $temp = $media[0];
-          $media[0]= $media[$i];
-          $media[$i] = $temp;
-          break;
-        }
-      }
-    }    
+    if(($media->format != 'flv' && $media->format != 'mp3') || is_empty($media->file_name))
+      return;
     
-    return $media;
+    if(is_empty($media->path))
+      $media->path = MEDIA_PATH . $formatFolder[$media->format].'/'.$media->file_name.'.'.$media->format;
+    
+    $path_to_lib = $base_url . '/' . drupal_get_path('module', 'eca_main') . '/lib/flv_player/';
+    $path_to_swf = $path_to_lib . 'player_flv_maxi.swf';
+    $path_splash = $path_to_lib . 'video_start_screen.png';
+    
+    $bgcolor = 'ffffff';
+    $fgcolor = '333333';
+    $hlcolor = '97bfbc';
+    
+    $params = "&showstop=1&showvolume=1&showtime=1&showfullscreen=1
+                &buttonovercolor=$hlcolor&sliderovercolor=$hlcolor&loadingcolor=$hlcolor
+                &bgcolor=$bgcolor&videobgcolor=$bgcolor
+                &playercolor=$fgcolor&bgcolor1=$fgcolor&bgcolor2=$fgcolor
+                &startimage=$path_splash";
+        
+    $output  = '<object type="application/x-shockwave-flash" data="'.$path_to_swf.'" width="320" height="240">';
+    $output .=   '<param name="movie" value="'.$path_to_swf.'" />';
+    $output .=   '<param name="allowFullScreen" value="true" />';
+    $output .=   '<param name="FlashVars" value="flv=' . $media->path . $params.'" />';
+    $output .= '</object>';
+    return $output;    
   }
   
   /*
    * return a markup-snippet to embed a media file
    */
   function eca_get_media_markup($media, $size, $image_link = false){
+    $path = MEDIA_PATH;
+    $path .= format_folder($media);
+    $output = '';
+    if( eca_is_image($media) ){
+      //if shrinked, add subfolder
+      $path .= (is_empty($size))?'':$size . '/'; 
+      //add file_name
+      $path .= $media->file_name;
+      //all shrinked are jpg
+      $path .= (is_empty($size))?$media->format:'.jpg';
+       
+      if( $image_link ){
+        $output = l($media->file_name, $path);
+      }
+      else {
+        $output = "<div><img src=\"$path\" alt=\"$media->file_name\" /><br/>$media->description</div>";          
+      }
+    }
+    else if( $media->format == 'pdf' ){
+      $path .= $media->file_name . '.pdf';
+      $output = "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name.$media->format</a>";
+    }
+    else if( $media->format == 'flv' || $media->format == 'mp3' ){
+     if($size!= 'thumbs'){
+        $media->path = $path . $media->file_name . '.' . $media->format;
+        $output = return_video_markup($media);
+        //TODO add mp3 player
+      }
+      else { //still image preview //not in use sofar
+        $path = MEDIA_PATH . 'imageUploads/thumbs/'.$media->file_name.'.gif';
+        $output = "<div><img src=\"$path\" alt=\"$media->file_name\" /><br/>$media->description</div>";    
+      }
+    }else {
+      $output = $media->format . ':' . $media->file_name;        
+    }
+    return $output;
+  }  
+  function eca_is_image($media){
+    return ($media->format == 'jpg' || $media->format == 'gif' || $media->format == 'png' || $media->format == 'tif' || $media->format == 'jpeg');
+  }  
+  function format_folder($media){
+    global $formatFolder;
+    if( eca_is_image($media) )
+      return $formatFolder['img'] . '/';
+    else 
+      return $formatFolder[$media->format] . '/'; 
+  }  
+  
+  function DEP_eca_get_media_markup($media, $size, $image_link = false){
     $path = eca_get_media_path($media->format, $size);
-    if(!is_empty($size) && eca_is_image($media)) //note: seems like all thumbs and medium images are jpg's
-      $path .= $media->file_name . '.' . jpg;
+    if(!is_empty($size) && eca_is_image($media)) {//note: seems like all thumbs and medium images are jpg's
+      $path .= $media->file_name;
+      $path .= ($media->format == 'flv')?'.gif':'.jpg';    
+    }
     else
       $path .= $media->file_name . '.' . $media->format;
     
@@ -87,24 +151,25 @@
     else if($media->format == 'pdf'){
       return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name.$media->format</a>";
     }
+    else if($media->format == 'flv' )
+    {
+      //return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name</a>";
+      return return_video_markup($media);
+    }
     else if($media->format == 'flv' || $media->format == 'mp3')
     {
-      return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name</a>";
+      return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name</a>";      
     }
     else 
     {
       return $media->format . ':' . $media->file_name;
     }
-  }
-  
-  function eca_is_image($media){
-    return ($media->format == 'jpg' || $media->format == 'gif' || $media->format == 'png' || $media->format == 'tif');
-  }
+  }  
   
   /*
    * get the path for a certain file type
    */
-  function eca_get_media_path($format, $size){
+  function DEP__eca_get_media_path($format, $size){
     global $formatFolder;
     $path = MEDIA_PATH;
     if( $formatFolder[$format] != "")
@@ -118,14 +183,6 @@
        //$path .= '/';
        
     return $path;
-  }
-  
-  function DEP_print_awards($awards){
-    $output = 'Award(s): ';
-    foreach($awards as $award){
-      $output .= l($award->title, 'award/' . $award->award_id, array( 'attributes' => array('title' => $award->description, 'class' => 'dialog-link')) ) . ' ';
-    }
-    print $output;
   }
   
   function return_media_links( $media ){    
@@ -217,15 +274,17 @@
   function return_artwork_thumb( $node, $link = true ){
     $output .= '<li>';
     
+    $thumbnailFormat = ($node->format == 'flv')?'.gif':'.jpg';
+    
     if(!is_empty($node->creation_year))
       $yearString = ' - Date: ' . $node->creation_year;
     
     if($link){
-      $output .= l('<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.'.jpg" alt="'.$node->title.'" />', 
+      $output .= l('<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.$thumbnailFormat.'" alt="'.$node->title.'" />', 
                     "node/$node->nid", 
                     array( 'html' => true, 'attributes' => array('title' => 'Title: ' . $node->title . $yearString, 'class' => 'artwork-tooltip' ) ));
     }else {
-        $output .= '<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.'.jpg" alt="'.$node->title.'" class="current-item" />';
+        $output .= '<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.$thumbnailFormat.'" alt="'.$node->title.'" class="current-item" />';
     }
     $output .= '</li>';
     return $output;
@@ -421,12 +480,40 @@
     
     return $output; 
   }
-
+  
+  //DATABASE FUNCTIONS_____________________________________
+  
+  /*
+   * get an array with all media from the db
+   */
+  function eca_get_media($table_id, $row_id){    
+    $selectMedia = "SELECT mf.file_name, mf.format, mf.description FROM compartDB.illustrated_by LEFT JOIN compartDB.media_file mf ON illustrated_by.media_file_id = mf.media_file_id WHERE illustrated_by.row_id = $row_id AND illustrated_by.table_id = $table_id";
+    $resultMedia = db_query($selectMedia);
+    $media = array();
+    while ($dataMedia = db_fetch_object($resultMedia)) {
+      array_push($media, $dataMedia);
+    }
+    //try that the first media is an image
+    if( !eca_is_image( $media[0] ) ){
+      for($i = 0; $i < count($media); $i++){
+        if(eca_is_image( $media[$i] )){
+          $temp = $media[0];
+          $media[0]= $media[$i];
+          $media[$i] = $temp;
+          break;
+        }
+      }
+    }
+    return $media;
+  }
+  
   function get_publication_title($id){
     $res = db_query("SELECT title FROM compartDB.publication WHERE publication_id = $id");    
     $pub = db_fetch_object($res);    
     return $pub->title;
   }
+  
+  //HELPER FUNCTIONS_____________________________________
   
   function is_empty($string) {
     return (strlen(trim($string)) == 0);	

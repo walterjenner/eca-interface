@@ -24,10 +24,10 @@ if($teaser){
 ?>
 
   <div class="artwork-node">
-    <div id="tabs">      
+    <div id="tabs" class="ui-tabs">      
       <h1 class="node-title artwork"><?php print check_plain($node->title); ?></h1>
       <?php print flag_create_link('bookmarks', $node->nid);  ?>
-      <ul>
+      <ul class="ui-tabs-nav">
           <li><a href="#info-tab" title="View basic infos about this artwork." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
           <?php if ($content_bottom): ?> 
             <li><a href="#related-tab" title="View related items of this artwork." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
