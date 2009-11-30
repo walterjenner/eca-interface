@@ -52,7 +52,7 @@ if($teaser){
           print_value( _textile_process(array(1 =>$node->description)), t('Description'), true);
           //print_value($node->email, "Email (NOTE: remove?)");
           if($node->url)
-            print_value( l($node->url, $node->url ), t('Web site') );  
+            print_value( l($node->url, absolute($node->url) ), t('Web site') );  
           print_value( return_awards($node->awards), t('Award(s)') );
           print_value( return_institutions($node->institutions), t('Member of institution(s)') );  
           print_value( return_publications($node->citations), t('Cited in') );

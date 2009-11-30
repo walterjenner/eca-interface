@@ -8,7 +8,7 @@
   define("TEXTILE_FORMAT_ID", 3); //the id of the input format (aka filter) of the Textile filter
   define("DO_AGENT_SYNC", TRUE);
   define("DO_ARTWORK_SYNC", TRUE);
-  define("DO_EXHIBITION_SYNC", FALSE);
+  define("DO_EXHIBITION_SYNC", TRUE);
   define("NODE_SYNC_INTERVAL", (60 * 60 * 24) );  // 1 day
   define("MIN_CACHE_LIFETIME", (60 * 60 * 24) );  // 1 day. that means that before the item in cache is one day old, 
                                                   // it will NOT be remove, by cache_clear_all()!
@@ -445,3 +445,14 @@
     }
     else return false;
  } 
+ 
+ /*
+  * takes an url an appends http:// if is not there already
+  * somehow the drupal internal option 'absolute' in the l() function did not work
+  */
+ function absolute($url){
+   if( strpos($url, 'http://') === FALSE){ //typesafe comparison needed!      
+     $url = 'http://' . $url;
+   }
+   return $url;
+ }
