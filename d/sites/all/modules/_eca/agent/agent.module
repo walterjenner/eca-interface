@@ -49,15 +49,15 @@ function agent_cron()
 {
   $last_run = variable_get('cron_last', time());
  
-  //if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_AGENT_SYNC ){
-  if( true ){
+  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_AGENT_SYNC ){
+  //if( false ){
     variable_set('cron_last', time() );
     global $userMapping;
         
     //1-DELETE if there is a mapping which is not in compart db anymore
     $selectDeprecated = "SELECT a.nid
                           FROM agent a
-                          LEFT JOIN compartdb.agent ca_a
+                          LEFT JOIN compartDB.agent ca_a
                           ON a.agent_id = ca_a.agent_id
                           WHERE ca_a.agent_id IS NULL";
                           
@@ -69,7 +69,7 @@ function agent_cron()
     
     //2-INSERT if there is no mapping for an agent sofar.
     $selectNew = "SELECT ca_a.agent_id, ca_a.first_name, ca_a.last_name, ca_a.owner_id
-                          FROM compartdb.agent ca_a
+                          FROM compartDB.agent ca_a
                           LEFT JOIN agent a
                           ON a.agent_id = ca_a.agent_id
                           WHERE a.agent_id IS NULL";
@@ -90,11 +90,11 @@ function agent_cron()
       
     //3-UPDATE if the data is newer
     $selectUpdated = "SELECT ca_a.agent_id, ca_a.first_name, ca_a.last_name, a.nid as nid, ca_a.owner_id
-                FROM compartdb.agent ca_a
+                FROM compartDB.agent ca_a
                 LEFT JOIN agent a
                 ON ca_a.agent_id = a.agent_id
                 LEFT JOIN node n
-                ON a.nid = n.nid
+                ON a.nid = n.nid 
                 WHERE UNIX_TIMESTAMP(ca_a.last_change) > n.changed";
     
     $resultUpdated = db_query( $selectUpdated );
@@ -161,11 +161,11 @@ function agent_load($node) {
                   ca_l.city as ca_l_city, ca_l.country as ca_l_country, ca_l.description as ca_l_description,
                   ca_dl.city as ca_dl_city, ca_dl.country as ca_dl_country, ca_dl.description as ca_dl_description
                   FROM agent a 
-                  LEFT JOIN compartdb.agent ca_a 
+                  LEFT JOIN compartDB.agent ca_a 
                   ON a.agent_id = ca_a.agent_id 
-                  LEFT JOIN compartdb.location as ca_l
+                  LEFT JOIN compartDB.location as ca_l
                   ON ca_a.birth_location_id = ca_l.location_id
-                  LEFT JOIN compartdb.location as ca_dl
+                  LEFT JOIN compartDB.location as ca_dl
                   ON ca_a.death_location_id = ca_dl.location_id
                   WHERE nid=$node->nid";
                   
@@ -186,8 +186,8 @@ function agent_load($node) {
     //getAwards
     $agent->awards = array();
     $selectAwards = "SELECT ca_r.at_date, ca_aw.title, ca_aw.description, ca_aw.award_id 
-                      FROM compartdb.receiving ca_r
-                      LEFT JOIN compartdb.award ca_aw
+                      FROM compartDB.receiving ca_r
+                      LEFT JOIN compartDB.award ca_aw
                       ON ca_r.award_id = ca_aw.award_id
                       WHERE ca_r.agent_id = $agent->agent_id";
     
@@ -200,8 +200,8 @@ function agent_load($node) {
     //getMembership (of institution)
     $agent->institutions = array();
     $selectInstitutions = "SELECT ca_i.name, ca_i.institution_id 
-                            FROM compartdb.membership ca_m 
-                            LEFT JOIN compartdb.institution ca_i
+                            FROM compartDB.membership ca_m 
+                            LEFT JOIN compartDB.institution ca_i
                             ON ca_m.institution_id = ca_i.institution_id 
                             WHERE ca_m.agent_id = $agent->agent_id";
                             
@@ -213,8 +213,8 @@ function agent_load($node) {
     //getCitations
     $agent->citations = array();
     $selectCitations = "SELECT ca_p.title, ca_ac.publication_id 
-                        FROM compartdb.agent_citation ca_ac 
-                        LEFT JOIN compartdb.publication ca_p
+                        FROM compartDB.agent_citation ca_ac 
+                        LEFT JOIN compartDB.publication ca_p
                         ON ca_ac.publication_id = ca_p.publication_id
                         WHERE ca_ac.agent_id = $agent->agent_id";
     $resCitations = db_query($selectCitations);
@@ -225,10 +225,10 @@ function agent_load($node) {
     //getCollective
     $agent->collectives = array();
     $resCollectives = db_query("SELECT ca_c.name, ca_c.description, ca_c.collective_id 
-                                  FROM compartdb.collective ca_c 
+                                  FROM compartDB.collective ca_c 
                                   WHERE ca_c.collective_id 
                                     IN (SELECT collective_id 
-                                          FROM compartdb.agent_is_part_of 
+                                          FROM compartDB.agent_is_part_of 
                                           WHERE agent_id = $agent->agent_id) 
                                   ORDER BY ca_c.name");
     while ($collective = db_fetch_object($resCollectives)) {
@@ -238,8 +238,8 @@ function agent_load($node) {
     //getExhibitions (that were organized by this agent)
     $agent->exhibitions = array();
     $selectExhibitions = "SELECT ca_e.name, ca_o.exhibition_id 
-                          FROM compartdb.organizing ca_o
-                          LEFT JOIN compartdb.exhibition ca_e
+                          FROM compartDB.organizing ca_o
+                          LEFT JOIN compartDB.exhibition ca_e
                           ON ca_o.exhibition_id = ca_e.exhibition_id  
                           WHERE ca_o.agent_id = $agent->agent_id";
     $resultExhibitions = db_query( $selectExhibitions );

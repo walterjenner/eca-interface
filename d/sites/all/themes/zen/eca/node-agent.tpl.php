@@ -10,17 +10,7 @@ if($teaser){
 ?>
 
   <div class="node-teaser clear-both">
-   <div class="teaser-thumb">
-     <?php 
-       if(count($node->media)>0){
-         $mediaMarkup = eca_get_media_markup($node->media[0], 'thumbs');
-         print $mediaMarkup;
-       } else {
-         print  "<img scr=\"$eca_main_path/img/agent_dummy.png\" alt=\"agent_dummy\" />";
-       }
-     ?>
-   </div>
-   <h2><?php print l(check_plain($node->title), 'node/' . $node->nid, array('attributes'=> array('title' => check_plain($node->title))) ); ?></h2>
+    <h2><?php print l(check_plain($node->title), 'node/' . $node->nid, array('attributes'=> array('title' => check_plain($node->title))) ); ?></h2>
   </div>
 
 <?php 
@@ -30,22 +20,22 @@ if($teaser){
 
   <div class="agent-node">
     <div id="tabs">
-      <h1 class="node-title"><?php print /*$node->academic_title . ' ' . */check_plain($node->title); ?></h1>
+      <h1 class="node-title agent"><?php print /*$node->academic_title . ' ' . */check_plain($node->title); ?></h1>
       
       <?php print flag_create_link('bookmarks', $node->nid);  ?>
             
       <ul>
-          <li><a href="#info-tab" title="View basic infos about this person." rel="address:/"><span>Info</span></a></li>
+          <li><a href="#info-tab" title="View basic infos about this person." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
           <?php if($node->biography!=''): ?>
-            <li><a href="#biography-tab" title="View biography of this person." rel="address:/biography-tab"><span>Biography</span></a></li>
+            <li><a href="#biography-tab" title="View biography of this person." rel="address:/biography-tab"><span><?php print t('Biography'); ?></span></a></li>
           <?php endif; ?>
           <?php if ($content_bottom): ?> 
-            <li><a href="#related-tab" title="View related items of this person." rel="address:/related-tab"><span>Related Items</span></a></li>
+            <li><a href="#related-tab" title="View related items of this person." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
           <?php endif; ?>
           <?php if(count($node->media)): ?>
-            <li><a href="#media-tab" title="View pictures of this person." rel="address:/media-tab"><span>Media (<?php print count($node->media); ?>)</span></a></li>
+            <li><a href="#media-tab" title="View pictures of this person." rel="address:/media-tab"><span><?php print t('Media'); ?> (<?php print count($node->media); ?>)</span></a></li>
           <?php endif; ?>
-          <li><a href="#comment-tab" title="View comments on this person." rel="address:/comment-tab"><span>Comments (<?php print $comment_count; ?>)</span></a></li>
+          <li><a href="#comment-tab" title="View comments on this person." rel="address:/comment-tab"><span><?php print t('Comments'); ?> (<?php print $comment_count; ?>)</span></a></li>
       </ul>
                 
       
@@ -56,21 +46,19 @@ if($teaser){
             print "<div class=\"agent-image\">$mediaMarkup</div>\n";
           }
           
-          print_value($node->birth_date . return_location( $node->ca_l_city, $node->ca_l_country ), "Born");
-          print_value($node->death_date . return_location( $node->ca_dl_city, $node->ca_dl_country ), "Died");
-          print_value($node->pseudonym, "Pseudonymous");
-          print_value( _textile_process(array(1 =>$node->description)), "Description", true);
+          print_value($node->birth_date . return_location( $node->ca_l_city, $node->ca_l_country ), t('Born'), false, '', false );
+          print_value($node->death_date . return_location( $node->ca_dl_city, $node->ca_dl_country ), t('Died'), false, '', false );
+          print_value($node->pseudonym, t('Pseudonymous') );
+          print_value( _textile_process(array(1 =>$node->description)), t('Description'), true);
           //print_value($node->email, "Email (NOTE: remove?)");
           if($node->url)
-            print_value( l($node->url, 'http://'.$node->url ), 'Webpage');  
-          print_value( return_awards($node->awards), 'Award(s)');
-          print_value( return_institutions($node->institutions), 'Member of institution(s)' );  
-          print_value( return_publications($node->citations), 'Cited in');
-          print_value( return_collectives($node->collectives), 'Part of collective(s)');
-          print_value( return_exhibitions($node->exhibitions), 'Exhibitions organized');              
-        ?>
-        
-              
+            print_value( l($node->url, $node->url ), t('Web site') );  
+          print_value( return_awards($node->awards), t('Award(s)') );
+          print_value( return_institutions($node->institutions), t('Member of institution(s)') );  
+          print_value( return_publications($node->citations), t('Cited in') );
+          print_value( return_collectives($node->collectives), t('Part of collective(s)') );
+          print_value( return_exhibitions($node->exhibitions), t('Exhibitions organized') );              
+        ?>              
                  
       </div>  
       
@@ -107,7 +95,12 @@ if($teaser){
           <div class="clear-both">&nbsp;</div> 
       </div> 
       
-      <div class="node-submitted">Last change by <?php print($name); ?> on <?php print(format_date($node->last_change, 'small')); ?></div>  
+      <div class="node-submitted">
+        <?php 
+          print t('Last change by !name on @last_change', 
+                    array('!name' => $name,'@last_change' => format_date($node->last_change, 'small') ) ); 
+        ?>
+      </div>  
           
     </div>
   </div>

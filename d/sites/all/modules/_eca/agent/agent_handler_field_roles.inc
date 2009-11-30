@@ -24,30 +24,30 @@ class agent_handler_field_roles extends views_handler_field_prerender_list {
     }
    // print_r($values);
     if ($agent_ids) {
-      $result = db_query("SELECT ca_c.agent_id as agent_id, COUNT(ca_a.artwork_id) as num_artworks FROM {compartdb.artwork} as ca_a INNER JOIN {compartdb.creating} as ca_c ON ca_c.artwork_id = ca_a.artwork_id WHERE ca_c.agent_id IN (" . implode(', ', $agent_ids) . ") GROUP BY ca_c.agent_id");
+      $result = db_query("SELECT ca_c.agent_id as agent_id, COUNT(ca_a.artwork_id) as num_artworks FROM {compartDB.artwork} as ca_a INNER JOIN {compartDB.creating} as ca_c ON ca_c.artwork_id = ca_a.artwork_id WHERE ca_c.agent_id IN (" . implode(', ', $agent_ids) . ") GROUP BY ca_c.agent_id");
       while ($agent = db_fetch_object($result)) {
         if($agent->num_artworks > 0)
           $this->items[$agent->agent_id]['artist'] = t('Artist');
       }
-      $result2 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_p.publication_id) as num_publications FROM {compartdb.publication} as ca_p INNER JOIN {compartdb.authorship} as ca_a ON ca_a.publication_id = ca_p.publication_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
+      $result2 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_p.publication_id) as num_publications FROM {compartDB.publication} as ca_p INNER JOIN {compartDB.authorship} as ca_a ON ca_a.publication_id = ca_p.publication_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
       while ($agent2 = db_fetch_object($result2)) {
         if($agent2->num_publications > 0){         
           $this->items[$agent2->agent_id]['author'] = t('Author');
         }       
       }
-      $result3 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_o.exhibition_id) as num_exhibitions FROM {compartdb.agent} as ca_a INNER JOIN {compartdb.organizing} as ca_o ON ca_a.agent_id = ca_o.agent_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
+      $result3 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_o.exhibition_id) as num_exhibitions FROM {compartDB.agent} as ca_a INNER JOIN {compartDB.organizing} as ca_o ON ca_a.agent_id = ca_o.agent_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
       while ($agent3 = db_fetch_object($result3)) {
         if($agent3->num_exhibitions > 0){         
           $this->items[$agent3->agent_id]['Curator'] = t('Curator');
         }       
       }
-      $result4 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_ao.artwork_id) as num_artworks FROM {compartdb.agent} as ca_a INNER JOIN {compartdb.artwork_ownership} as ca_ao ON ca_a.agent_id = ca_ao.agent_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
+      $result4 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_ao.artwork_id) as num_artworks FROM {compartDB.agent} as ca_a INNER JOIN {compartDB.artwork_ownership} as ca_ao ON ca_a.agent_id = ca_ao.agent_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
       while ($agent4 = db_fetch_object($result4)) {
         if($agent4->num_artworks > 0){         
           $this->items[$agent4->agent_id]['Art Collectors'] = t('Art Collector');
         }       
       }
-      $result5 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_co.collection_id) as num_artworks FROM {compartdb.agent} as ca_a INNER JOIN {compartdb.collection_ownership} as ca_co ON ca_a.agent_id = ca_co.agent_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
+      $result5 = db_query("SELECT ca_a.agent_id as agent_id, COUNT(ca_co.collection_id) as num_artworks FROM {compartDB.agent} as ca_a INNER JOIN {compartDB.collection_ownership} as ca_co ON ca_a.agent_id = ca_co.agent_id WHERE ca_a.agent_id IN (" . implode(', ', $agent_ids) . ")  GROUP BY ca_a.agent_id");
       while ($agent5 = db_fetch_object($result5)) {
         if($agent5->num_artworks > 0){         
           $this->items[$agent5->agent_id]['Art Collectors'] = t('Art Collector');

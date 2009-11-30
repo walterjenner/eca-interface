@@ -1,6 +1,7 @@
 <?php 
   //the path to all media files
   define("MEDIA_PATH", "http://localhost/www/eca/public/");
+  //define("MEDIA_PATH", "http://localhost/www/eca/public/");
   define("URL_LENGTH", 45);
   define("TITLE_LENGTH", 30);
   define("RELATED_ITEM_LIMIT", 10); //how many items should be shown in the "related items" tab.
@@ -38,7 +39,7 @@
    */
   function eca_get_media($table_id, $row_id){    
     
-    $selectMedia = "SELECT mf.file_name, mf.format, mf.description FROM compartdb.illustrated_by LEFT JOIN compartdb.media_file mf ON illustrated_by.media_file_id = mf.media_file_id WHERE illustrated_by.row_id = $row_id AND illustrated_by.table_id = $table_id";
+    $selectMedia = "SELECT mf.file_name, mf.format, mf.description FROM compartDB.illustrated_by LEFT JOIN compartDB.media_file mf ON illustrated_by.media_file_id = mf.media_file_id WHERE illustrated_by.row_id = $row_id AND illustrated_by.table_id = $table_id";
     $resultMedia = db_query($selectMedia);
     $media = array();
     while ($dataMedia = db_fetch_object($resultMedia)) {
@@ -392,27 +393,37 @@
   /*
    * prints a markup-snipped with a value-label couple
    */
-  function print_value($value, $label, $multiline = false){
-    print( return_value($value, $label, $multiline) );
+  function print_value($value, $label, $multiline = false, $class_str = '', $colon = true, $showLabel = true){
+    print( return_value($value, $label, $multiline, $class_str, $colon, $showLabel) );
   }
   
-  function return_value($value, $label, $multiline = false, $class_str = ''){
+  function return_value($value, $label, $multiline = false, $class_str = '', $colon = true, $showLabel = true){
     if(!is_empty($value) ) { 
      if(strcasecmp($label, "description") == 0){
        $value = check_markup( $value, TEXTILE_FORMAT_ID, false );
-       $multiline = true;
+       //$multiline = true;
+       $showLabel = false;
      }
+     
+     if($nolabel)
+       $multiline = false;
    
-    $output .= '<div class="label_value_pair"><span class="label">' . $label . ': &nbsp;</span>';
-    $output .= ($multiline)?'<br/>':'';
-    $output .= '<span class="value ' . $class_str . '">' . $value .'</span></div>';
+     $output .= '<div class="label_value_pair">';
+     if($showLabel){
+       $output .= ($colon)?'<span class="label">':'<span>';
+       $output .= $label;
+       $output .= ($colon)?':':'';
+       $output .= '&nbsp;</span>';
+       $output .= ($multiline)?'<br/>':'';
+     }
+     $output .= '<span class="value ' . $class_str . '">' . $value .'</span></div>';
     }
     
     return $output; 
   }
 
   function get_publication_title($id){
-    $res = db_query("SELECT title FROM compartdb.publication WHERE publication_id = $id");    
+    $res = db_query("SELECT title FROM compartDB.publication WHERE publication_id = $id");    
     $pub = db_fetch_object($res);    
     return $pub->title;
   }

@@ -4,6 +4,7 @@
 function eca_main_views_data(){
   $data = array();
   
+  //PUBLICATIONS
   //BASE TABLE
   $data['publication']['table']['base'] = array(
     'field' => 'publication_id', // the exhibit module function render() needs this var to be set!!!
@@ -116,6 +117,74 @@ function eca_main_views_data(){
     ),
   );
   
+  
+  
+  
+  //PUBLICATIONS
+  //BASE TABLE
+  $data['institution']['table']['base'] = array(
+    'field' => 'institution_id', // the exhibit module function render() needs this var to be set!!!
+    'institution_id' => 'Primary key',
+    'title' => t('Institution'),
+    'help' => t('The unique ID of an institution in the compart DB'),
+    'database' => 'compart',
+    'weight' => -10,
+  );
+  
+  //TABLES
+  $data['institution']['table']['group'] = t('Institution');
+  $data['institution_type']['table']['group'] = t('Institution Type');
+  
+  
+  //CONNECTIONS
+  $data['institution_type']['table']['join']['institution'] = array(    
+    'left_field' => 'institution_type_id',
+    'field' => 'institution_type_id',
+  );
+    
+  //FIELDS
+  $data['institution']['institution_id'] = array(
+    'title' => t('Institution ID'),
+    'help' => t('The ID of the Institution'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );   
+  $data['institution']['name'] = array(
+    'title' => t('Name'),
+    'help' => t('The Name of the Institution'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );  
+  $data['institution']['description'] = array(
+    'title' => t('Description'),
+    'help' => t('The Description of the Institution'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    )
+  );  
+  $data['institution_type']['name'] = array(
+    'title' => t('Type of Institution'),
+    'help' => t('Institution Type Name'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+  );  
+    
   //print_r($data);
 
   return $data;

@@ -50,15 +50,15 @@ function exhibition_cron()
 {
   $last_run = variable_get('cron_last', time());
 
-  //if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_EXHIBITION_SYNC ){
-  if( true ){
+  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_EXHIBITION_SYNC ){
+  //if( true ){
     variable_set('cron_last', time() );
     global $userMapping;
      
     //1-DELETE if there is a mapping which is not in compart db anymore
     $selectDeprecated = "SELECT e.nid
                           FROM exhibition e
-                          LEFT JOIN compartdb.exhibition ca_e
+                          LEFT JOIN compartDB.exhibition ca_e
                           ON e.exhibition_id = ca_e.exhibition_id
                           WHERE ca_e.exhibition_id IS NULL";
                           
@@ -70,10 +70,10 @@ function exhibition_cron()
     
     //2-INSERT if there is no mapping for an exhibition sofar.
     $selectNew = "SELECT ca_e.exhibition_id, ca_e.name, ca_et.name as exhibition_type_name, ca_e.owner_id
-                          FROM compartdb.exhibition ca_e
+                          FROM compartDB.exhibition ca_e
                           LEFT JOIN exhibition e
                           ON e.exhibition_id = ca_e.exhibition_id
-                          LEFT JOIN compartdb.exhibition_type ca_et
+                          LEFT JOIN compartDB.exhibition_type ca_et
                           ON ca_e.exhibition_type_id = ca_et.exhibition_type_id
                           WHERE e.exhibition_id IS NULL";
                           
@@ -92,12 +92,12 @@ function exhibition_cron()
       
     //3-UPDATE if the data is newer
     $selectUpdated = "SELECT ca_e.exhibition_id, ca_e.name, e.nid as nid, ca_et.name as exhibition_type_name, ca_e.owner_id
-                FROM compartdb.exhibition ca_e
+                FROM compartDB.exhibition ca_e
                 LEFT JOIN exhibition e
                 ON ca_e.exhibition_id = e.exhibition_id
                 LEFT JOIN node n
                 ON e.nid = n.nid
-                LEFT JOIN compartdb.exhibition_type ca_et
+                LEFT JOIN compartDB.exhibition_type ca_et
                 ON ca_e.exhibition_type_id = ca_et.exhibition_type_id
                 WHERE UNIX_TIMESTAMP(ca_e.last_change) > n.changed";
     
@@ -180,9 +180,9 @@ function exhibition_load($node) {
   $selectExhibition = "SELECT e.exhibition_id, e.nid, ca_e.name as exhibition_name, ca_e.description, ca_et.name as exhibition_type_name,
                         UNIX_TIMESTAMP(ca_e.last_change) as last_change 
                         FROM exhibition e 
-                        LEFT JOIN compartdb.exhibition ca_e 
+                        LEFT JOIN compartDB.exhibition ca_e 
                         ON e.exhibition_id = ca_e.exhibition_id
-                        LEFT JOIN compartdb.exhibition_type ca_et
+                        LEFT JOIN compartDB.exhibition_type ca_et
                         ON ca_e.exhibition_type_id = ca_et.exhibition_type_id
                         WHERE nid=$node->nid";
   $resultExhibition = db_query($selectExhibition);
@@ -195,8 +195,8 @@ function exhibition_load($node) {
     //getInstitutions (where this exhibition was shown)
     $exhibition->institutions = array();
     $selectInstitutions = "SELECT  ca_i.name, ca_h.institution_id, ca_h.from_date, ca_h.to_date
-                          FROM compartdb.happening ca_h
-                          LEFT JOIN compartdb.institution ca_i
+                          FROM compartDB.happening ca_h
+                          LEFT JOIN compartDB.institution ca_i
                           ON ca_h.institution_id = ca_i.institution_id
                           WHERE ca_h.exhibition_id = $exhibition->exhibition_id";
     
@@ -208,8 +208,8 @@ function exhibition_load($node) {
     //getCitations (that are owned by this i.)
     $exhibition->citations = array();
     $selectCitations = "SELECT ca_p.title, ca_ec.publication_id 
-                          FROM compartdb.exhibition_citation ca_ec
-                          LEFT JOIN compartdb.publication ca_p
+                          FROM compartDB.exhibition_citation ca_ec
+                          LEFT JOIN compartDB.publication ca_p
                           ON ca_ec.publication_id = ca_p.publication_id  
                           WHERE ca_ec.exhibition_id = $exhibition->exhibition_id";
     $resultCitations = db_query( $selectCitations );
@@ -219,7 +219,7 @@ function exhibition_load($node) {
     
     //getOrganizers
     $exhibition->organizers = array( 'agent' => array(), 'institution' => array() );
-    $selectOrganizers = "SELECT agent_id, institution_id FROM compartdb.organizing WHERE exhibition_id = $exhibition->exhibition_id";
+    $selectOrganizers = "SELECT agent_id, institution_id FROM compartDB.organizing WHERE exhibition_id = $exhibition->exhibition_id";
     $resultOrganizers = db_query( $selectOrganizers );  
     while( $organizer = db_fetch_object($resultOrganizers) ){
       if($organizer->agent_id != 0){
@@ -228,7 +228,7 @@ function exhibition_load($node) {
         }
       }
       else if( $organizer->institution_id != 0 ){
-        if( $organizer_detail = db_fetch_object( db_query( "SELECT i.name, i.institution_id FROM compartdb.institution i WHERE i.institution_id = $organizer->institution_id" ) )){
+        if( $organizer_detail = db_fetch_object( db_query( "SELECT i.name, i.institution_id FROM compartDB.institution i WHERE i.institution_id = $organizer->institution_id" ) )){
           array_push( $exhibition->organizers['institution'], $organizer_detail );
         }
       } 

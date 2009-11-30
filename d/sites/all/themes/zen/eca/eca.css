@@ -79,7 +79,7 @@ a:hover #logo{
   border: 2px solid #e6e6e6;
   color: #333;
   font-family: Arial, sans-serif;
-  width: 128px; /*140-8padding-4border*/
+  width: 138px; /*150-8padding-4border*/
 }
 
 #search-box input:focus, #search-box input:active, #finder-box input:focus, #finder-box input:active {
@@ -162,6 +162,21 @@ a:hover #logo{
   font-size: 0.55em;
   color: #666;
 }
+
+/*** FRONT PAGE BLOCK ******/
+#block-menu-menu-browse a {
+  color: #2D1E1E;
+}
+#block-menu-menu-browse li.leaf {
+  list-style-image: none !important;
+  list-style-type: none !important;
+}
+
+.item-list ul li{
+  list-style-type: none !important;
+  padding-bottom: 1px;
+}
+
 /*** RELATED ITEMS TAB *********/
 #related-tab .content-class {
   margin-bottom:20px;
@@ -210,7 +225,9 @@ div.all-link{
 
 /* NODE *************/
 
-#content-inner h1{ margin: 0 0 15px 0; }
+#content-inner h1{ margin: 0 0 15px 0; line-height:1.1em;}
+#content-inner h1.exhibition, #content-inner h1.artwork { width: 400px; line-height:1.1em; }
+#content-inner h1.agent { width: 320px; line-height:1.1em;}
 #content-inner h2{ margin: 0 0 10px 0; }
 #content-inner h3 { margin: 10px 0 5px 0; }
 #content-inner h4 { margin: 5px 0 5px 0; }
@@ -377,7 +394,6 @@ html.js input.form-autocomplete {
 .form-item label {
   /*text-transform: uppercase;*/
 }
-
 /* TAGS ************/
 /* allgemein block */
 span.tag {
@@ -714,14 +730,6 @@ div.exhibit-busyIndicator {
   text-decoration: none;
 }
 
-#comment-form input.form-text, #comment-form textarea {
-  background: #fff;
-  border: 2px solid #E6E6E6;  
-}
-#comment-form input:focus.form-text , #comment-form textarea:focus {
-  border: 2px solid #97BFBC;  
-}
-
 /** MEMBERS *************/
 div.view-Members ul { list-style: none; margin: 0; padding:0;}
 div.view-Members ul li{ list-style-type: none; margin: 0 0 0 0; padding: 0; width: 97px; background: #F2F2F2; 
@@ -741,23 +749,32 @@ div.view-Members ul li a {
 div.view-Members ul li a:visited { color: #666; }
 div.view-Members ul li a:hover { color: #000; }
 
+
+
 /*** SEARCH FORM + COMMUNITY TAGS FORM *******/
 #search-form input.form-text, #community-tags-form input.form-text, .finder-1 input.form-text,
-#user-login input.form-text, #user-register input.form-text, #user-pass input.form-text, div.exhibit-text-facet input {
+#user-login input.form-text, #user-register input.form-text, #user-pass input.form-text, div.exhibit-text-facet input,
+#comment-form input.form-text, #comment-form textarea,
+.webform-client-form select,
+.webform-client-form input, .webform-client-form textarea {
   border: 2px solid #E6E6E6;	
   padding:3px;
 }
-#search-form input.form-text, #user-login input.form-text, #user-register input.form-text, #user-pass input.form-text{
+#search-form input.form-text, #user-login input.form-text, #user-register input.form-text, #user-pass input.form-text,
+#comment-form input.form-text, #comment-form textarea {
   background: #fff;
 }
 #search-form input:focus.form-text, #community-tags-form input:focus.form-text, .finder-1 input:focus.form-text,
 #user-login input:focus.form-text, #user-register input:focus.form-text, #user-pass input:focus.form-text,
-div.exhibit-text-facet input:focus, div.exhibit-text-facet input:active {
+div.exhibit-text-facet input:focus, div.exhibit-text-facet input:active,
+#comment-form input:focus.form-text , #comment-form textarea:focus,
+.webform-client-form input:focus, .webform-client-form textarea:focus {
   border: 2px solid #97BFBC;	
 }
 #search-form input.form-submit, #search-form input.form-submit:focus, 
 #community-tags-form input.form-button, #community-tags-form input.form-button:focus,
-#user-login input.form-submit, #user-register input.form-submit, #user-pass input.form-submit {
+#user-login input.form-submit, #user-register input.form-submit, #user-pass input.form-submit,
+.webform-client-form input.form-submit {
   background: #e6e6e6;
 	color: #475159;	
 	padding:3px;
@@ -771,7 +788,8 @@ div.exhibit-text-facet input:focus, div.exhibit-text-facet input:active {
 #community-tags-form input.form-button:active,
 #user-login input.form-submit:active,
 #user-register input.form-submit:active,
-#user-pass input.form-submit:active {
+#user-pass input.form-submit:active,
+.webform-client-form input.form-submit:active {
 	padding:3px;
 	border-right: solid 1px #f2f2f2;
 	border-bottom:solid 1px #f2f2f2;	
@@ -896,7 +914,7 @@ a:hover.feed-icon{
   list-style: none;
 }
 .carousel li{
-  padding: 0 22px 0 22px;
+  padding: 0 8px 0 8px;
   display: inline;
   width:64px;
   height:64px;
