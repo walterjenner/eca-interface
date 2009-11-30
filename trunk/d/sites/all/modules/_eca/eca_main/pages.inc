@@ -43,9 +43,9 @@ function eca_main_publication( $id = 0 ){
   
   if(!is_empty($item->url)){
     if(!is_empty($item->last_seen))
-      $output .=  return_value( l($item->url, $item->url) . ' ('.t('retrieved').': ' . $item->last_seen . ')' , 'URL');
+      $output .=  return_value( l($item->url, absolute($item->url)) . ' ('.t('retrieved').': ' . $item->last_seen . ')' , 'URL');
     else
-      $output .= return_value( l($item->url, $item->url) , 'URL');
+      $output .= return_value( l($item->url, absolute($item->url)) , 'URL');
   }
   $output .= return_value( $item->book_title , t('Book title') );
   $output .= return_value( $item->keywords , t('Keywords') );
@@ -190,7 +190,7 @@ function eca_main_institution( $id = 0 ){
   
   $output .= return_value($item->description, t('Description') );
   if(!is_empty($item->url))
-    $output .= return_value(l($item->url, $item->url), 'Web page');
+    $output .= return_value(l($item->url, absolute($item->url)), 'Web page');
   $output .= return_value(return_address($item->street, $item->zip, $item->city, $item->country), t('Address') );
   
   $output .= return_value( return_happenings( $item->happenings ), t('Happening(s)') );

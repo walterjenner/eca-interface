@@ -23,7 +23,7 @@ class artwork_handler_field_artwork_agents extends views_handler_field_prerender
       $artwork_ids[] = $result->{$this->aliases['artwork_id']};
     }
     if ($artwork_ids) {
-      $result = db_query("SELECT compartdb_creating.artwork_id, compartdb_agent.first_name, compartdb_agent.last_name, agent.nid FROM {compartdb_agent} INNER JOIN {compartdb_creating} ON compartdb_creating.agent_id = compartdb_agent.agent_id LEFT JOIN {agent} ON compartdb_creating.agent_id = agent.agent_id WHERE compartdb_creating.artwork_id IN (" . implode(', ', $artwork_ids) . ")");
+      $result = db_query("SELECT compartDB.creating.artwork_id, compartDB.agent.first_name, compartDB.agent.last_name, agent.nid FROM {compartDB.agent} INNER JOIN {compartDB.creating} ON compartDB.creating.agent_id = compartDB.agent.agent_id LEFT JOIN {agent} ON compartDB.creating.agent_id = agent.agent_id WHERE compartDB.creating.artwork_id IN (" . implode(', ', $artwork_ids) . ")");
       while ($agent = db_fetch_object($result)) {
         $this->items[$agent->artwork_id][$agent->nid] .= l($agent->first_name . ' ' . $agent->last_name, 'node/'.$agent->nid);          
       }

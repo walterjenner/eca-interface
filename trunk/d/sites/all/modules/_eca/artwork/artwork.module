@@ -47,11 +47,11 @@ function artwork_help($path, $arg) {
  */
 function artwork_cron()
 {
-  $last_run = variable_get('cron_last', time());
+  $last_run = variable_get('cron_last_artwork', 0);
 
   if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_ARTWORK_SYNC ){
   //if( true ){
-    variable_set('cron_last', time() );
+    variable_set('cron_last_artwork', time() );
     global $userMapping;
     
     //DELETE if there is a mapping which is not in compart db anymore
@@ -64,7 +64,8 @@ function artwork_cron()
     $resultDeprecated = db_query( $selectDeprecated );
     while( $toDelete = db_fetch_object( $resultDeprecated ) ){
       node_delete( $toDelete->nid );
-      drupal_set_message( "Deleted artwork: nid: $toDelete->nid");
+      //drupal_set_message( "Deleted artwork: nid: $toDelete->nid");
+      watchdog( 'artwork.module', 'Deleted artwork: nid: @nid', array('@nid' => $toDelete->nid) );
     }
     
     //INSERT if there is no mapping for an artwork sofar.
@@ -82,7 +83,8 @@ function artwork_cron()
       $toInsert->comment = 2;
       $toInsert->uid = isset($userMapping[$toInsert->owner_id])?$userMapping[$toInsert->owner_id]:0;
       node_save( $toInsert );      
-      drupal_set_message( "Inserted artwork: nid: $toInsert->nid, title: $toInsert->title");
+      //drupal_set_message( "Inserted artwork: nid: $toInsert->nid, title: $toInsert->title");
+      watchdog( 'artwork.module', 'Inserted artwork: nid: @nid, title: @title', array('@nid' => $toInsert->nid, '@title' => $toInsert->title ) );
       
       //update search index     
       _node_index_node( $toInsert ); 
@@ -107,7 +109,8 @@ function artwork_cron()
       $n->title = $updated->title;
       $n->uid = isset($userMapping[$updated->owner_id])?$userMapping[$updated->owner_id]:0;
       node_save( $n );
-      drupal_set_message( "Updated artwork: nid: $n->nid, title: $n->title");
+      //drupal_set_message( "Updated artwork: nid: $n->nid, title: $n->title");
+      watchdog( 'artwork.module', 'Updated artwork: nid: @nid, title: @title', array('@nid' => $n->nid, '@title' => $n->title ) );
       
       //update search index
       _node_index_node( $n );   

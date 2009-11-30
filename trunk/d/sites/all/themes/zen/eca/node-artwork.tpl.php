@@ -25,7 +25,7 @@ if($teaser){
 
   <div class="artwork-node">
     <div id="tabs">      
-      <h1 class="node-title"><?php print check_plain($node->title); ?></h1>
+      <h1 class="node-title artwork"><?php print check_plain($node->title); ?></h1>
       <?php print flag_create_link('bookmarks', $node->nid);  ?>
       <ul>
           <li><a href="#info-tab" title="View basic infos about this artwork." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
@@ -47,9 +47,6 @@ if($teaser){
             print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
           }
                    
-          if(strlen($title) < strlen($node->title) )
-            print_value($node->title, t('Full title') );
-          
           print_value(return_agents_by_node($node->artists), t('Artist(s)') );
           
           print_value(_textile_process(array(1 => $node->description)), t('Description'), true);
