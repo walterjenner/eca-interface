@@ -62,7 +62,8 @@ function artwork_views_data(){
     'title' => t('creation_year'),
     'help' => t('A string describing the creation year'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'eca_main_handler_field_year',
+      //'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
       'numeric' => TRUE
     ),
@@ -133,6 +134,9 @@ function artwork_views_handlers() {
           'parent' => 'views_handler_field' ),
         'eca_main_handler_argument_agent_id' => array(
           'parent' => 'views_handler_argument_many_to_one', 
+          'path' => drupal_get_path('module', 'eca_main') ),
+        'eca_main_handler_field_year' => array(
+          'parent' => 'views_handler_field_numeric', 
           'path' => drupal_get_path('module', 'eca_main') )
     ),
   );

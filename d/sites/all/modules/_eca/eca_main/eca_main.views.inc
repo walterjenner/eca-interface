@@ -75,7 +75,8 @@ function eca_main_views_data(){
     'help' => t('Year of publication'), // The help that appears on the UI,
     // Information for displaying the nid
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'eca_main_handler_field_year',
+     // 'handler' => 'views_handler_field_numeric',
       'click sortable' => TRUE,
       'numeric' => TRUE
     ),
@@ -203,7 +204,9 @@ function eca_main_views_handlers() {
         'eca_main_handler_field_agent_list' => array(
           'parent' => 'views_handler_field_prerender_list', ),
         'eca_main_handler_argument_agent_id' => array(
-          'parent' => 'views_handler_argument_many_to_one', )
+          'parent' => 'views_handler_argument_many_to_one', ),
+        'eca_main_handler_field_year' => array(
+          'parent' => 'views_handler_field_numeric', ),
     ),
   );
 }
