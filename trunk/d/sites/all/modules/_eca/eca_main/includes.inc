@@ -293,17 +293,23 @@
   function return_artwork_thumb( $node, $link = true ){
     $output .= '<li>';
     
-    $thumbnailFormat = ($node->format == 'flv')?'.gif':'.jpg';
+    $thumbnailFormat = (eca_is_video($node))?'.gif':'.jpg';
+    
+    $path = '';
+    if(is_empty($node->file_name))
+      $path .= drupal_get_path('module', 'eca_main').'/img/no_thumb.png';
+    else
+      $path .= image_thumb_path() . $node->file_name . $thumbnailFormat;
     
     if(!is_empty($node->creation_year))
       $yearString = ' - Date: ' . $node->creation_year;
     
     if($link){
-      $output .= l('<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.$thumbnailFormat.'" alt="'.$node->title.'" />', 
+      $output .= l('<img src="'.$path.'" alt="'.$node->title.'" />', 
                     "node/$node->nid", 
                     array( 'html' => true, 'attributes' => array('title' => 'Title: ' . $node->title . $yearString, 'class' => 'artwork-tooltip' ) ));
     }else {
-        $output .= '<img src="'.MEDIA_PATH.'imageUploads/thumbs/'.$node->file_name.$thumbnailFormat.'" alt="'.$node->title.'" class="current-item" />';
+        $output .= '<img src="'.$path.'" alt="'.$node->title.'" class="current-item" />';
     }
     $output .= '</li>';
     return $output;

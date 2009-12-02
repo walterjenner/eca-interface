@@ -51,6 +51,7 @@ function artwork_cron()
 
   if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_ARTWORK_SYNC ){
   //if( true ){
+    watchdog( 'artwork.module', 'Updated mapping');
     variable_set('cron_last_artwork', time() );
     global $userMapping;
     
