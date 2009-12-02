@@ -27,9 +27,16 @@
   //the folders where certain file types are stored
   global $formatFolder;
   $formatFolder = array('img' => "imageUploads",
-                        'flv' => "videoUploads", 
-                        'mp3' => "soundUploads",
+                        'vid' => "videoUploads", 
+                        'sound' => "soundUploads",
                         'pdf' => "docUploads" );
+                        
+  global $imageFormats;
+  $imageFormats = array('jpg', 'jpeg', 'gif', 'tif', 'tiff', 'png');  
+  global $videoFormats;
+  $videoFormats = array('flv', 'mov');
+  global $soundFormats;;
+  $soundFormats = array('mp3', 'wav');          
   
   /*
    * return html markup for a flv/mp3 file embedded in a player
@@ -45,11 +52,11 @@
     global $formatFolder;
     global $base_url;
     
-    if(($media->format != 'flv' && $media->format != 'mp3') || is_empty($media->file_name))
+    if((!eca_is_video($media)) || is_empty($media->file_name))
       return;
     
     if(is_empty($media->path))
-      $media->path = MEDIA_PATH . $formatFolder[$media->format].'/'.$media->file_name.'.'.$media->format;
+      $media->path = MEDIA_PATH . $formatFolder[$media->format].'/'.$media->file_name.'.flv';
     
     $path_to_lib = $base_url . '/' . drupal_get_path('module', 'eca_main') . '/lib/flv_player/';
     $path_to_swf = $path_to_lib . 'player_flv_maxi.swf';
@@ -73,10 +80,39 @@
     return $output;    
   }
   
+  function return_sound_markup($media){
+    global $base_url;
+    
+    drupal_add_js(drupal_get_path('module', 'eca_main') .'/lib/audio_player/audio-player.js');
+    $path_to_swf = $base_url .'/'. drupal_get_path('module', 'eca_main') .'/lib/audio_player/player.swf';
+    $path_to_sound = $media->path;
+    
+    $js_setup = "AudioPlayer.setup(\"$path_to_swf\", {  
+                  width: 290,
+                  loader: '97bfbc',
+                  righticon: '333333',
+                  righticonhover: '333333',
+                  rightbghover: 'b4b4b4',
+                  rightbg: 'b4b4b4'  
+                 });";  
+    
+    drupal_add_js($js_setup, 'inline');
+    
+    $output =  '<div><p id="'.$media->file_name.'">'.l($media->file_name .'.mp3', $path_to_sound).'</p>';
+    $output .=  '<p>'. return_value($media->description, t('Description')) .'</p></div>';
+    $output .= '<script type="text/javascript">'; 
+	  $output .=   'AudioPlayer.embed("'.$media->file_name.'", {soundFile: "'.$path_to_sound.'", titles: "'.$media->file_name.'"});  ';
+    $output .=  '</script>';
+    
+    return $output;
+  }
+  
   /*
    * return a markup-snippet to embed a media file
+   * 
+   * note: $inline means not embedded (eg. link instead of video player)
    */
-  function eca_get_media_markup($media, $size, $image_link = false){
+  function eca_get_media_markup($media, $size, $inline = false){
     $path = MEDIA_PATH;
     $path .= format_folder($media);
     $output = '';
@@ -88,7 +124,7 @@
       //all shrinked are jpg
       $path .= (is_empty($size))?$media->format:'.jpg';
        
-      if( $image_link ){
+      if( $inline ){
         $output = l($media->file_name, $path);
       }
       else {
@@ -97,93 +133,76 @@
     }
     else if( $media->format == 'pdf' ){
       $path .= $media->file_name . '.pdf';
-      $output = "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name.$media->format</a>";
+      $output = "PDF: <a href=\"$path\" title=\"Download $media->file_name\">$media->file_name.$media->format</a> (".format_bytes($media->file_size).")";
     }
-    else if( $media->format == 'flv' || $media->format == 'mp3' ){
+    else if( eca_is_video($media) ){
      if($size!= 'thumbs'){
-        $media->path = $path . $media->file_name . '.' . $media->format;
-        $output = return_video_markup($media);
-        //TODO add mp3 player
+        $media->path = $path . 'lowq/' . $media->file_name . '.flv';//
+        if( $inline ){
+          $output = l($media->file_name, $media->path);
+        }
+        else {          
+          $output = return_video_markup($media);
+        }
       }
       else { //still image preview //not in use sofar
-        $path = MEDIA_PATH . 'imageUploads/thumbs/'.$media->file_name.'.gif';
+        $path = image_thumb_path().$media->file_name.'.gif';
         $output = "<div><img src=\"$path\" alt=\"$media->file_name\" /><br/>$media->description</div>";    
       }
-    }else {
+    }
+    else if (eca_is_sound($media)){
+      $media->path .= $path . 'lowq/' . $media->file_name . '.mp3';//
+      /*if( $inline ){
+          $output = l($media->file_name, $media->path);
+      }
+      else {*/ 
+        $output = return_sound_markup($media);
+      //}
+    }
+    else {
       $output = $media->format . ':' . $media->file_name;        
     }
     return $output;
-  }  
+  }
+  function image_thumb_path(){
+    global $formatFolder;
+    return MEDIA_PATH . $formatFolder['img'] .'/thumbs/';
+  }
   function eca_is_image($media){
-    return ($media->format == 'jpg' || $media->format == 'gif' || $media->format == 'png' || $media->format == 'tif' || $media->format == 'jpeg');
-  }  
+    global $imageFormats;
+    foreach ($imageFormats as $format){
+      if($media->format == $format)
+        return true;
+    }
+    return false;
+  }
+  function eca_is_video($media){
+    global $videoFormats;
+    foreach ($videoFormats as $videoFormat){
+      if($media->format == $videoFormat)
+        return true;
+    }
+    return false;
+  } 
+  function eca_is_sound($media){
+    global $soundFormats;
+    foreach ($soundFormats as $format){
+      if($media->format == $format)
+        return true;
+    }
+    return false;
+  } 
   function format_folder($media){
     global $formatFolder;
     if( eca_is_image($media) )
       return $formatFolder['img'] . '/';
+    else if( eca_is_video($media) )
+      return $formatFolder['vid'] . '/';
+    else if( eca_is_sound($media) )
+      return $formatFolder['sound'] . '/';
     else 
       return $formatFolder[$media->format] . '/'; 
   }  
-  
-  function DEP_eca_get_media_markup($media, $size, $image_link = false){
-    $path = eca_get_media_path($media->format, $size);
-    if(!is_empty($size) && eca_is_image($media)) {//note: seems like all thumbs and medium images are jpg's
-      $path .= $media->file_name;
-      $path .= ($media->format == 'flv')?'.gif':'.jpg';    
-    }
-    else
-      $path .= $media->file_name . '.' . $media->format;
-    
-    $output = '';
-    if( eca_is_image($media) )
-    {
-      if( $image_link ){
-        $output .= l($media->file_name, $path);
-        return $output;
-      }
-      else {
-        $output .= '<div>';
-        $output .= "<img src=\"$path\" alt=\"$media->file_name\" />";
-        $output .= "<br/>$media->description</div>";
-        return $output; 
-      }
-    }
-    else if($media->format == 'pdf'){
-      return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name.$media->format</a>";
-    }
-    else if($media->format == 'flv' )
-    {
-      //return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name</a>";
-      return return_video_markup($media);
-    }
-    else if($media->format == 'flv' || $media->format == 'mp3')
-    {
-      return "<a href=\"$path\" title=\"Download $media->file_name\">$media->file_name</a>";      
-    }
-    else 
-    {
-      return $media->format . ':' . $media->file_name;
-    }
-  }  
-  
-  /*
-   * get the path for a certain file type
-   */
-  function DEP__eca_get_media_path($format, $size){
-    global $formatFolder;
-    $path = MEDIA_PATH;
-    if( $formatFolder[$format] != "")
-      $path .= $formatFolder[$format] . '/';
-    else
-      $path .= 'formatUnkown' . '/';
-      
-    if( !is_empty($size) && $format != 'pdf' )
-      $path .= $size . '/';
-    //else
-       //$path .= '/';
-       
-    return $path;
-  }
   
   function return_media_links( $media ){    
     if(count($media)==0)
@@ -487,7 +506,7 @@
    * get an array with all media from the db
    */
   function eca_get_media($table_id, $row_id){    
-    $selectMedia = "SELECT mf.file_name, mf.format, mf.description FROM compartDB.illustrated_by LEFT JOIN compartDB.media_file mf ON illustrated_by.media_file_id = mf.media_file_id WHERE illustrated_by.row_id = $row_id AND illustrated_by.table_id = $table_id";
+    $selectMedia = "SELECT mf.file_name, mf.format, mf.description, mf.file_size FROM compartDB.illustrated_by LEFT JOIN compartDB.media_file mf ON illustrated_by.media_file_id = mf.media_file_id WHERE illustrated_by.row_id = $row_id AND illustrated_by.table_id = $table_id";
     $resultMedia = db_query($selectMedia);
     $media = array();
     while ($dataMedia = db_fetch_object($resultMedia)) {
@@ -543,3 +562,15 @@
    }
    return $url;
  }
+ 
+ function format_bytes($bytes, $precision = 1) {
+    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+  
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+  
+    $bytes /= pow(1024, $pow);
+  
+    return round($bytes, $precision) . ' ' . $units[$pow];
+} 

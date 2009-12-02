@@ -111,14 +111,14 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
             $block['title'] = t('Artworks shown');
             $fromTable = "compartDB.showing_artwork ft";
             $whereField = "exhibition_id = $node->exhibition_id";
-            $moreLinkHref = "artworks_at/";
+            $moreLinkHref = "node/3118";
             $query = "args=$node->exhibition_id";
           }
           else if($node->type == 'agent'){
             $block['title'] = t('Artwork');
             $fromTable = "compartDB.creating ft";
             $whereField = "agent_id = $node->agent_id";
-            $moreLinkHref = "node/2498/";
+            $moreLinkHref = "node/2498";
             $query = "args=$node->agent_id";
           }
           else
@@ -211,7 +211,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
             }
             
             if($node->type=="agent")
-              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>Show all ' . $totalNum . ' Exhibitions</span>', "exhibitions/", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
+              $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>Show all ' . $totalNum . ' Exhibitions</span>', "node/2499", array('query' => "args=$node->agent_id", 'html' => true) ) . '</div>';
                                           
             break;
           //PUBLICATIONS BLOCK
@@ -237,7 +237,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 $numRes++;
                 $block['content'] .= '<span class="tag tag-publication">' . l( _filter_url_trim($dataPub->title, URL_LENGTH) , 'publication/'.$dataPub->publication_id, array( 'attributes' => array('title' => $dataPub->title, 'class' => 'dialog-link') )) . '</span>';
               }
-              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>Show all ' . $totalNum . ' Publications</span>', 'publications/', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
+              $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>Show all ' . $totalNum . ' Publications</span>', 'publications', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
             }
             break;
             //'PART OF SERIES' BLOCK

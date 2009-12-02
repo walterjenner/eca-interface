@@ -26,22 +26,16 @@ class artwork_handler_field_file_name extends views_handler_field {
     $media = new stdClass();
     $media->format = $values->compartdb_media_file_format;
     $media->file_name = $values->compartdb_media_file_file_name;
-    
-    if( eca_is_image($media) || $media->format == 'flv')
+        
+    if( eca_is_image($media) || eca_is_video($media))
     {
-      //TODO remove hardcoding
-      $path = MEDIA_PATH;
-      $path .= 'imageUploads/thumbs/'; 
-      $path .= $media->file_name;
-      //$path .= '.' . $values->compartdb_media_file_format;
-      $path .= ($media->format == 'flv')?'.gif':'.jpg'; //as all thumbs are jpg?
-      
-      $output .= "<img src=\"$path\" alt=\"$media->file_name\" />";
-      
+      $path = image_thumb_path() . $media->file_name;
+      $path .= (eca_is_video($media))?'.gif':'.jpg'; //as all thumbs are jpg?
       return $path;
     }
-    else
-      return '';
+    else{      
+      return drupal_get_path('module', 'eca_main').'/img/no_thumb.png';
+    }
   }
 }
 
