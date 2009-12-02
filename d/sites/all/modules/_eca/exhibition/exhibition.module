@@ -51,6 +51,7 @@ function exhibition_cron()
 
   if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_EXHIBITION_SYNC ){
   //if( true ){
+    watchdog( 'exhibition.module', 'Updated mapping');
     variable_set('cron_last_exhibition', time() );
     global $userMapping;
      
