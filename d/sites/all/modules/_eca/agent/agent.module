@@ -49,8 +49,8 @@ function agent_cron()
 {
   $last_run = variable_get('cron_last_agent', 0);
  
-  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_AGENT_SYNC ){
-  //if( false ){
+  //if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_AGENT_SYNC ){
+  if( true ){
     variable_set('cron_last_agent', time() );
     global $userMapping;
         

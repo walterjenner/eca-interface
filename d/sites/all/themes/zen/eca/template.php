@@ -77,7 +77,7 @@ if (theme_get_setting('STARTERKIT_fixed')) {
 }
 // */
 
-drupal_add_js(drupal_get_path('module', finder_autocomplete) .'/finder_autocomplete.js');
+drupal_add_js(drupal_get_path('module', 'finder_autocomplete') .'/finder_autocomplete.js');
 drupal_add_js(drupal_get_path('theme', 'eca').'/js/jquery-ui-1.7.2.custom.min.js', 'theme');
 drupal_add_js(drupal_get_path('theme', 'eca').'/js/jquery.tooltip.min.js', 'theme');
 drupal_add_js(drupal_get_path('theme', 'eca').'/js/jquery.address-1.0.min.js', 'theme');

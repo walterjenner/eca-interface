@@ -139,7 +139,7 @@ a:hover #logo{
 /* SIDEBARS **********/
 #sidebar-left h2.title, #sidebar-right h2.title {
   margin: 0 0 15px 0;
-  font-size: 1.2em;
+  font-size: 0.9em;
   font-weight: normal;
 }
 #sidebar-left h4, #sidebar-right h4, #sidebar-left h3, #sidebar-right h3, #footer h4, #footer h3{
@@ -496,9 +496,13 @@ ol.exhibit-tileView-body li { margin:0; padding:0; list-style: none; list-style-
 
 .node-teaser h2 a, .teaser-body-inner-artwork a { border: none !important; }
 .node-teaser h2 a:hover { border-bottom: 1px solid #2D1E1E !important; }
+.node-teaser-people h2 { font-size: 1.1em !important; }
 .node-teaser-people h2 a:hover { border: none !important; color: #8FA915; }
 .node-teaser-exhibition h2 a:hover { border: none !important; color: #FF9D00; }
-.node-teaser-people, .node-teaser-exhibition {
+.node-teaser-people {
+  height:30px;
+}
+.node-teaser-exhibition {
   height:50px;
 }
 .node-teaser-artwork {
@@ -521,7 +525,7 @@ ol.exhibit-tileView-body li { margin:0; padding:0; list-style: none; list-style-
 }
 .teaser-body-inner-artwork a:hover { border: none !important; color: #D03400; }
 
-.node-teaser-people span.teaser-body-inner, 
+/*.node-teaser-people span.teaser-body-inner, */
 .node-teaser-exhibition span.teaser-body-inner,
 .node-teaser-publication span.teaser-body-inner  {
   display: block;
@@ -543,6 +547,17 @@ span.teaser-type {
   top:5px;
   font-size:0.9em;
   color:#595959;
+}
+
+.node-teaser-people span.teaser-type {
+  display: none;
+  /*padding-left:20px;
+  font-size:0.8em;
+  color:#595959;
+  position: relative;
+  line-height:normal;
+  top: 0;
+  right: 0;*/
 }
 
 
