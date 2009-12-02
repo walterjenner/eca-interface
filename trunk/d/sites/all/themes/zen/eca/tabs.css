@@ -85,7 +85,7 @@
     border-bottom: 1px solid #c0c0c0;
     list-style: none;
     white-space: nowrap;
-    background: url(images/tab-secondary-bg.png) repeat-x left bottom;
+   /*background: url(images/tab-secondary-bg.png) repeat-x left bottom;*/
   }
 
   ul.secondary li
