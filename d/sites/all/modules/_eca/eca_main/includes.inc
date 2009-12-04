@@ -291,13 +291,14 @@
    * params: title, creation_year, nid, file_name, format
    */
   function return_artwork_thumb( $node, $link = true ){
+    global $base_url;
     $output .= '<li>';
     
     $thumbnailFormat = (eca_is_video($node))?'.gif':'.jpg';
     
     $path = '';
     if(is_empty($node->file_name))
-      $path .= drupal_get_path('module', 'eca_main').'/img/no_thumb.png';
+      $path .= $base_url .'/'. drupal_get_path('module', 'eca_main').'/img/no_thumb.png';
     else
       $path .= image_thumb_path() . $node->file_name . $thumbnailFormat;
     

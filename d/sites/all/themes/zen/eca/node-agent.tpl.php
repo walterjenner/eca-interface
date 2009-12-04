@@ -42,8 +42,10 @@ if($teaser){
       <div id="info-tab" class="ui-tabs-panel">
         <?php
           if(count($node->media)){
-            $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
-            print "<div class=\"agent-image\">$mediaMarkup</div>\n";
+            if( eca_is_image( $node->media[0] ) ){
+              $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
+              print "<div class=\"agent-image\">$mediaMarkup</div>\n";
+            }
           }
           
           print_value($node->birth_date . return_location( $node->ca_l_city, $node->ca_l_country ), t('Born'), false, '', false );
@@ -69,7 +71,7 @@ if($teaser){
       <?php endif; ?>
       
       <?php if($content_bottom): ?>
-        <div id="related-tab">
+        <div id="related-tab" class="ui-tabs-panel">
             <?php print $content_bottom; ?>    
         </div>
       <?php endif; ?>

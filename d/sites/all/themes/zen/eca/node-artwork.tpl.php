@@ -43,8 +43,10 @@ if($teaser){
         <?php
           
           if(count($node->media)){
-            $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
-            print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
+            if( eca_is_image( $node->media[0] ) ){
+              $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
+              print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
+            }
           }
                    
           print_value(return_agents_by_node($node->artists), t('Artist(s)') );
