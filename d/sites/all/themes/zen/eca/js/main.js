@@ -5,12 +5,14 @@
 function onArtworkShow( obj ){
   //$(obj).child("")tooltip();
   // console.log( "get child with is the link and add the tooltip" + obj );
+  
+  
   $(obj).find(".artwork-tooltip").tooltip({ 
     bodyHandler: function() { 
-        return $( $(obj).find(".desc").html() ); 
+        return $( $(obj).find("div.desc").html() ); 
     }, 
-    showURL: false 
-});
+    showURL: false
+  });
 }
 
 $(document).ready(function(){    

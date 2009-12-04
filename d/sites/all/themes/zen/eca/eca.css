@@ -59,10 +59,12 @@ a:hover #logo{
   text-decoration: none;  
   color: #2D1E1E;
   padding: 0 10px 10px 0;
+  display:block;
 }
 #primary a:hover, #primary a.active, #primary li.active-trail a {
   color: #fff;
   background: url(img/primary_arrow.png) 0 27px no-repeat;
+  padding: 0 10px 10px 0;
 }
 
 /* SEARCH BOX **********/
@@ -94,7 +96,8 @@ a:hover #logo{
 }
 #secondary ul {
   display:block;
-  height:25px;
+  line-height:normal;
+  /*height:25px;*/
 }
 #secondary li {
   padding: 0 10px 0 0;  
@@ -508,11 +511,12 @@ ol.exhibit-tileView-body li { margin:0; padding:0; list-style: none; list-style-
 .node-teaser-artwork {
    width: 175px;
    height: 140px;
+   float:left;
 }
 .teaser-body-inner-artwork {  
   
 }
-.teaser-body-inner-artwork .desc {
+.teaser-body-inner-artwork div.desc {
   display: none;
 }
 .teaser-body-inner-artwork .image{
@@ -540,6 +544,7 @@ ol.exhibit-tileView-body li { margin:0; padding:0; list-style: none; list-style-
 .node-teaser {
   position:relative;
 }
+div.exhibit-thumbnailView-itemContainer {float:none !important;}
 span.teaser-type {
   display: inline;
   position:absolute;

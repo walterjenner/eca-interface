@@ -71,7 +71,7 @@ function finder_search_preprocess_finder_results($results, $finder, $keywords, $
         $keys[] = $keyword;
       }
     }
-    $results_array = finder_search_get_result(implode(' ', $keys));
+    $results_array = finder_search_get_result(implode(' ', $keys), 'node');
     $results = theme('finder_search_results', $results_array, $finder, $form_state);
 
     // search module has it's own pager
