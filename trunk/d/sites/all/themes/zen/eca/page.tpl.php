@@ -8,10 +8,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language; ?>" lang="<?php print $language->language; ?>" dir="<?php print $language->dir; ?>">
 
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
   <title><?php print $head_title; ?></title>
   <?php print $head; ?>
   <?php print $styles; ?>
   <?php print $scripts; ?>
+  
 </head>
 <body class="<?php print $body_classes; ?>">
 
@@ -58,15 +60,15 @@
             
           <?php endif; ?>
           
-          <?php if ($search_box): ?>
-            <div id="finder-box">
-              <?php /*print $search_box;*/ ?>
-              <?php 
-                 //drupal_add_js(drupal_get_path('module', finder_autocomplete) .'/finder_autocomplete.js');
-                print finder_view(finder_load(1), 'block'); 
-              ?>
-            </div> <!-- /#search-box -->
-          <?php endif; ?>
+          
+          <div id="finder-box">
+            <?php /*print $search_box;*/ ?>
+            <?php 
+               //drupal_add_js(drupal_get_path('module', finder_autocomplete) .'/finder_autocomplete.js');
+              print finder_view(finder_load(1), 'block'); 
+            ?>
+          </div> <!-- /#search-box -->
+          
           
           <?php if ($secondary_links): ?>
             <div id="secondary">

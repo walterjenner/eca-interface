@@ -33,6 +33,116 @@ function eca_main_cron()
   cache_clear_all( NULL, 'cache_eca' );
 }
 
+function eca_main_update_index(){
+  global $last_change_pub, $last_id_pub, $last_change_inst, $last_id_inst;
+  
+  register_shutdown_function('eca_main_update_shutdown');
+  
+  $last_id_pub = variable_get('eca_main_cron_last_id_pub', 0);
+  $last_change_pub = variable_get('eca_main_cron_last_change_pub', 0);
+  $last_id_inst = variable_get('eca_main_cron_last_id_inst', 0);
+  $last_change_inst = variable_get('eca_main_cron_last_change_inst', 0);
+  
+  //ADD PUBLICATIONS 
+  db_set_active('compart');
+  $resultPublication = db_query("SELECT publication_id, title, last_change
+                    FROM {publication}
+                    WHERE (publication_id > %d) OR (last_change > %d)
+                    ORDER BY last_change ASC", $last_id_pub, $last_change_pub);
+  db_set_active('default');                   
+  while($data = db_fetch_object($resultPublication)){
+      $last_change_pub = $data->last_change;
+      $last_id_pub = $data->publication_id;
+     // watchdog("index publ",$data->title );
+      search_index($data->publication_id, 'publication', $data->title);
+  }
+    
+  //ADD INSTITUTIONS
+  db_set_active('compart');
+  $resultInstitution = db_query("SELECT institution_id, name, last_change
+                      FROM {institution}
+                      WHERE (institution_id > %d) OR (last_change > %d)
+                      ORDER BY last_change ASC", $last_id_inst, $last_change_inst);
+  
+  db_set_active('default');        
+  while($data = db_fetch_object($resultInstitution)){
+      $last_change_inst = $data->last_change;
+      $last_id_inst = $data->institution_id;
+      // watchdog("index inst",$data->name );
+      search_index($data->institution_id, 'institution', $data->name);
+  }                    
+                  
+  
+}
+
+function eca_main_update_shutdown(){
+  global $last_change_pub, $last_id_pub, $last_change_inst, $last_id_inst;
+  if( $last_change_pub && $last_id_pub ){
+    variable_set('eca_main_cron_last_id_pub', $last_id_pub);
+    variable_set('eca_main_cron_last_table_pub', $last_table_pub);
+    
+  }
+  if( $last_change_inst && $last_id_inst ){
+    variable_set('eca_main_cron_last_id_inst', $last_id_inst);
+    variable_set('eca_main_cron_last_table_inst', $last_table_inst);
+  }
+}
+
+function eca_main_search($op = 'search', $keys = NULL){
+  switch($op){
+    case 'name':
+      return t('All Content'); //must add an own search tab!
+    case 'reset':
+      variable_del(eca_main_cron_last_id_pub);
+      variable_del(eca_main_cron_last_change_pub);
+      variable_del(eca_main_cron_last_id_inst);
+      variable_del(eca_main_cron_last_change_inst);
+      return;
+    case 'search':
+      //search publications
+      $hits = do_search($keys, 'publication');
+      $results = array();
+      foreach($hits as $item){
+        db_set_active('compart');
+        $publication = db_fetch_object( db_query("SELECT publication_id, title, last_change
+                            FROM {publication}
+                            WHERE publication_id = %d", $item->sid ));
+        db_set_active('default');
+        
+        $results[] = array(
+          'link' => url('publication/'.$item->sid),
+          'type' => 'Publication',
+          'title' => $publication->title,
+          'date' => $publication->last_change,
+          'score' => $item->score);
+      }
+      
+      $hits = do_search($keys, 'institution');
+      $resultsInstitution = array();
+      foreach($hits as $item){
+        db_set_active('compart');
+        $institution = db_fetch_object( db_query("SELECT institution_id, name, last_change
+                            FROM {institution}
+                            WHERE institution_id = %d", $item->sid ));
+        db_set_active('default');
+        
+        $resultsInstitution[] = array(
+          'link' => url('institution/'.$item->sid),
+          'type' => 'Institution',
+          'title' => $institution->name,
+          'date' => $institution->last_change,
+          'score' => $item->score);
+      }
+      
+      $results = array_merge($resultsInstitution, $results);
+      
+      $node_results = node_search($op, $keys);
+      $results = array_merge($node_results, $results);
+      
+      return $results;
+  }
+}
+
 /**
  * Implementation of hook_perm().
  */
@@ -343,7 +453,44 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
       return $block;
     }       
   } //endif $op == view
-} 
+}
+
+/**
+ * Change the default search which is used by the finder module from 'node' to 'eca_main'
+ * by adding an own finder preprocess function, using the same technique as in 
+ * finder_search.module line 52 ongoing.
+ */
+function eca_main_theme_registry_alter(&$theme_registry) {
+  variable_set('eca_main_finder_results_theme', $theme_registry['finder_results']['function']);
+  $theme_registry['finder_results']['function'] = 'eca_main_preprocess_finder_results';
+}
+/**
+ * Intervene before theme function.
+ *
+ * Kind of like a template preprocess, except not for a template.
+ *
+ * @see finder_search_theme_registry_alter()
+ */
+function eca_main_preprocess_finder_results($results, $finder, $keywords, $pager, $params, $form_state) {
+  $theme_func = variable_get('eca_main_finder_results_theme', 'theme_finder_results');
+
+  if ($finder->settings['advanced']['search'] && empty($results)) {
+    $keys = array();
+    foreach ($keywords as $finder_element_id => $finder_element_keywords) {
+      foreach ((array)$finder_element_keywords as $keyword) {
+        $keys[] = $keyword;
+      }
+    }
+    $results_array = finder_search_get_result(implode(' ', $keys), 'eca_main');
+    $results = theme('finder_search_results', $results_array, $finder, $form_state);
+
+    // search module has it's own pager
+    $pager = 0;
+  }
+
+  return $theme_func($results, $finder, $keywords, $pager, $params, $form_state);
+
+}
 
 
 /**

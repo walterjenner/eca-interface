@@ -132,7 +132,7 @@
         var includeMap = false;
         var includeTimeline = false;
         
-        var defaultClientLocales = ("language" in navigator ? navigator.language : navigator.browserLanguage).split(";");
+        /*var defaultClientLocales = ("language" in navigator ? navigator.language : navigator.browserLanguage).split(";");
         for (var l = 0; l < defaultClientLocales.length; l++) {
             var locale = defaultClientLocales[l];
             if (locale != "en") {
@@ -142,7 +142,7 @@
                 }
                 Exhibit.locales.push(locale);
             }
-        }
+        }*/
 
         var paramTypes = { bundle:Boolean, js:Array, css:Array, autoCreate:Boolean, safe:Boolean };
         if (typeof Exhibit_urlPrefix == "string") {

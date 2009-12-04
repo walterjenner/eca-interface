@@ -646,8 +646,7 @@ div.exhibit-thumbnailView-itemContainer {
 }
 
 div.exhibit-thumbnailView-itemContainer-IE {
-    float:      left;
-    width:      0;
+    float:      left;   
     overflow:   visible;
 }table.exhibit-tileView-body {
     width: 100%;

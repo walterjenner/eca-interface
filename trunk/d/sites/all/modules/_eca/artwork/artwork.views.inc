@@ -7,6 +7,7 @@ function artwork_views_data(){
   $data['compartdb_creating']['table']['group'] = t('Creating CA');
   $data['compartdb_agent']['table']['group'] = t('Agent CA');
   $data['compartdb_artwork']['table']['group'] = t('Artwork CA');
+  $data['compartdb_artwork_type']['table']['group'] = t('Artwort Type CA');
   $data['compartdb_illustrated_by']['table']['group'] = t('Illustrated By CA');
   $data['compartdb_media_file']['table']['group'] = t('Media File CA');
    
@@ -24,7 +25,12 @@ function artwork_views_data(){
     'left_table' => 'artwork',
     'left_field' => 'artwork_id',
     'field' => 'artwork_id',
-  );   
+  );
+  $data['compartdb_artwork_type']['table']['join']['node'] = array(
+    'left_table' => 'compartdb_artwork',
+    'left_field' => 'artwork_type_id',
+    'field' => 'artwork_type_id',
+  ); 
   $data['compartdb_agent']['table']['join']['node'] = array(
     'left_table' => 'compartdb_creating',
     'left_field' => 'agent_id',
@@ -68,6 +74,14 @@ function artwork_views_data(){
       'numeric' => TRUE
     ),
   );
+  $data['compartdb_artwork_type']['name'] = array(
+     'title' => t('Artwork Type Name'),
+     'help' => t('Artwork Type Name'),
+     'field' => array(
+       'handler' => 'views_handler_field',
+       'click sortable' => TRUE,
+     )
+   );
   
   $data['compartdb_creating']['agent_id'] = array(
      'title' => t('Agent ID'),
