@@ -128,6 +128,7 @@
         $output = l($media->file_name, $path);
       }
       else {
+        $media->description = check_markup( $media->description, TEXTILE_FORMAT_ID, false );
         $output = "<div><img src=\"$path\" alt=\"$media->file_name\" /><br/>$media->description</div>";          
       }
     }

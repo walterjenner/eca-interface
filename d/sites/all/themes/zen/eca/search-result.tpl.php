@@ -59,7 +59,12 @@
   <h2><a href="<?php print $url; ?>"><?php print $title; ?></a></h2>
   
   <?php if ($snippet) : ?>
-    <p class="search-snippet"><?php print $snippet; ?></p>
+    <p class="search-snippet">
+      <?php 
+        //$snippet = check_markup( $snippet, TEXTILE_FORMAT_ID, false );
+        print $snippet; 
+      ?>
+    </p>
   <?php endif; ?>
   
   <div class="clear-both"></div>

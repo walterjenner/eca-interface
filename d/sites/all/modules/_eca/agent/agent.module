@@ -252,6 +252,7 @@ function agent_load($node) {
     
     //everything in the content array will be indexed for the search
     $agent->content = array();
+    $agent->description = check_markup( $agent->description, TEXTILE_FORMAT_ID, false );
     $agent->content['description'] = array(
       '#value' => add_space($agent->description),
       '#weight' => 0,

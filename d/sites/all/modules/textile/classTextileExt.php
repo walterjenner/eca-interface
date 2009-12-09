@@ -116,7 +116,7 @@ class TextileExt extends Textile
     function sourceRef($text)
     {
         //                    [source: (1-n mal eine ziffer) (optional:#) (0-n mal eine ziffer) ] (optional:whitespace)
-        return preg_replace('/\[(source|cite|fullcite|footcite):([0-9]+)(#)?([0-9]*)\](\s)?/Ue',
+        return preg_replace('/\[(source|cite|fullcite|footcite):([0-9]+)(#([0-9]+))?\](\s)?/Uei',
             '$this->sourceLink(\'\2\',\'\4\')', $text);
     }
 
@@ -124,9 +124,10 @@ class TextileExt extends Textile
     function sourceLink($id, $t)
     {
         $title = get_publication_title($id);
-        $output .= '[Source: ';
+        $output .= ' [Source: ';
         $output .= l(_filter_url_trim($title, URL_LENGTH), 'publication/' . $id, array( 'attributes' => array('title' => $title, 'class' => 'dialog-link' )) );
-        $output .= ', p. ' .$t .']';
+        if($t) $output .= ', p. ' .$t;
+        $output .= ']'; 
         return $output;
     }
 
