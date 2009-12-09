@@ -43,9 +43,12 @@ if($teaser){
         <?php
           
           if(count($node->media)){
-            if( eca_is_image( $node->media[0] ) ){
+            if( eca_is_image( $node->media[0] ) || eca_is_video( $node->media[0] ) ){
               $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
               print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
+            }
+            else {
+              $showMediaTab = true;
             }
           }
                    
@@ -83,7 +86,7 @@ if($teaser){
         </div>
       <?php endif; ?>
       
-      <?php if(count($node->media)>1): ?>     
+      <?php if( count($node->media)>1 || $showMediaTab): ?>     
         <div id="media-tab" class="ui-tabs-panel">
           <?php 
             foreach($node->media as $media){
