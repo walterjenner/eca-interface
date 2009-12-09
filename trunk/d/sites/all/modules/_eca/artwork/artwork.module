@@ -263,6 +263,7 @@ function artwork_load($node) {
     
     //everything in the content array will be indexed for the search
     $artwork->content = array();
+    $artwork->description = check_markup( $artwork->description, TEXTILE_FORMAT_ID, false );
     $artwork->content['description'] = array(
       '#value' => add_space($artwork->description),
       '#weight' => 0,

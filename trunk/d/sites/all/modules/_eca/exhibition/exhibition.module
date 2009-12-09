@@ -238,6 +238,7 @@ function exhibition_load($node) {
       
       //everything in the content array will be indexed for the search
       $exhibition->content = array();
+      $exhibition->description = check_markup( $exhibition->description, TEXTILE_FORMAT_ID, false );
       $exhibition->content['description'] = array(
         '#value' => add_space($exhibition->description),
         '#weight' => 0,

@@ -35,8 +35,10 @@ function eca_main_publication( $id = 0 ){
   
   $output .= return_value( return_agents($item->authors) , t('Author(s)' ) );
   $output .= return_value( $item->description , t('Description'), true );
+  $output .= return_value( $item->keywords , t('Keywords') );
   
-  $output .= return_value( $item->year , t('Year')); //TODO month sometimes is also there
+  $output .= return_value( $item->year , t('Year'));
+  $output .= return_value( $item->month , t('Month') );  
   $output .= return_value( $item->address , t('Place'));
   $output .= return_value( $item->publisher , t('Publisher'));      
   $output .= return_value( $item->isbn , t('ISBN'));     
@@ -48,13 +50,13 @@ function eca_main_publication( $id = 0 ){
       $output .= return_value( l($item->url, absolute($item->url)) , 'URL');
   }
   $output .= return_value( $item->book_title , t('Book title') );
-  $output .= return_value( $item->keywords , t('Keywords') );
   $output .= return_value( $item->journal , t('Journal') );  
   $output .= return_value( $item->volume , t('Volume') );
   $output .= return_value( $item->edition , t('Edition') );
   $output .= return_value( $item->on_pages , t('On pages') );            
   $output .= return_value( $item->nr_pages , t('Pages') );
-  $output .= return_value( $item->format , t('Format') );          
+  $output .= return_value( $item->format , t('Format') );
+  $output .= return_value( $item->duration , t('Duration') );            
  
   $output .= return_value( return_media_links($item->media), 'File(s)' );
   

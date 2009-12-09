@@ -180,6 +180,11 @@ a:hover #logo{
   padding-bottom: 1px;
 }
 
+.logos-home img {
+  float:left;
+  margin:10px;
+}
+
 /*** RELATED ITEMS TAB *********/
 #related-tab .content-class {
   margin-bottom:20px;
@@ -235,8 +240,9 @@ div.all-link{
 #content-inner h3 { margin: 10px 0 5px 0; }
 #content-inner h4 { margin: 5px 0 5px 0; }
 #content-inner p{ margin: 0px 0 10px 0; }
-#content-inner a, #dialog-box a{ }
+#content-inner a, #dialog-box a{ border-bottom: 1px solid #E6E6E6 }
 #content-inner a:hover, #dialog-box a:hover { border-bottom: 1px solid #333; }
+
 span.label {   
   display: block;
   float: left;
@@ -630,10 +636,10 @@ a.exhibit-menu-item /* links in sorted by pop up menu */
   border: none !important; /* hide the dotted underline for the "sorted by" links*/
 }
 div.exhibit-facet-value-inner {
-  padding-left: 1.5em !important;
+  padding-left: 2em !important;
 }
 div.exhibit-facet-value-count{
-  width: 1em !important;
+  width: 1.5em !important;
 }
 #block-block-5 .exhibit-resizableDivWidget-resizer {
   display: none; /* hide the resize handle for role facet*/
