@@ -176,7 +176,13 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
     $block[5]["info"] = t('Part of Collective Block');  
     $block[5]["cache"] = BLOCK_CACHE_PER_PAGE;
     $block[6]["info"] = t('Artworks owned Block');  
-    $block[6]["cache"] = BLOCK_CACHE_PER_PAGE;         
+    $block[6]["cache"] = BLOCK_CACHE_PER_PAGE;
+    
+    $block[7]["info"] = t('Agent Teaser Block');  
+    $block[7]["cache"] = BLOCK_CACHE_PER_PAGE;
+    
+    $block[8]["info"] = t('Artwork Teaser Block');  
+    $block[8]["cache"] = BLOCK_CACHE_PER_PAGE;              
         
     return $block;
   }
@@ -446,6 +452,33 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 $numRes += $numRes2;                
               }
             break;
+          //ARTWORK TEASER BLOCK  
+          case 8:
+            $block['title'] = t('Artwork');
+            $selArtworks = "SELECT node.nid, node.title, node_counter.totalcount,
+                              compartdb_artwork.creation_year, compartdb_media_file.file_name, compartdb_media_file.format,
+                              artwork.artwork_id
+                            FROM node node 
+                            LEFT JOIN node_counter node_counter ON node.nid = node_counter.nid
+                            LEFT JOIN artwork artwork ON node.nid = artwork.nid
+                            LEFT JOIN compartdb_artwork compartdb_artwork ON artwork.artwork_id = compartdb_artwork.artwork_id
+                            LEFT JOIN compartdb_illustrated_by compartdb_illustrated_by ON artwork.artwork_id = compartdb_illustrated_by.row_id AND compartdb_illustrated_by.table_id = 5
+                            LEFT JOIN compartdb_media_file compartdb_media_file ON compartdb_illustrated_by.media_file_id = compartdb_media_file.media_file_id
+                            WHERE node.type in ('artwork')
+                            GROUP BY nid
+                            ORDER BY node_counter.totalcount DESC LIMIT 5";
+                        
+            $resArtworks = db_query( $selArtworks );
+            $numRes = 0;                
+            
+            while( $artwork = db_fetch_object( $resArtworks ) ){
+              $numRes++;
+              $block['content'] .= return_artwork_thumb($artwork, false);
+            }
+            
+            $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>Show all Artworks</span>', 'artworks', array('html'=> true) ) . '</div>';
+
+           break;
       }       
       if($numRes == 0)
         $block = 0; 
