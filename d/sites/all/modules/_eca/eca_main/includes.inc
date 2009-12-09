@@ -129,6 +129,7 @@
       }
       else {
         $media->description = check_markup( $media->description, TEXTILE_FORMAT_ID, false );
+        $media->description = ($media->description == 'n/a')?'':$media->description;
         $output = "<div><img src=\"$path\" alt=\"$media->file_name\" /><br/>$media->description</div>";          
       }
     }
@@ -209,12 +210,13 @@
     if(count($media)==0)
       return;
     
-    $output = '';
+    $output = '<br/><ul>';
     foreach($media as $mediafile ){
-      if($output != '')
-        $output .= ', ';
-      $output .= eca_get_media_markup($mediafile,'medium',true); 
+      //if($output != '')
+        //$output .= ', ';
+      $output .= '<li>'.eca_get_media_markup($mediafile,'medium',true).'</li>'; 
     }
+    $output .= '</ul>';
     return $output;
   }
   
