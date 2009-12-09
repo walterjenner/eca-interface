@@ -9,8 +9,8 @@
   define("DO_AGENT_SYNC", TRUE);
   define("DO_ARTWORK_SYNC", TRUE);
   define("DO_EXHIBITION_SYNC", TRUE);
-  define("NODE_SYNC_INTERVAL", (60 * 60 * 24) );  // 1 day
-  define("MIN_CACHE_LIFETIME", (60 * 60 * 24) );  // 1 day. that means that before the item in cache is one day old, 
+  define("NODE_SYNC_INTERVAL", (60 * 60 * 3) );  // 3h
+  define("MIN_CACHE_LIFETIME", (60 * 60 * 3) );  // 3h. that means that before the item in cache is one day old, 
                                                   // it will NOT be remove, by cache_clear_all()!
                                                   // As cache_clear_all() is called daily, the maximum time
                                                   // an update in the compart db needs to be visible is TWO DAYS!
