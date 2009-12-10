@@ -203,6 +203,9 @@ a:hover #logo{
 
 /*** RELATED ITEMS TAB *********/
 #related-tab .content-class {
+  /*margin-bottom:20px;*/
+}
+.block-eca_main .content-class {
   margin-bottom:20px;
 }
 
@@ -442,7 +445,8 @@ span.tag a:visited{
   border: none !important;
 }
 /* agent block */
-#block-eca_main-0 h2.title span span, #block-eca_main-5 h2.title span span, #block-tagadelic-4 h2{
+#block-eca_main-0 h2.title span span, #block-eca_main-5 h2.title span span, 
+#block-tagadelic-4 h2, #block-eca_main-7 h2{
   color: #8FA915 !important;
 }
 span.tag-agent a:hover {
@@ -454,7 +458,7 @@ span.tag-agent-active {
 }
 /* artwork block */
 #block-eca_main-1 h2.title span span, #block-eca_main-4 h2.title span span, 
-#block-eca_main-6 h2.title span span, #block-tagadelic-7 h2 {
+#block-eca_main-6 h2.title span span, #block-tagadelic-7 h2, #block-eca_main-8 h2{
   color: #D03400 !important;
 }
 span.tag-artwork a:hover, span.tag-artwork-active {
@@ -462,7 +466,8 @@ span.tag-artwork a:hover, span.tag-artwork-active {
   color: #fff;
 }
 /* exhibitions block */
-#block-eca_main-2 h2.title span span, #block-tagadelic-3 h2{
+#block-eca_main-2 h2.title span span, #block-tagadelic-3 h2,
+#block-eca_main-9 h2{
   color: #FF9D00 !important;
 }
 span.tag-exhibition a:hover {
@@ -945,23 +950,23 @@ a:hover.feed-icon{
   border:none !important;
 }
 
-/* CAROUSEL *********/
+/* CAROUSEL + BROWSER TEASER *********/
 .carousel img{
    border: 2px solid #fff;
 }
 .carousel img.current-item{
   border: 2px solid #97BFBC;
 }
-.carousel ul{
+.carousel ul, ul.browse-teaser{
   list-style: none;
 }
-.carousel li{
+.carousel li, .browse-teaser li{
   padding: 0 8px 0 8px;
   display: inline;
   width:64px;
   height:64px;
 }
-.carousel li a{
+.carousel li a, .browse-teaser li a{
   border: none !important;
 }
 .carousel-next, .carousel-prev {

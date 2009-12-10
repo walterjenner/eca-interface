@@ -305,13 +305,26 @@
     else
       $path .= image_thumb_path() . $node->file_name . $thumbnailFormat;
     
+    if( is_array($node->agents) ){
+      foreach($node->agents as $agent){
+        if($agentString == '')
+          $agentString .= 'Artist(s): ';
+        else
+          $agentString .= ', ';
+           
+        $agentString .= $agent->first_name . ' ' . $agent->last_name;
+      }
+    }
+    if($agentString != '')
+      $agentString = ' - ' . $agentString;
+    
     if(!is_empty($node->creation_year))
       $yearString = ' - Date: ' . $node->creation_year;
     
     if($link){
       $output .= l('<img src="'.$path.'" alt="'.$node->title.'" />', 
                     "node/$node->nid", 
-                    array( 'html' => true, 'attributes' => array('title' => 'Title: ' . $node->title . $yearString, 'class' => 'artwork-tooltip' ) ));
+                    array( 'html' => true, 'attributes' => array('title' => '' . $node->title . $agentString . $yearString, 'class' => 'artwork-tooltip' ) ));
     }else {
         $output .= '<img src="'.$path.'" alt="'.$node->title.'" class="current-item" />';
     }
@@ -390,6 +403,7 @@
   /*
    * returns a markup-snippet, with a list of artists
    */
+  //DEP --- same as return nodes!
   function return_agents_by_node($agents){
     $output = '';
     foreach($agents as $agent){
