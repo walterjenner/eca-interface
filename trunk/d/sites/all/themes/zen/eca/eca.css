@@ -127,15 +127,18 @@ a:hover #logo{
 
 }*/
 .menu-408 a:hover span, .menu-952 a:hover span, .menu-408 a.active span, .menu-952 a.active span,
-#secondary li.menu-952.active-trail a span {
+#secondary li.menu-952.active-trail a span,
+#block-block-11 li.people a:hover {
   border-bottom: 2px solid #8FA915 !important;
 }
 .menu-631 a:hover span, .menu-970 a:hover span, .menu-631 a.active span, .menu-970 a.active span,
-#secondary li.menu-970.active-trail a span {
+#secondary li.menu-970.active-trail a span,
+#block-block-11 li.artworks a:hover  {
   border-bottom: 2px solid #BF2726 !important;
 }
 .menu-606 a:hover span, .menu-973 a:hover span, .menu-606 a.active span, .menu-973 a.active span,
-#secondary li.menu-973.active-trail a span  {
+#secondary li.menu-973.active-trail a span,
+#block-block-11 li.events a:hover   {
   border-bottom: 2px solid #DEAD26 !important; 
 }
 
@@ -167,12 +170,19 @@ a:hover #logo{
 }
 
 /*** FRONT PAGE BLOCK ******/
-#block-menu-menu-browse a {
+#block-block-11 ul {
+  width: 149px;
+  text-align: right;
+}
+#block-menu-menu-browse a, #block-block-11 a {
   color: #2D1E1E;
 }
-#block-menu-menu-browse li.leaf {
+#block-menu-menu-browse li.leaf, #block-block-11 li.leaf {
   list-style-image: none !important;
   list-style-type: none !important;
+}
+#block-block-11 li a:hover {
+  border-bottom: 2px solid #97BFBC;
 }
 
 .item-list ul li{
