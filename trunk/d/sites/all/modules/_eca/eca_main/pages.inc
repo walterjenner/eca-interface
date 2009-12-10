@@ -56,8 +56,11 @@ function eca_main_publication( $id = 0 ){
   $output .= return_value( $item->on_pages , t('On pages') );            
   $output .= return_value( $item->nr_pages , t('Pages') );
   $output .= return_value( $item->format , t('Format') );
-  $output .= return_value( $item->duration , t('Duration') );            
- 
+  $output .= return_value( $item->duration , t('Duration') );
+  $output .= return_value( return_nodes($item->referencedAgents) , t('People referred to') );
+  $output .= return_value( return_nodes($item->referencedArtworks) , t('Artworks referred to') );
+  $output .= return_value( return_nodes($item->referencedExhibitions) , t('Events referred to') );
+  
   $output .= return_value( return_media_links($item->media), 'File(s)' );
   
   if( !$print_as_page ){
@@ -379,6 +382,45 @@ function _load_publication( $id ){
     //getMedia
     $item->media = array();
     $item->media = eca_get_media( 30, $id );
+    
+    //getReferencedAgents
+    $item->referencedAgents = array();
+    $selectRefAgents = "SELECT ca_ac.agent_id, n.nid, n.title 
+                        FROM compartDB.agent_citation ca_ac
+                        LEFT JOIN agent a ON ca_ac.agent_id = a.agent_id
+                        LEFT JOIN node n ON a.nid = n.nid
+                        WHERE ca_ac.publication_id = $id";
+                        
+    $resultRefAgents = db_query( $selectRefAgents );
+    while( $agent = db_fetch_object( $resultRefAgents ) ){
+      $item->referencedAgents[] = $agent;
+    }
+    
+    //getReferencedArtworks
+    $item->referencedArtworks = array();
+    $selectRefArtworks = "SELECT ca_ac.artwork_id, n.nid, n.title 
+                        FROM compartDB.artwork_citation ca_ac
+                        LEFT JOIN artwork a ON ca_ac.artwork_id = a.artwork_id
+                        LEFT JOIN node n ON a.nid = n.nid
+                        WHERE ca_ac.publication_id = $id";
+                        
+    $resultRefArtworks = db_query( $selectRefArtworks );
+    while( $artwork = db_fetch_object( $resultRefArtworks ) ){
+      $item->referencedArtworks[] = $artwork;
+    }
+    
+    //getReferencedArtworks
+    $item->referencedExhibitions = array();
+    $selectRefExhibitions = "SELECT ca_ec.exhibition_id, n.nid, n.title 
+                        FROM compartDB.exhibition_citation ca_ec
+                        LEFT JOIN exhibition e ON ca_ec.exhibition_id = e.exhibition_id
+                        LEFT JOIN node n ON e.nid = n.nid
+                        WHERE ca_ec.publication_id = $id";
+                        
+    $resultRefExhibitions = db_query( $selectRefExhibitions );
+    while( $exhibition = db_fetch_object( $resultRefExhibitions ) ){
+      $item->referencedExhibitions[] = $exhibition;
+    }
   }
   
   //set cache,  minimum time 1 day

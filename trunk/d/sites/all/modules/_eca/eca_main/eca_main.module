@@ -134,11 +134,16 @@ function eca_main_search($op = 'search', $keys = NULL){
           'score' => $item->score);
       }
       
-      $results = array_merge($resultsInstitution, $results);
+      //dvr('count results pub'.count(results));
+      //dvr('count results inst'.count($resultsInstitution));
       
+      $results = array_merge($resultsInstitution, $results);      
       $node_results = node_search($op, $keys);
+      
+      //dvr('count $node_results'.count($node_results));
       $results = array_merge($node_results, $results);
       
+      //dvr('count $results'.count($results));      
       return $results;
   }
 }
@@ -179,10 +184,13 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
     $block[6]["cache"] = BLOCK_CACHE_PER_PAGE;
     
     $block[7]["info"] = t('Agent Teaser Block');  
-    $block[7]["cache"] = BLOCK_CACHE_PER_PAGE;
+    $block[7]["cache"] = BLOCK_CACHE_GLOBAL;
     
     $block[8]["info"] = t('Artwork Teaser Block');  
-    $block[8]["cache"] = BLOCK_CACHE_PER_PAGE;              
+    $block[8]["cache"] = BLOCK_CACHE_GLOBAL;
+    
+    $block[9]["info"] = t('Event Teaser Block');  
+    $block[9]["cache"] = BLOCK_CACHE_GLOBAL;                 
         
     return $block;
   }
@@ -452,32 +460,88 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
                 $numRes += $numRes2;                
               }
             break;
+          //AGENT TEASER BLOCK  
+          case 7:
+            $block['title'] = t('People');
+            $selAgents = "SELECT n.nid, n.title, nc.totalcount,
+                              ca_m.file_name, ca_m.format
+                            FROM node n 
+                            LEFT JOIN node_counter nc ON n.nid = nc.nid
+                            LEFT JOIN agent a ON n.nid = a.nid
+                            LEFT JOIN compartDB.illustrated_by ca_i ON a.agent_id = ca_i.row_id AND ca_i.table_id = 1
+                            LEFT JOIN compartDB.media_file ca_m ON ca_i.media_file_id = ca_m.media_file_id
+                            WHERE n.type in ('agent')
+                            GROUP BY n.nid
+                            ORDER BY nc.totalcount DESC LIMIT 8";
+                        
+            $resAgents = db_query( $selAgents );
+            $numRes = 0;
+                            
+            $block['content'] .= '<ul class="browse-teaser">';
+            while( $agent = db_fetch_object( $resAgents ) ){
+              $numRes++;              
+              $block['content'] .= return_artwork_thumb($agent, true);
+            }
+            $block['content'] .= '</ul>';
+            $block['content'] .= '<div class="all-link all-link-agent">' . l('<span>Browse all people</span>', 'people', array('html'=> true) ) . '</div>';
+
+            break;
           //ARTWORK TEASER BLOCK  
           case 8:
-            $block['title'] = t('Artwork');
-            $selArtworks = "SELECT node.nid, node.title, node_counter.totalcount,
-                              compartdb_artwork.creation_year, compartdb_media_file.file_name, compartdb_media_file.format,
-                              artwork.artwork_id
-                            FROM node node 
-                            LEFT JOIN node_counter node_counter ON node.nid = node_counter.nid
-                            LEFT JOIN artwork artwork ON node.nid = artwork.nid
-                            LEFT JOIN compartdb_artwork compartdb_artwork ON artwork.artwork_id = compartdb_artwork.artwork_id
-                            LEFT JOIN compartdb_illustrated_by compartdb_illustrated_by ON artwork.artwork_id = compartdb_illustrated_by.row_id AND compartdb_illustrated_by.table_id = 5
-                            LEFT JOIN compartdb_media_file compartdb_media_file ON compartdb_illustrated_by.media_file_id = compartdb_media_file.media_file_id
-                            WHERE node.type in ('artwork')
-                            GROUP BY nid
-                            ORDER BY node_counter.totalcount DESC LIMIT 5";
+            $block['title'] = t('Artworks');
+            $selArtworks = "SELECT n.nid, n.title, nc.totalcount,
+                              ca_a.creation_year, ca_m.file_name, ca_m.format,
+                              a.artwork_id
+                            FROM node n 
+                            LEFT JOIN node_counter nc ON n.nid = nc.nid
+                            LEFT JOIN artwork a ON n.nid = a.nid
+                            LEFT JOIN compartDB.artwork ca_a ON a.artwork_id = ca_a.artwork_id
+                            LEFT JOIN compartDB.illustrated_by ca_i ON a.artwork_id = ca_i.row_id AND ca_i.table_id = 5
+                            LEFT JOIN compartDB.media_file ca_m ON ca_i.media_file_id = ca_m.media_file_id
+                            WHERE n.type in ('artwork')
+                            GROUP BY n.nid
+                            ORDER BY nc.totalcount DESC LIMIT 8";
                         
             $resArtworks = db_query( $selArtworks );
-            $numRes = 0;                
-            
+            $numRes = 0;
+                            
+            $block['content'] .= '<ul class="browse-teaser">';
             while( $artwork = db_fetch_object( $resArtworks ) ){
               $numRes++;
-              $block['content'] .= return_artwork_thumb($artwork, false);
+              
+              $selAgents = "SELECT ca_a.first_name, ca_a.last_name
+                              FROM compartDB.creating ca_c
+                              LEFT JOIN compartDB.agent ca_a ON ca_c.agent_id = ca_a.agent_id
+                              WHERE ca_c.artwork_id = $artwork->artwork_id";
+              $resAgents = db_query( $selAgents );
+              $artwork->agents = array();
+              while( $agent = db_fetch_object($resAgents) ){
+                $artwork->agents[] = $agent;
+              }
+              
+              $block['content'] .= return_artwork_thumb($artwork, true);
             }
-            
-            $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>Show all Artworks</span>', 'artworks', array('html'=> true) ) . '</div>';
+            $block['content'] .= '</ul>';
+            $block['content'] .= '<div class="all-link all-link-artwork">' . l('<span>Browse all Artworks</span>', 'artworks', array('html'=> true) ) . '</div>';
 
+           break;
+         //EVENT TEASER BLOCK
+         case 9:
+           $block['title'] = t('Events');
+           $selectEx = "SELECT n.nid, n.title, nc.totalcount
+                         FROM node n 
+                         LEFT JOIN node_counter nc ON n.nid = nc.nid
+                         WHERE n.type in ('exhibition')
+                         ORDER BY nc.totalcount DESC LIMIT 8";
+           $resultEx = db_query($selectEx);
+          
+                 
+           $numRes = 0;
+           while ($exhibition = db_fetch_object($resultEx)) {
+             $numRes++;
+             $block['content'] .= '<span class="tag tag-exhibition">' . l(_filter_url_trim($exhibition->title, URL_LENGTH), 'node/'.$exhibition->nid, array('attributes' => array('title' => $exhibition->title))) . '</span>';
+           }
+           $block['content'] .= '<div class="all-link all-link-exhibition">' . l('<span>Browse all Events</span>', 'events', array('html'=> true) ) . '</div>';
            break;
       }       
       if($numRes == 0)
