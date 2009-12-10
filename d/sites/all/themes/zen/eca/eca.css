@@ -185,6 +185,12 @@ a:hover #logo{
   margin:10px;
 }
 
+.contact-detail {
+  display: block;
+  float: left;
+  width:70px;
+}
+
 /*** RELATED ITEMS TAB *********/
 #related-tab .content-class {
   margin-bottom:20px;
