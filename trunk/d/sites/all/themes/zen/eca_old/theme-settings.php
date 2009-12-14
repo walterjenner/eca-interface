@@ -13,10 +13,10 @@ include_once './' . drupal_get_path('theme', 'zen') . '/theme-settings.php';
  * @return
  *   A form array.
  */
-function eca_settings($saved_settings) {
+function eca_old_settings($saved_settings) {
 
   // Get the default values from the .info file.
-  $defaults = zen_theme_get_default_settings('eca');
+  $defaults = zen_theme_get_default_settings('eca_old');
 
   // Merge the saved variables and their default values.
   $settings = array_merge($defaults, $saved_settings);

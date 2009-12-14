@@ -77,16 +77,16 @@ if (theme_get_setting('STARTERKIT_fixed')) {
 }
 // */
 
-drupal_add_js(drupal_get_path('theme', 'eca').'/js/jquery-ui-1.7.2.custom.min.js', 'theme');
-drupal_add_js(drupal_get_path('theme', 'eca').'/js/jquery.tooltip.min.js', 'theme');
-drupal_add_js(drupal_get_path('theme', 'eca').'/js/jquery.address-1.0.min.js', 'theme');
-drupal_add_js(drupal_get_path('theme', 'eca').'/js/main.js', 'theme');
+drupal_add_js(drupal_get_path('theme', 'eca_old').'/js/jquery-ui-1.7.2.custom.min.js', 'theme');
+drupal_add_js(drupal_get_path('theme', 'eca_old').'/js/jquery.tooltip.min.js', 'theme');
+drupal_add_js(drupal_get_path('theme', 'eca_old').'/js/jquery.address-1.0.min.js', 'theme');
+drupal_add_js(drupal_get_path('theme', 'eca_old').'/js/main.js', 'theme');
 
 
 /**
  * Implementation of HOOK_theme().
  */
-function eca_theme(&$existing, $type, $theme, $path) {
+function eca_old_theme(&$existing, $type, $theme, $path) {
   $hooks = zen_theme($existing, $type, $theme, $path);
   // Add your theme hooks like this:
   /*
@@ -98,7 +98,7 @@ function eca_theme(&$existing, $type, $theme, $path) {
   return $hooks;
 }
 
-function eca_links($links, $attributes = array('class' => 'links')) {
+function eca_old_links($links, $attributes = array('class' => 'links')) {
   global $language;
   $output = '';
 
@@ -159,7 +159,7 @@ function eca_links($links, $attributes = array('class' => 'links')) {
  * NOTE: function works together with the node_display module, as the module takes care
  * that the comment is not rendered double. Therefor this module is a dependency.
  */
-function eca_preprocess_node(&$vars) {
+function eca_old_preprocess_node(&$vars) {
   $vars['comments'] = '';
   if (function_exists('comment_render') && !empty($vars['node']) && $vars['node']->comment) {
     $arg2 = arg(2);
@@ -173,7 +173,7 @@ function eca_preprocess_node(&$vars) {
 /**
  * add two closing divs for "#tabs" und ".agent-node" (they are opened in node-agent.tpl.php)
  */
-function eca_comment_post_forbidden($node) {
+function eca_old_comment_post_forbidden($node) {
   global $user;
   static $authenticated_post_comments;
 
