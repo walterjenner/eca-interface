@@ -51,6 +51,8 @@ function finder_search_form_finder_admin_edit_alter(&$form, $form_state) {
  */
 function finder_search_theme_registry_alter(&$theme_registry) {
   variable_set('finder_search_finder_results_theme', $theme_registry['finder_results']['function']);
+  //dvr($theme_registry['finder_results']['function']);
+  
   $theme_registry['finder_results']['function'] = 'finder_search_preprocess_finder_results';
 }
 
@@ -63,7 +65,6 @@ function finder_search_theme_registry_alter(&$theme_registry) {
  */
 function finder_search_preprocess_finder_results($results, $finder, $keywords, $pager, $params, $form_state) {
   $theme_func = variable_get('finder_search_finder_results_theme', 'theme_finder_results');
-
   if ($finder->settings['advanced']['search'] && empty($results)) {
     $keys = array();
     foreach ($keywords as $finder_element_id => $finder_element_keywords) {

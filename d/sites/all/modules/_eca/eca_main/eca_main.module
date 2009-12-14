@@ -559,6 +559,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
  */
 function eca_main_theme_registry_alter(&$theme_registry) {
   variable_set('eca_main_finder_results_theme', $theme_registry['finder_results']['function']);
+  //variable_set('finder_search_finder_results_theme', $theme_registry['finder_results']['function']);
   $theme_registry['finder_results']['function'] = 'eca_main_preprocess_finder_results';
 }
 /**
@@ -570,7 +571,8 @@ function eca_main_theme_registry_alter(&$theme_registry) {
  */
 function eca_main_preprocess_finder_results($results, $finder, $keywords, $pager, $params, $form_state) {
   $theme_func = variable_get('eca_main_finder_results_theme', 'theme_finder_results');
-
+  //$theme_func = variable_get('finder_search_finder_results_theme', 'theme_finder_results');
+  //dvr("in eca main preprocess finder results");
   if ($finder->settings['advanced']['search'] && empty($results)) {
     $keys = array();
     foreach ($keywords as $finder_element_id => $finder_element_keywords) {
