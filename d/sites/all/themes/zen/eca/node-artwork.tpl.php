@@ -5,6 +5,18 @@ $eca_main_path = drupal_get_path('module', 'eca_main');
 //include the file with the helper functions
 require_once $eca_main_path . '/includes.inc';
 
+  if(count($node->media)){
+    if( eca_is_image( $node->media[0] ) || eca_is_video( $node->media[0] ) ){
+      $showOnInfoPage = true; //if pic or video
+    }
+    else {
+      $showOnInfoPage = false;
+      $showMediaTab = true; //TODO is a weng schiach!
+    }
+  }
+  
+
+
 //IF TEASER
 if($teaser){ 
 ?>
@@ -32,7 +44,7 @@ if($teaser){
           <?php if ($content_bottom): ?> 
             <li><a href="#related-tab" title="View related items of this artwork." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
           <?php endif; ?>
-          <?php if(count($node->media)>1): ?>
+          <?php if(count($node->media)>1 || $showMediaTab): ?>
             <li><a href="#media-tab" title="View pictures of this artwork." rel="address:/media-tab"><span><?php print t('Media'); ?> (<?php print count($node->media); ?>)</span></a></li>
           <?php endif; ?>
           <li><a href="#comment-tab" title="View comments on this person." rel="address:/comment-tab"><span><?php print t('Comments'); ?> (<?php print $comment_count; ?>)</span></a></li>
@@ -43,13 +55,10 @@ if($teaser){
         <?php
           
           if(count($node->media)){
-            if( eca_is_image( $node->media[0] ) || eca_is_video( $node->media[0] ) ){
+            if( $showOnInfoPage ){
               $mediaMarkup = eca_get_media_markup($node->media[0], "medium");
               print "<div class=\"artwork-image\">$mediaMarkup</div>\n";
-            }
-            else {
-              $showMediaTab = true;
-            }
+            }            
           }
                    
           print_value(return_agents_by_node($node->artists), t('Artist(s)') );
