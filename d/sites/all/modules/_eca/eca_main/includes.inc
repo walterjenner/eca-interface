@@ -6,9 +6,11 @@
   define("TITLE_LENGTH", 30);
   define("RELATED_ITEM_LIMIT", 10); //how many items should be shown in the "related items" tab.
   define("TEXTILE_FORMAT_ID", 3); //the id of the input format (aka filter) of the Textile filter
-  define("DO_AGENT_SYNC", TRUE);
-  define("DO_ARTWORK_SYNC", TRUE);
-  define("DO_EXHIBITION_SYNC", TRUE);
+  define("FORCE_AGENT_SYNC", FALSE);
+  define("FORCE_ARTWORK_SYNC", FALSE);
+  define("FORCE_EXHIBITION_SYNC", FALSE);
+  define("FORCE_PUBLICATION_SYNC", FALSE);
+  define("FORCE_INSTITUTION_SYNC", TRUE);
   define("NODE_SYNC_INTERVAL", (60 * 60 * 3) );  // 3h
   define("MIN_CACHE_LIFETIME", (60 * 60 * 3) );  // 3h. that means that before the item in cache is one day old, 
                                                   // it will NOT be remove, by cache_clear_all()!
@@ -374,28 +376,32 @@
       foreach( $owners['institutions'] as $institution ){
         if($owner_str != '')
           $owner_str .= ', ';
-        $owner_str .= l($institution->name, "institution/$institution->institution_id", array('attributes' => array('title' => $institution->name, 'class' => 'dialog-link')));
+        $owner_str .= l($institution->name, "institution/$institution->institution_id", array('attributes' => array('title' => $institution->name)));
       }
     }
     return $owner_str;
   }
   
   function return_exhibitions( $exhibitions ){
-    foreach($exhibitions as $exhibition){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l($exhibition->name, 'exhibition/' . $exhibition->exhibition_id, array( 'attributes' => array('title' => $exhibition->name)) );
+    if( is_array($exhibitions) ){
+      foreach($exhibitions as $exhibition){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l($exhibition->name, 'exhibition/' . $exhibition->exhibition_id, array( 'attributes' => array('title' => $exhibition->name)) );
+      }
     }
     return $output;  
   }
   
   function return_collections( $items ){
-    foreach($items as $item){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l(_filter_url_trim($item->name, URL_LENGTH), 'collection/' . $item->collection_id, array( 'attributes' => array('title' => $item->name, 'class' => 'dialog-link')) );
+    if( is_array($items) ){
+      foreach($items as $item){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l(_filter_url_trim($item->name, URL_LENGTH), 'collection/' . $item->collection_id, array( 'attributes' => array('title' => $item->name, 'class' => 'dialog-link')) );
+      }
     }
     return $output;  
   }
@@ -415,61 +421,71 @@
   }
   
   function return_agents( $items ){
-    foreach($items as $item){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l(_filter_url_trim($item->first_name . ' ' . $item->last_name, URL_LENGTH), 'agent/' . $item->agent_id, array( 'attributes' => array('title' => $item->first_name . ' ' . $item->last_name )) );
-      
-      if($item->at_date != '')
-        $output .= " (in $item->at_date)";
-      if($item->as_editor)
-        $output .= " (Ed.)";
+    if( is_array($items) ){
+      foreach($items as $item){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l(_filter_url_trim($item->first_name . ' ' . $item->last_name, URL_LENGTH), 'agent/' . $item->agent_id, array( 'attributes' => array('title' => $item->first_name . ' ' . $item->last_name )) );
+        
+        if($item->at_date != '')
+          $output .= " (in $item->at_date)";
+        if($item->as_editor)
+          $output .= " (Ed.)";
+      }
     }
     return $output;  
   }
   
   function return_nodes( $items ){
-    foreach($items as $item){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l(_filter_url_trim($item->title, URL_LENGTH), 'node/' . $item->nid, array( 'attributes' => array('title' => $item->title )) );
-      
+    if( is_array($items) ){
+      foreach($items as $item){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l(_filter_url_trim($item->title, URL_LENGTH), 'node/' . $item->nid, array( 'attributes' => array('title' => $item->title )) );
+        
+      }
     }
     return $output;  
   }
   
   function return_publications ( $items ){
-    foreach($items as $item){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l(_filter_url_trim($item->title, URL_LENGTH), 'publication/' . $item->publication_id, array( 'attributes' => array('title' => $item->title, 'class' => 'dialog-link')) );
+    if( is_array($items) ){
+      foreach($items as $item){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l(_filter_url_trim($item->title, URL_LENGTH), 'node/' . $item->nid, array( 'attributes' => array('title' => $item->title)) );
+      }
     }
     return $output;  
   }
   
   function return_happenings( $items ){
-    foreach($items as $item){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l($item->name, 'exhibition/' . $item->exhibition_id, array( 'attributes' => array('title' => $item->name)) );
-      if($item->from_date != '')
-        $output .= " ($item->from_date until $item->to_date)";
+    if( is_array($items) ){
+      foreach($items as $item){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l($item->name, 'exhibition/' . $item->exhibition_id, array( 'attributes' => array('title' => $item->name)) );
+        if($item->from_date != '')
+          $output .= " ($item->from_date until $item->to_date)";
+      }
     }
     return $output;  
   }
   
   function return_institutions( $items ){
-    foreach($items as $item){
-      if($output != '')
-        $output .= ', ';
-      
-      $output .= l($item->name, 'institution/' . $item->institution_id, array( 'attributes' => array('title' => $item->name, 'class' => 'dialog-link')) );
-      if($item->from_date != '')
-        $output .= " ($item->from_date until $item->to_date)";
+    if( is_array($items) ){
+      foreach($items as $item){
+        if($output != '')
+          $output .= ', ';
+        
+        $output .= l($item->name, 'node/' . $item->nid, array( 'attributes' => array('title' => $item->name)) );
+        if($item->from_date != '')
+          $output .= " ($item->from_date until $item->to_date)";
+      }
     }
     return $output;  
   }

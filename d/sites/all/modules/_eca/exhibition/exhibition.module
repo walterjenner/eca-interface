@@ -49,8 +49,7 @@ function exhibition_cron()
 {
   $last_run = variable_get('cron_last_exhibition', 0);
 
-  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_EXHIBITION_SYNC ){
-  //if( true ){
+  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) || FORCE_EXHIBITION_SYNC ){
     watchdog( 'exhibition.module', 'Updated mapping');
     variable_set('cron_last_exhibition', time() );
     global $userMapping;
@@ -197,10 +196,12 @@ function exhibition_load($node) {
     
     //getInstitutions (where this exhibition was shown)
     $exhibition->institutions = array();
-    $selectInstitutions = "SELECT  ca_i.name, ca_h.institution_id, ca_h.from_date, ca_h.to_date
+    $selectInstitutions = "SELECT  ca_i.name, ca_h.institution_id, ca_h.from_date, ca_h.to_date, i.nid
                           FROM compartDB.happening ca_h
                           LEFT JOIN compartDB.institution ca_i
-                          ON ca_h.institution_id = ca_i.institution_id
+                            ON ca_h.institution_id = ca_i.institution_id
+                          LEFT JOIN institution i
+                            ON ca_i.institution_id = i.institution_id
                           WHERE ca_h.exhibition_id = $exhibition->exhibition_id";
     
     $resultInstitutions = db_query( $selectInstitutions );
@@ -210,10 +211,12 @@ function exhibition_load($node) {
     
     //getCitations (that are owned by this i.)
     $exhibition->citations = array();
-    $selectCitations = "SELECT ca_p.title, ca_ec.publication_id 
+    $selectCitations = "SELECT ca_p.title, ca_ec.publication_id, p.nid 
                           FROM compartDB.exhibition_citation ca_ec
                           LEFT JOIN compartDB.publication ca_p
-                          ON ca_ec.publication_id = ca_p.publication_id  
+                            ON ca_ec.publication_id = ca_p.publication_id
+                          LEFT JOIN publication p  
+                            ON ca_p.publication_id = p.publication_id
                           WHERE ca_ec.exhibition_id = $exhibition->exhibition_id";
     $resultCitations = db_query( $selectCitations );
     while( $citation = db_fetch_object($resultCitations) ){
@@ -222,7 +225,10 @@ function exhibition_load($node) {
     
     //getOrganizers
     $exhibition->organizers = array( 'agent' => array(), 'institution' => array() );
-    $selectOrganizers = "SELECT agent_id, institution_id FROM compartDB.organizing WHERE exhibition_id = $exhibition->exhibition_id";
+    $selectOrganizers = "SELECT ca_o.agent_id, ca_o.institution_id 
+      FROM compartDB.organizing ca_o
+      WHERE ca_o.exhibition_id = $exhibition->exhibition_id";
+      
     $resultOrganizers = db_query( $selectOrganizers );  
     while( $organizer = db_fetch_object($resultOrganizers) ){
       if($organizer->agent_id != 0){
@@ -231,7 +237,12 @@ function exhibition_load($node) {
         }
       }
       else if( $organizer->institution_id != 0 ){
-        if( $organizer_detail = db_fetch_object( db_query( "SELECT i.name, i.institution_id FROM compartDB.institution i WHERE i.institution_id = $organizer->institution_id" ) )){
+        $selectInstitution = "SELECT ca_i.name, ca_i.institution_id, i.nid 
+                              FROM compartDB.institution ca_i 
+                              LEFT JOIN institution i
+                                ON ca_i.institution_id = i.institution_id
+                              WHERE i.institution_id = $organizer->institution_id";
+        if( $organizer_detail = db_fetch_object( db_query( $selectInstitution ) )){
           array_push( $exhibition->organizers['institution'], $organizer_detail );
         }
       } 

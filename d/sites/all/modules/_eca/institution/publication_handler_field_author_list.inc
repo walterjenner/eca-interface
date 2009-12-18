@@ -4,7 +4,7 @@
 /**
  * Field handler for terms.
  */
-class eca_main_handler_field_agent_list extends views_handler_field_prerender_list {
+class publication_handler_field_author_list extends views_handler_field_prerender_list {
  function construct() {
     parent::construct();
     $this->additional_fields['publication_id'] = array('table' => 'publication', 'field' => 'publication_id');

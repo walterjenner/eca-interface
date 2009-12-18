@@ -22,20 +22,20 @@ if($teaser){
 
 ?>
 
-  <div class="exhibition-node">
+  <div class="publication-node">
     <div id="tabs" class="ui-tabs">
-      <h1 class="node-title exhibition"><?php print check_plain($node->title); ?></h1>
+      <h1 class="node-title publication"><?php print check_plain($node->title); ?></h1>
       
         <?php print flag_create_link('bookmarks', $node->nid);  ?>   
         <ul class="ui-tabs-nav">
-            <li><a href="#info-tab" title="View basic infos about this exhibition." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
+            <li><a href="#info-tab" title="View basic infos about this publication." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
             <?php if($content_bottom): ?>
-              <li><a href="#related-tab" title="View related items of this exhibition." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
+              <li><a href="#related-tab" title="View related items of this publication." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
             <?php endif; ?>
             <?php if(count($node->media)): ?>
-              <li><a href="#media-tab" title="View pictures of this exhibition." rel="address:/media-tab"><span><?php print t('Media'); ?> (<?php print count($node->media); ?>)</span></a></li>
+              <li><a href="#media-tab" title="View pictures of this publication." rel="address:/media-tab"><span><?php print t('Media'); ?> (<?php print count($node->media); ?>)</span></a></li>
             <?php endif; ?>
-            <li><a href="#comment-tab" title="View comments on this exhibition." rel="address:/comment-tab"><span><?php print t('Comments'); ?> (<?php print $comment_count; ?>)</span></a></li>
+            <li><a href="#comment-tab" title="View comments on this publication." rel="address:/comment-tab"><span><?php print t('Comments'); ?> (<?php print $comment_count; ?>)</span></a></li>
         </ul>
       
        
@@ -49,13 +49,22 @@ if($teaser){
               print "<div class=\"agent-image\">$mediaMarkup</div>\n";
             }  
           }          
-          //if(strlen($title) < strlen($node->title) )
-            //print_value($node->title, "Full title"); 
-          print_value( $node->description, t('Description'));
           
-          print_value( return_institutions($node->institutions), t('Shown at') );
-          print_value( return_publications($node->citations), t('Cited in') );
-          print_value( return_organizers($node->organizers), t('Organizer(s)') );
+          if(is_empty($node->it_name))
+            print('<h3>' . t('Institution') .'</h3>');
+          else
+            print('<h3>'.$node->it_name.'</h3>');
+          
+          print_value($node->description, t('Description') );
+          if(!is_empty($item->url))
+            print_value(l($node->url, absolute($item->url)), 'Web page');
+          print_value(return_address($node->street, $node->zip, $node->city, $node->country), t('Address') );
+          
+          print_value( return_happenings( $node->happenings ), t('Happening(s)') );
+          print_value( return_happenings( $node->exhibitions ), t('Exhibition(s) organized') );
+          print_value( return_artworks( $node->artworks ), t('Artwork(s) owned') );
+          print_value( return_collections( $node->collections ), t('Collection(s) owned') );
+          print_value( return_publications( $node->citations ), t('Cited in') );
           
         ?>
         

@@ -6,7 +6,7 @@ function eca_main_views_data(){
   
   //PUBLICATIONS
   //BASE TABLE
-  $data['publication']['table']['base'] = array(
+  /*$data['publication']['table']['base'] = array(
     'field' => 'publication_id', // the exhibit module function render() needs this var to be set!!!
     'publication_id' => 'Primary key',
     'title' => t('Publication'),
@@ -109,7 +109,7 @@ function eca_main_views_data(){
       'title' => t('Authors'),
       'help' => t('Display all agents who are authors of this publication.'),
       'handler' => 'eca_main_handler_field_agent_list',
-      /*'skip base' => 'term_data',*/
+      //'skip base' => 'term_data',
     ),
     'argument' => array(
       'handler' => 'eca_main_handler_argument_agent_id',
@@ -121,7 +121,7 @@ function eca_main_views_data(){
   
   
   
-  //PUBLICATIONS
+  //INSTITUTIONS
   //BASE TABLE
   $data['institution']['table']['base'] = array(
     'field' => 'institution_id', // the exhibit module function render() needs this var to be set!!!
@@ -184,8 +184,8 @@ function eca_main_views_data(){
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
     ),
-  );  
-    
+  ); 
+    */
   //print_r($data);
 
   return $data;

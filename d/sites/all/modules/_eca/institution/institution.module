@@ -1,0 +1,263 @@
+<?php
+// $Id$
+
+//NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
+
+//include the file with the helper functions
+require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
+
+/**
+ * @file
+ * Wrapper-Node-Type to the Institution in the compArt DB
+ */
+
+function institution_node_info() {
+  return array(
+    'institution' => array(
+      'name' => t('Institution'),
+      'module' => 'institution',
+      'description' => "Wrapper-Node-Type to the Institution in the compArt DB",
+      'has_body' => FALSE,
+      'title_label' => t('Name'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function institution_help($path, $arg) {
+  $output = ''; 
+  switch ($path) {
+    case "admin/help#institution":
+      $output = '<p>'.  t("Wrapper-Node-Type to the Institution in the compArt DB.") .'</p>';
+      $output .= '<p>'.  t("It was developed for the ") 
+        . '<a href="http://www.compart.informatik.uni-bremen.de/" title="compArt Project">compArt Project</a>' 
+        . t(" at University Bremen.") .'</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Called everytime cron.php is run. 
+ * Updates the mapping if the timespan since last update is greater then 12h.
+ * 
+ * @return 
+ */
+function institution_cron()
+{
+  $last_run = variable_get('cron_last_institution', 0);
+
+  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) || FORCE_INSTITUTION_SYNC ){
+    watchdog( 'institution.module', 'Updated mapping');
+    variable_set('cron_last_institution', time() );
+    global $userMapping;
+     
+    //1-DELETE if there is a mapping which is not in compart db anymore
+    $selectDeprecated = "SELECT i.nid
+                          FROM institution i
+                          LEFT JOIN compartDB.institution ca_i
+                          ON i.institution_id = ca_i.institution_id
+                          WHERE ca_i.institution_id IS NULL";
+                          
+    $resultDeprecated = db_query( $selectDeprecated );
+    while( $toDelete = db_fetch_object( $resultDeprecated ) ){
+      node_delete( $toDelete->nid );
+      //drupal_set_message( "Deleted institution: nid: $toDelete->nid");
+      watchdog( 'institution.module', 'Deleted institution: nid: @nid', array('@nid' => $toDelete->nid) );
+    }
+    
+    //2-INSERT if there is no mapping for an institution sofar.
+    $selectNew = "SELECT ca_i.institution_id, ca_i.name, ca_i.owner_id
+                          FROM compartDB.institution ca_i
+                          LEFT JOIN institution i
+                          ON i.institution_id = ca_i.institution_id                       
+                          WHERE i.institution_id IS NULL";
+                          
+    $resultNew = db_query( $selectNew );
+    while( $toInsert = db_fetch_object( $resultNew ) ){
+      $toInsert->title = $toInsert->name;
+      $toInsert->type = 'institution';
+      $toInsert->comment = 2;
+      $toInsert->uid = isset($userMapping[$toInsert->owner_id])?$userMapping[$toInsert->owner_id]:0;
+      node_save( $toInsert );      
+      //drupal_set_message( "Inserted institution: nid: $toInsert->nid, title: $toInsert->title");
+      watchdog( 'institution.module', 'Inserted institution: nid: @nid, title: @title', array('@nid' => $toInsert->nid, '@title' => $toInsert->title ) );
+      
+      //update search index     
+      _node_index_node( $toInsert ); 
+    }    
+      
+    //3-UPDATE if the data is newer
+    $selectUpdated = "SELECT ca_i.institution_id, ca_i.name, i.nid as nid, ca_i.owner_id
+                FROM compartDB.institution ca_i
+                LEFT JOIN institution i
+                ON ca_i.institution_id = i.institution_id
+                LEFT JOIN node n
+                ON i.nid = n.nid
+                WHERE UNIX_TIMESTAMP(ca_i.last_change) > n.changed";
+    
+    $resultUpdated = db_query( $selectUpdated );
+    while( $updated = db_fetch_object($resultUpdated) ){
+      $n = new stdClass();
+      $n->nid = $updated->nid;
+      $n->vid = $n->nid; //to ensure that the title in revision table is also updated.
+      $n->title = $updated->name;
+      $n->uid = isset($userMapping[$updated->owner_id])?$userMapping[$updated->owner_id]:0;
+      node_save( $n );
+      //drupal_set_message( "Updated institution: nid: $n->nid, title: $n->title");
+      watchdog( 'institution.module', 'Updated institution: nid: @nid, title: @title', array('@nid' => $n->nid, '@title' => $n->title ) );
+      
+      //update search index
+      _node_index_node( $n );
+    }
+  }  
+}
+
+/**
+* Implementation of hook_delete
+ */
+function institution_delete($node) {
+  db_query("DELETE FROM institution WHERE nid = $node->nid");
+}
+
+/**
+* Implementation of hook_insert
+ */
+function institution_insert($node) {
+  drupal_write_record( 'institution', $node );
+}
+
+/**
+ * Implementation of hook_update
+ */
+function institution_update($node) {
+  //NOTE: the node itself is changed already node_update() (=kind of super() function of this)
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function institution_perm() {
+  return array('administer institutions');
+}
+
+/**
+ * Implementation of hook_access
+ */
+function institution_access($op, $node, $account) {
+  switch($op) {
+    case 'create':
+      return false;
+    case 'update';
+      return user_access('administer institutions');
+    case 'delete':
+      return user_access('administer institutions');       
+  }
+}
+
+/**
+ * 
+ * 
+ * @return an array with all additional properties of this node-type
+ * @param object $node
+ */
+function institution_load($node) {
+  $select = "SELECT ca_i.institution_id, ca_i.name as institution_name, ca_i.url, ca_i.email, ca_i.description, 
+                    it.name it_name, a.street, a.zip, a.pobox, a.additional, l.city, l.country, 
+                    UNIX_TIMESTAMP(ca_i.last_change) as last_change            
+             FROM institution i
+             LEFT JOIN compartDB.institution ca_i 
+               ON i.institution_id = ca_i.institution_id
+             LEFT JOIN compartDB.institution_type it
+               ON ca_i.institution_type_id = it.institution_type_id
+             LEFT JOIN compartDB.address a
+               ON ca_i.address_id = a.address_id
+             LEFT JOIN compartDB.location l 
+               ON a.location_id = l.location_id
+             WHERE i.nid = $node->nid";
+             
+   $res = db_query($select);
+   if( $institution = db_fetch_object($res) ){
+      //getHappenings (which were shown there)
+      $institution->happenings = array();
+      $selectHappenings = "SELECT ca_e.name, ca_h.exhibition_id, ca_h.from_date, ca_h.to_date 
+                            FROM compartDB.happening ca_h
+                            LEFT JOIN compartDB.exhibition ca_e
+                            ON ca_h.exhibition_id = ca_e.exhibition_id  
+                            WHERE ca_h.institution_id = $institution->institution_id";
+      $resultHappenings = db_query( $selectHappenings );
+      while( $happening = db_fetch_object($resultHappenings) ){
+        array_push( $institution->happenings, $happening );
+      }
+      
+      //getExhibitions (that were organized there)
+      $institution->exhibitions = array();
+      $selectExhibitions = "SELECT ca_e.name, ca_o.exhibition_id 
+                            FROM compartDB.organizing ca_o
+                            LEFT JOIN compartDB.exhibition ca_e
+                            ON ca_o.exhibition_id = ca_e.exhibition_id  
+                            WHERE ca_o.institution_id = $institution->institution_id";
+      $resultExhibitions = db_query( $selectExhibitions );
+      while( $exhibition = db_fetch_object($resultExhibitions) ){
+        array_push( $institution->exhibitions, $exhibition );
+      }
+      
+      //getArtwork (that are owned by this i.)
+      $institution->artworks = array();
+      $selectArtworks = "SELECT ca_a.title, ca_o.artwork_id 
+                            FROM compartDB.artwork_ownership ca_o
+                            LEFT JOIN compartDB.artwork ca_a
+                            ON ca_o.artwork_id = ca_a.artwork_id  
+                            WHERE ca_o.institution_id = $institution->institution_id";
+      $resultArtworks = db_query( $selectArtworks );
+      while( $artwork = db_fetch_object($resultArtworks) ){
+        array_push( $institution->artworks, $artwork );
+      }
+      
+      //getCollections (that are owned by this i.)
+      $institution->collections = array();
+      $selectCollections = "SELECT ca_c.name, ca_o.collection_id 
+                            FROM compartDB.collection_ownership ca_o
+                            LEFT JOIN compartDB.collection ca_c
+                            ON ca_o.collection_id = ca_c.collection_id  
+                            WHERE ca_o.institution_id = $institution->institution_id";
+      $resultCollections = db_query( $selectCollections );
+      while( $collection = db_fetch_object($resultCollections) ){
+        array_push( $institution->collections, $collection );
+      }
+      
+      //getCitations (that are owned by this i.)
+      $institution->citations = array();
+      $selectCitations = "SELECT ca_p.title, ca_ic.publication_id, p.nid 
+                            FROM compartDB.institution_citation ca_ic
+                            LEFT JOIN compartDB.publication ca_p
+                              ON ca_ic.publication_id = ca_p.publication_id 
+                            LEFT JOIN publication p 
+                              ON ca_p.publication_id = p.publication_id
+                            WHERE ca_ic.institution_id = $institution->institution_id";
+      $resultCitations = db_query( $selectCitations );
+      while( $citation = db_fetch_object($resultCitations) ){
+        array_push( $institution->citations, $citation );
+      }
+      
+      return $institution;
+   }
+}
+
+/**
+* Implementation of hook_block
+* @param string $op one of "list", "view", "save" and "configure"
+* @param integer $delta code to identify the block
+* @param array $edit only for "save" operation
+**/
+function institution_block($op = 'list', $delta = 0, $edit = array()) { 
+
+}
+
+function institution_views_api(){
+  return array(
+    'api' => 2
+  );
+}

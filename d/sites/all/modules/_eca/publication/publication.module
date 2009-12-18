@@ -1,0 +1,253 @@
+<?php
+// $Id$
+
+//NOTE: THE .module FILES SHOULD BE AS SMALL AS POSSIBLE AS THE ARE LOADED AT EVERY REQUEST!!
+
+//include the file with the helper functions
+require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
+
+/**
+ * @file
+ * Wrapper-Node-Type to the Publication in the compArt DB
+ */
+
+function publication_node_info() {
+  return array(
+    'publication' => array(
+      'name' => t('Publication'),
+      'module' => 'publication',
+      'description' => "Wrapper-Node-Type to the Publication in the compArt DB",
+      'has_body' => FALSE,
+      'title_label' => t('Name'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function publication_help($path, $arg) {
+  $output = ''; 
+  switch ($path) {
+    case "admin/help#publication":
+      $output = '<p>'.  t("Wrapper-Node-Type to the publication in the compArt DB.") .'</p>';
+      $output .= '<p>'.  t("It was developed for the ") 
+        . '<a href="http://www.compart.informatik.uni-bremen.de/" title="compArt Project">compArt Project</a>' 
+        . t(" at University Bremen.") .'</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Called everytime cron.php is run. 
+ * Updates the mapping if the timespan since last update is greater then 12h.
+ * 
+ * @return 
+ */
+function publication_cron()
+{
+  $last_run = variable_get('cron_last_publication', 0);
+
+  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) || FORCE_PUBLICIATION_SYNC ){
+    watchdog( 'publication.module', 'Updated mapping');
+    variable_set('cron_last_publication', time() );
+    global $userMapping;
+     
+    //1-DELETE if there is a mapping which is not in compart db anymore
+    $selectDeprecated = "SELECT p.nid
+                          FROM publication p
+                          LEFT JOIN compartDB.publication ca_p
+                          ON p.publication_id = ca_p.publication_id
+                          WHERE ca_p.publication_id IS NULL";
+                          
+    $resultDeprecated = db_query( $selectDeprecated );
+    while( $toDelete = db_fetch_object( $resultDeprecated ) ){
+      node_delete( $toDelete->nid );
+      //drupal_set_message( "Deleted publication: nid: $toDelete->nid");
+      watchdog( 'publication.module', 'Deleted publication: nid: @nid', array('@nid' => $toDelete->nid) );
+    }
+    
+    //2-INSERT if there is no mapping for an publication sofar.
+    $selectNew = "SELECT ca_p.publication_id, ca_p.title, ca_p.owner_id
+                          FROM compartDB.publication ca_p
+                          LEFT JOIN publication p
+                          ON p.publication_id = ca_p.publication_id                       
+                          WHERE p.publication_id IS NULL";
+                          
+    $resultNew = db_query( $selectNew );
+    while( $toInsert = db_fetch_object( $resultNew ) ){
+      //$toInsert->title = $toInsert->title;
+      $toInsert->type = 'publication';
+      $toInsert->comment = 2;
+      $toInsert->uid = isset($userMapping[$toInsert->owner_id])?$userMapping[$toInsert->owner_id]:0;
+      node_save( $toInsert );      
+      //drupal_set_message( "Inserted publication: nid: $toInsert->nid, title: $toInsert->title");
+      watchdog( 'publication.module', 'Inserted publication: nid: @nid, title: @title', array('@nid' => $toInsert->nid, '@title' => $toInsert->title ) );
+      
+      //update search index     
+      _node_index_node( $toInsert ); 
+    }    
+      
+    //3-UPDATE if the data is newer
+    $selectUpdated = "SELECT ca_p.publication_id, ca_p.title, p.nid as nid, ca_p.owner_id
+                FROM compartDB.publication ca_p
+                LEFT JOIN publication p
+                ON ca_p.publication_id = p.publication_id
+                LEFT JOIN node n
+                ON p.nid = n.nid
+                WHERE UNIX_TIMESTAMP(ca_p.last_change) > n.changed";
+    
+    $resultUpdated = db_query( $selectUpdated );
+    while( $updated = db_fetch_object($resultUpdated) ){
+      $n = new stdClass();
+      $n->nid = $updated->nid;
+      $n->vid = $n->nid; //to ensure that the title in revision table is also updated.
+      $n->title = $updated->title;
+      $n->uid = isset($userMapping[$updated->owner_id])?$userMapping[$updated->owner_id]:0;
+      node_save( $n );
+      //drupal_set_message( "Updated publication: nid: $n->nid, title: $n->title");
+      watchdog( 'publication.module', 'Updated publication: nid: @nid, title: @title', array('@nid' => $n->nid, '@title' => $n->title ) );
+      
+      //update search index
+      _node_index_node( $n );
+    }
+  }  
+}
+
+/**
+* Implementation of hook_delete
+ */
+function publication_delete($node) {
+  db_query("DELETE FROM publication WHERE nid = $node->nid");
+}
+
+/**
+* Implementation of hook_insert
+ */
+function publication_insert($node) {
+  drupal_write_record( 'publication', $node );
+}
+
+/**
+ * Implementation of hook_update
+ */
+function publication_update($node) {
+  //NOTE: the node itself is changed already node_update() (=kind of super() function of this)
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function publication_perm() {
+  return array('administer publications');
+}
+
+/**
+ * Implementation of hook_access
+ */
+function publication_access($op, $node, $account) {
+  switch($op) {
+    case 'create':
+      return false;
+    case 'update';
+      return user_access('administer publications');
+    case 'delete':
+      return user_access('administer publications');       
+  }
+}
+
+/**
+ * 
+ * 
+ * @return an array with all additional properties of this node-type
+ * @param object $node
+ */
+function publication_load($node) {
+  $select = "SELECT p.publication_id, p.nid,
+                    ca_p.publication_id, ca_p.title , ca_p.booktitle, ca_p.journal, ca_p.volume, ca_p.number, ca_p.year, ca_p.isbn, ca_p.nr_pages, 
+                    ca_p.on_pages, ca_p.edition, ca_p.publisher, ca_p.url, ca_p.last_seen, ca_p.format, ca_p.duration, ca_p.address, ca_p.keywords, 
+                    ca_p.month, ca_p.description, UNIX_TIMESTAMP(ca_p.last_change) as last_change,
+                    pt.name AS type_name                   
+             FROM publication p
+             LEFT JOIN compartDB.publication ca_p
+               ON p.publication_id = ca_p.publication_id  
+             LEFT JOIN compartDB.publication_type pt 
+               ON ca_p.publication_type_id = pt.publication_type_id
+             WHERE p.nid = $node->nid";
+
+  if( $item = db_fetch_object( db_query($select) ) ){
+    //getAuthors
+    $item->authors = array();
+    $selectAuthors = "SELECT ca_a.first_name, ca_a.last_name, ca_as.agent_id, ca_as.as_editor
+                      FROM compartDB.authorship ca_as
+                      LEFT JOIN compartDB.agent ca_a
+                      ON ca_as.agent_id = ca_a.agent_id
+                      WHERE ca_as.publication_id = $item->publication_id";
+                      
+    $resultAuthors = db_query( $selectAuthors );
+    while( $author = db_fetch_object($resultAuthors) ){
+      array_push( $item->authors, $author ); 
+    }
+    
+    //getMedia
+    $item->media = array();
+    $item->media = eca_get_media( 30, $item->publication_id );
+    
+    //getReferencedAgents
+    $item->referencedAgents = array();
+    $selectRefAgents = "SELECT ca_ac.agent_id, n.nid, n.title 
+                        FROM compartDB.agent_citation ca_ac
+                        LEFT JOIN agent a ON ca_ac.agent_id = a.agent_id
+                        LEFT JOIN node n ON a.nid = n.nid
+                        WHERE ca_ac.publication_id = $item->publication_id";
+                        
+    $resultRefAgents = db_query( $selectRefAgents );
+    while( $agent = db_fetch_object( $resultRefAgents ) ){
+      $item->referencedAgents[] = $agent;
+    }
+    
+    //getReferencedArtworks
+    $item->referencedArtworks = array();
+    $selectRefArtworks = "SELECT ca_ac.artwork_id, n.nid, n.title 
+                        FROM compartDB.artwork_citation ca_ac
+                        LEFT JOIN artwork a ON ca_ac.artwork_id = a.artwork_id
+                        LEFT JOIN node n ON a.nid = n.nid
+                        WHERE ca_ac.publication_id = $item->publication_id";
+                        
+    $resultRefArtworks = db_query( $selectRefArtworks );
+    while( $artwork = db_fetch_object( $resultRefArtworks ) ){
+      $item->referencedArtworks[] = $artwork;
+    }
+    
+    //getReferencedArtworks
+    $item->referencedExhibitions = array();
+    $selectRefExhibitions = "SELECT ca_ec.exhibition_id, n.nid, n.title 
+                        FROM compartDB.exhibition_citation ca_ec
+                        LEFT JOIN exhibition e ON ca_ec.exhibition_id = e.exhibition_id
+                        LEFT JOIN node n ON e.nid = n.nid
+                        WHERE ca_ec.publication_id = $item->publication_id";
+                        
+    $resultRefExhibitions = db_query( $selectRefExhibitions );
+    while( $exhibition = db_fetch_object( $resultRefExhibitions ) ){
+      $item->referencedExhibitions[] = $exhibition;
+    }
+    return $item;
+  }  
+}
+
+/**
+* Implementation of hook_block
+* @param string $op one of "list", "view", "save" and "configure"
+* @param integer $delta code to identify the block
+* @param array $edit only for "save" operation
+**/
+function publication_block($op = 'list', $delta = 0, $edit = array()) {
+
+}
+
+function publication_views_api(){
+  return array(
+    'api' => 2
+  );
+}

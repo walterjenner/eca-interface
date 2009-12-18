@@ -49,8 +49,7 @@ function agent_cron()
 {
   $last_run = variable_get('cron_last_agent', 0);
  
-  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) && DO_AGENT_SYNC ){
-  //if( true ){
+  if( (time() > ($last_run + NODE_SYNC_INTERVAL)) || FORCE_AGENT_SYNC ){
     watchdog( 'agent.module', 'Updated mapping');
     variable_set('cron_last_agent', time() );
     global $userMapping;
@@ -201,10 +200,12 @@ function agent_load($node) {
     
     //getMembership (of institution)
     $agent->institutions = array();
-    $selectInstitutions = "SELECT ca_i.name, ca_i.institution_id 
+    $selectInstitutions = "SELECT ca_i.name, ca_i.institution_id, i.nid 
                             FROM compartDB.membership ca_m 
                             LEFT JOIN compartDB.institution ca_i
-                            ON ca_m.institution_id = ca_i.institution_id 
+                              ON ca_m.institution_id = ca_i.institution_id 
+                            LEFT JOIN institution i
+                              ON ca_i.institution_id = i.institution_id
                             WHERE ca_m.agent_id = $agent->agent_id";
                             
     $resInstitutions = db_query( $selectInstitutions );
@@ -214,10 +215,12 @@ function agent_load($node) {
     
     //getCitations
     $agent->citations = array();
-    $selectCitations = "SELECT ca_p.title, ca_ac.publication_id 
+    $selectCitations = "SELECT ca_p.title, ca_ac.publication_id, p.nid 
                         FROM compartDB.agent_citation ca_ac 
                         LEFT JOIN compartDB.publication ca_p
-                        ON ca_ac.publication_id = ca_p.publication_id
+                          ON ca_ac.publication_id = ca_p.publication_id
+                        LEFT JOIN publication p  
+                           ON ca_p.publication_id = p.publication_id
                         WHERE ca_ac.agent_id = $agent->agent_id";
     $resCitations = db_query($selectCitations);
     while( $citation = db_fetch_object($resCitations) ) {
@@ -242,7 +245,7 @@ function agent_load($node) {
     $selectExhibitions = "SELECT ca_e.name, ca_o.exhibition_id 
                           FROM compartDB.organizing ca_o
                           LEFT JOIN compartDB.exhibition ca_e
-                          ON ca_o.exhibition_id = ca_e.exhibition_id  
+                            ON ca_o.exhibition_id = ca_e.exhibition_id  
                           WHERE ca_o.agent_id = $agent->agent_id";
     $resultExhibitions = db_query( $selectExhibitions );
     while( $exhibition = db_fetch_object($resultExhibitions) ){

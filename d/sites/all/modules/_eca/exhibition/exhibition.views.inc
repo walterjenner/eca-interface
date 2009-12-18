@@ -1,7 +1,100 @@
-<?php 
+<?php
 function exhibition_views_data(){
   $data = array();
   
+  //BASE TABLE
+  $data['compartdb_exhibition']['table']['base'] = array(
+    'field' => 'exhibition_id', // the exhibit module function render() needs this var to be set!!!
+    'exhibition_id' => 'Primary key',
+    'title' => t('Exhibition'),
+    'help' => t('An exhibition in the compart DB'),
+    'weight' => -10,
+  );
+  
+  $data['exhibition']['table']['group'] = t('Exhibition');
+  $data['compartdb_exhibition']['table']['group'] = t('Exhibition CA');
+  $data['compartdb_exhibition_type']['table']['group'] = t('Exhibition CA');
+  $data['compartdb_exhibits_in']['table']['group'] = t('Exhibits_In CA');
+    
+  //set up the join-chain
+  $data['exhibition']['table']['join']['compartdb_exhibition'] = array(    
+    'left_field' => 'exhibition_id',
+    'field' => 'exhibition_id',
+  );
+  $data['compartdb_exhibition_type']['table']['join']['compartdb_exhibition'] = array(    
+    'left_field' => 'exhibition_type_id',
+    'field' => 'exhibition_type_id',
+  );
+  $data['compartdb_exhibits_in']['table']['join']['compartdb_exhibition'] = array(    
+    'left_field' => 'exhibition_id',
+    'field' => 'exhibition_id',
+  );
+  
+  //fields
+  $data['compartdb_exhibition']['name'] = array(
+    'title' => t('Name'),
+    'help' => t('Name'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+      'numeric' => TRUE
+    ),
+  );
+  $data['compartdb_exhibition']['description'] = array(
+    'title' => t('Description'),
+    'help' => t('Description'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+      'numeric' => TRUE
+    ),
+  );
+  $data['compartdb_exhibition_type']['name'] = array(
+     'title' => t('Exhibition Type Name'),
+     'help' => t('Exhibition Type Name'),
+     'field' => array(
+       'handler' => 'views_handler_field',
+       'click sortable' => TRUE,
+     )
+  );
+  $data['exhibition']['nid'] = array(
+    'title' => t('Exhibition Node'),
+    'help' => t('The Exhibition Node'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'relationship' => array(
+      'base' => 'node',
+      'base_field' => 'nid'
+    ),
+  );  
+  $data['compartdb_exhibits_in']['agent_id'] = array(
+     'title' => t('Agent ID'),
+     'help' => t('Agent ID'),
+     'field' => array(
+       'handler' => 'exhibition_handler_field_agent_list',
+       'click sortable' => TRUE,
+     ),
+     'argument' => array(
+      'handler' => 'eca_main_handler_argument_agent_id',
+      'name field' => 'last_name',
+      'name table' => 'compartdb_agent',
+      'empty field name' => t('No Agent'),
+      'numeric' => TRUE,
+    ),
+  );
+  
+  return $data;
+  
+}
+ 
+function _exhibition_views_data(){
+  $data = array();
+  /*
   $data['exhibition']['table']['group'] = t('Exhibition');
   $data['compartdb_exhibition']['table']['group'] = t('Exhibition CA');
   $data['compartdb_exhibition_type']['table']['group'] = t('Exhibition CA');
@@ -97,7 +190,7 @@ function exhibition_views_data(){
       'numeric' => TRUE,
     ),
    );
-  
+  */
   return $data;
 }
 

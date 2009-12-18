@@ -4,7 +4,7 @@
 /**
  * Field handler for terms.
  */
-class artwork_handler_field_artwork_agents extends views_handler_field_prerender_list {
+class artwork_handler_field_creator_list extends views_handler_field_prerender_list {
   function construct() {
     parent::construct();
     $this->additional_fields['artwork_id'] = array('table' => 'artwork', 'field' => 'artwork_id');

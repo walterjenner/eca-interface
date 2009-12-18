@@ -1,0 +1,7 @@
+;  $Id$
+name = Institution Node-Type
+description = Wrapper-Node-Type to the Institution in the compArt DB
+core = 6.x
+
+package = ECA
+version = 0.1
