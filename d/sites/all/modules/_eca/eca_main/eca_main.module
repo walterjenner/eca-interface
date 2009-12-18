@@ -33,7 +33,7 @@ function eca_main_cron()
   cache_clear_all( NULL, 'cache_eca' );
 }
 
-function eca_main_update_index(){
+function ___eca_main_update_index(){
   global $last_change_pub, $last_id_pub, $last_change_inst, $last_id_inst;
   
   register_shutdown_function('eca_main_update_shutdown');
