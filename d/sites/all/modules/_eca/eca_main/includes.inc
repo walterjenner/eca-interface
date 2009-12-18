@@ -9,7 +9,7 @@
   define("FORCE_AGENT_SYNC", FALSE);
   define("FORCE_ARTWORK_SYNC", FALSE);
   define("FORCE_EXHIBITION_SYNC", FALSE);
-  define("FORCE_PUBLICATION_SYNC", FALSE);
+  define("FORCE_PUBLICATION_SYNC", TRUE);
   define("FORCE_INSTITUTION_SYNC", TRUE);
   define("NODE_SYNC_INTERVAL", (60 * 60 * 3) );  // 3h
   define("MIN_CACHE_LIFETIME", (60 * 60 * 3) );  // 3h. that means that before the item in cache is one day old, 
