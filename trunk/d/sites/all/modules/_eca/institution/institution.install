@@ -1,0 +1,51 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * Contains install and update functions for institution database table.
+ */
+
+/**
+ * Implementation of hook_install()
+ */
+function institution_install() {
+  drupal_install_schema('institution');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function institution_uninstall() {
+  drupal_uninstall_schema('institution');
+  
+  //delete all institution nodes. NOTE: takes loooooong //all comments, all terms, etc should be deleted as well
+  $res = db_query("SELECT n.nid FROM {node} n WHERE n.type = 'institution'");
+  while ($n = db_fetch_object($res)) {
+    node_delete($n->nid);
+  }
+}
+
+function institution_schema() {
+  $schema['institution'] = array(
+      'description' => t('The table which does the mapping to institutions in compArt DB.'),
+      'fields' => array(
+        'nid' => array(
+          'description' => t('The primary identifier for a node.'),
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE),
+        'institution_id' => array(
+          'description' => t('The id of the institution in compArt DB.'),
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0)
+        ),
+      'unique keys' => array( 'institution_id' => array('institution_id') ),
+      'primary key' => array('nid'),
+      );
+      
+     return $schema;
+}

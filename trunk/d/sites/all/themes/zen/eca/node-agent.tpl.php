@@ -51,7 +51,7 @@ if($teaser){
           print_value($node->birth_date . return_location( $node->ca_l_city, $node->ca_l_country ), t('Born'), false, '', false );
           print_value($node->death_date . return_location( $node->ca_dl_city, $node->ca_dl_country ), t('Died'), false, '', false );
           print_value($node->pseudonym, t('Pseudonymous') );
-          print_value( _textile_process(array(1 =>$node->description)), t('Description'), true);
+          print_value( $node->description, t('Description'), true);
           //print_value($node->email, "Email (NOTE: remove?)");
           if($node->url)
             print_value( l($node->url, absolute($node->url) ), t('Web site') );  

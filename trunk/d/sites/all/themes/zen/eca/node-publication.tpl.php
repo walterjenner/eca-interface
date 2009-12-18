@@ -22,20 +22,20 @@ if($teaser){
 
 ?>
 
-  <div class="exhibition-node">
+  <div class="publication-node">
     <div id="tabs" class="ui-tabs">
-      <h1 class="node-title exhibition"><?php print check_plain($node->title); ?></h1>
+      <h1 class="node-title publication"><?php print check_plain($node->title); ?></h1>
       
         <?php print flag_create_link('bookmarks', $node->nid);  ?>   
         <ul class="ui-tabs-nav">
-            <li><a href="#info-tab" title="View basic infos about this exhibition." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
+            <li><a href="#info-tab" title="View basic infos about this publication." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
             <?php if($content_bottom): ?>
-              <li><a href="#related-tab" title="View related items of this exhibition." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
+              <li><a href="#related-tab" title="View related items of this publication." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
             <?php endif; ?>
             <?php if(count($node->media)): ?>
-              <li><a href="#media-tab" title="View pictures of this exhibition." rel="address:/media-tab"><span><?php print t('Media'); ?> (<?php print count($node->media); ?>)</span></a></li>
+              <li><a href="#media-tab" title="View pictures of this publication." rel="address:/media-tab"><span><?php print t('Media'); ?> (<?php print count($node->media); ?>)</span></a></li>
             <?php endif; ?>
-            <li><a href="#comment-tab" title="View comments on this exhibition." rel="address:/comment-tab"><span><?php print t('Comments'); ?> (<?php print $comment_count; ?>)</span></a></li>
+            <li><a href="#comment-tab" title="View comments on this publication." rel="address:/comment-tab"><span><?php print t('Comments'); ?> (<?php print $comment_count; ?>)</span></a></li>
         </ul>
       
        
@@ -49,13 +49,37 @@ if($teaser){
               print "<div class=\"agent-image\">$mediaMarkup</div>\n";
             }  
           }          
-          //if(strlen($title) < strlen($node->title) )
-            //print_value($node->title, "Full title"); 
-          print_value( $node->description, t('Description'));
           
-          print_value( return_institutions($node->institutions), t('Shown at') );
-          print_value( return_publications($node->citations), t('Cited in') );
-          print_value( return_organizers($node->organizers), t('Organizer(s)') );
+          if(is_empty($node->type_name))
+            $output .= '<h3>' .t('Publication').'</h3>';
+          else
+            $output .= "<h3>$node->type_name</h3>";
+          
+          print_value( return_agents($node->authors) , t('Author(s)' ) );
+          print_value( $node->description, t('Description'));
+          print_value( $node->year , t('Year'));
+          print_value( $node->month , t('Month') );  
+          print_value( $node->address , t('Place'));
+          print_value( $node->publisher , t('Publisher'));      
+          print_value( $node->isbn , t('ISBN'));     
+          
+          if(!is_empty($node->url)){
+            if(!is_empty($node->last_seen))
+              print_value( l($node->url, absolute($node->url)) . ' ('.t('retrieved').': ' . $node->last_seen . ')' , 'URL');
+            else
+              print_value( l($node->url, absolute($node->url)) , 'URL');
+          }
+          print_value( $node->book_title , t('Book title') );
+          print_value( $node->journal , t('Journal') );  
+          print_value( $node->volume , t('Volume') );
+          print_value( $node->edition , t('Edition') );
+          print_value( $node->on_pages , t('On pages') );            
+          print_value( $node->nr_pages , t('Pages') );
+          print_value( $node->format , t('Format') );
+          print_value( $node->duration , t('Duration') );
+          print_value( return_nodes($node->referencedAgents) , t('People referred to') );
+          print_value( return_nodes($node->referencedArtworks) , t('Artworks referred to') );
+          print_value( return_nodes($node->referencedExhibitions) , t('Events referred to') );
           
         ?>
         

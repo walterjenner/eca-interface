@@ -101,7 +101,7 @@ class TextileExt extends Textile
           
           $url = str_replace('@', '/', $url);
           
-          if( ! preg_match("/Agent|Exhibition|Artwork/i", $url) ){
+          if( ! preg_match("/Agent|Exhibition|Artwork|Institution|Publication/i", $url) ){
             $atts .= " class=\"dialog-link\"";
           }          
         }      

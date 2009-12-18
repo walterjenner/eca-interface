@@ -75,79 +75,6 @@ function eca_main_update_index(){
   
 }
 
-function eca_main_update_shutdown(){
-  global $last_change_pub, $last_id_pub, $last_change_inst, $last_id_inst;
-  if( $last_change_pub && $last_id_pub ){
-    variable_set('eca_main_cron_last_id_pub', $last_id_pub);
-    variable_set('eca_main_cron_last_table_pub', $last_table_pub);
-    
-  }
-  if( $last_change_inst && $last_id_inst ){
-    variable_set('eca_main_cron_last_id_inst', $last_id_inst);
-    variable_set('eca_main_cron_last_table_inst', $last_table_inst);
-  }
-}
-
-function eca_main_search($op = 'search', $keys = NULL){
-  switch($op){
-    case 'name':
-      return t('All Content'); //must add an own search tab!
-    case 'reset':
-      variable_del(eca_main_cron_last_id_pub);
-      variable_del(eca_main_cron_last_change_pub);
-      variable_del(eca_main_cron_last_id_inst);
-      variable_del(eca_main_cron_last_change_inst);
-      return;
-    case 'search':
-      //search publications
-      $hits = do_search($keys, 'publication');
-      $results = array();
-      foreach($hits as $item){
-        db_set_active('compart');
-        $publication = db_fetch_object( db_query("SELECT publication_id, title, last_change
-                            FROM {publication}
-                            WHERE publication_id = %d", $item->sid ));
-        db_set_active('default');
-        
-        $results[] = array(
-          'link' => url('publication/'.$item->sid),
-          'type' => 'Publication',
-          'title' => $publication->title,
-          'date' => $publication->last_change,
-          'score' => $item->score);
-      }
-      
-      $hits = do_search($keys, 'institution');
-      $resultsInstitution = array();
-      foreach($hits as $item){
-        db_set_active('compart');
-        $institution = db_fetch_object( db_query("SELECT institution_id, name, last_change
-                            FROM {institution}
-                            WHERE institution_id = %d", $item->sid ));
-        db_set_active('default');
-        
-        $resultsInstitution[] = array(
-          'link' => url('institution/'.$item->sid),
-          'type' => 'Institution',
-          'title' => $institution->name,
-          'date' => $institution->last_change,
-          'score' => $item->score);
-      }
-      
-      //dvr('count results pub'.count(results));
-      //dvr('count results inst'.count($resultsInstitution));
-      
-      $results = array_merge($resultsInstitution, $results);      
-      $node_results = node_search($op, $keys);
-      
-      //dvr('count $node_results'.count($node_results));
-      $results = array_merge($node_results, $results);
-      
-      //dvr('count $results'.count($results));      
-      return $results;
-  }
-}
-
 /**
  * Implementation of hook_perm().
  */
@@ -342,8 +269,11 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
           case 3:
             if($node->type == 'agent') {
               $block['title'] = t('Publications');
-              $selectPub = "SELECT SQL_CALC_FOUND_ROWS publication_id, title 
-                              FROM compartDB.publication WHERE publication_id IN 
+              $selectPub = "SELECT SQL_CALC_FOUND_ROWS ca_p.publication_id, ca_p.title, p.nid 
+                              FROM compartDB.publication ca_p
+                              LEFT JOIN publication p
+                                ON ca_p.publication_id = p.publication_id
+                              WHERE ca_p.publication_id IN 
                               (SELECT publication_id FROM compartDB.authorship WHERE agent_id = $node->agent_id) 
                            ORDER BY title 
                            LIMIT " . RELATED_ITEM_LIMIT;
@@ -359,7 +289,7 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
               $numRes = 0;
               while ($dataPub = db_fetch_object($resultPub)) {
                 $numRes++;
-                $block['content'] .= '<span class="tag tag-publication">' . l( _filter_url_trim($dataPub->title, URL_LENGTH) , 'publication/'.$dataPub->publication_id, array( 'attributes' => array('title' => $dataPub->title, 'class' => 'dialog-link') )) . '</span>';
+                $block['content'] .= '<span class="tag tag-publication">' . l( _filter_url_trim($dataPub->title, URL_LENGTH) , 'node/'.$dataPub->nid, array( 'attributes' => array('title' => $dataPub->title) )) . '</span>';
               }
               $block['content'] .= '<div class="all-link all-link-publication">' . l('<span>Show all ' . $totalNum . ' Publications</span>', 'publications', array('query' => "args=$node->agent_id", 'html' => true) ) .'</div>';      
             }
@@ -551,46 +481,6 @@ function eca_main_block($op = 'list', $delta = 0, $edit = array()) {
     }       
   } //endif $op == view
 }
-
-/**
- * Change the default search which is used by the finder module from 'node' to 'eca_main'
- * by adding an own finder preprocess function, using the same technique as in 
- * finder_search.module line 52 ongoing.
- */
-function eca_main_theme_registry_alter(&$theme_registry) {
-  variable_set('eca_main_finder_results_theme', $theme_registry['finder_results']['function']);
-  //variable_set('finder_search_finder_results_theme', $theme_registry['finder_results']['function']);
-  $theme_registry['finder_results']['function'] = 'eca_main_preprocess_finder_results';
-}
-/**
- * Intervene before theme function.
- *
- * Kind of like a template preprocess, except not for a template.
- *
- * @see finder_search_theme_registry_alter()
- */
-function eca_main_preprocess_finder_results($results, $finder, $keywords, $pager, $params, $form_state) {
-  $theme_func = variable_get('eca_main_finder_results_theme', 'theme_finder_results');
-  //$theme_func = variable_get('finder_search_finder_results_theme', 'theme_finder_results');
-  //dvr("in eca main preprocess finder results");
-  if ($finder->settings['advanced']['search'] && empty($results)) {
-    $keys = array();
-    foreach ($keywords as $finder_element_id => $finder_element_keywords) {
-      foreach ((array)$finder_element_keywords as $keyword) {
-        $keys[] = $keyword;
-      }
-    }
-    $results_array = finder_search_get_result(implode(' ', $keys), 'eca_main');
-    $results = theme('finder_search_results', $results_array, $finder, $form_state);
-
-    // search module has it's own pager
-    $pager = 0;
-  }
-
-  return $theme_func($results, $finder, $keywords, $pager, $params, $form_state);
-
-}
-
 
 /**
  * Implementation of hook_menu().

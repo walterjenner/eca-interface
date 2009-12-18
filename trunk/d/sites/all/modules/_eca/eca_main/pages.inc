@@ -6,7 +6,7 @@ require_once drupal_get_path('module', 'eca_main') . '/includes.inc';
 /*
  * prints a publication
  */
-function eca_main_publication( $id = 0 ){
+/*function eca_main_publication( $id = 0 ){
   if( $id == 0 || !is_numeric($id))
     return drupal_not_found();
   
@@ -82,7 +82,7 @@ function eca_main_publication( $id = 0 ){
     print $output;
   }
   exit();
-}
+}*/
 
 function eca_main_collective( $id = 0 ){
   if( $id == 0 || !is_numeric($id) )
@@ -172,7 +172,7 @@ function eca_main_award( $id = 0 ){
  
   exit();
 }
-
+/*
 function eca_main_institution( $id = 0 ){
   if( $id == 0 || !is_numeric($id) )
     return drupal_not_found();
@@ -225,7 +225,7 @@ function eca_main_institution( $id = 0 ){
   }
   
   exit();
-}
+}*/
 
 function eca_main_algorithm( $id = 0 ){
   if( $id == 0 || !is_numeric($id) )
@@ -342,6 +342,32 @@ function eca_main_artwork( $id = 0 ){
    return drupal_not_found();
   else{
      $node = db_fetch_object(db_query("SELECT nid FROM artwork WHERE artwork_id = $id"));
+     if(!$node)
+       return drupal_not_found();
+     else
+       return drupal_goto("node/$node->nid");
+  }
+  exit();
+}
+
+function eca_main_publication( $id = 0 ){
+  if( $id == 0 || !is_numeric($id) )
+   return drupal_not_found();
+  else{
+     $node = db_fetch_object(db_query("SELECT nid FROM publication WHERE publication_id = $id"));
+     if(!$node)
+       return drupal_not_found();
+     else
+       return drupal_goto("node/$node->nid");
+  }
+  exit();
+}
+
+function eca_main_institution( $id = 0 ){
+  if( $id == 0 || !is_numeric($id) )
+   return drupal_not_found();
+  else{
+     $node = db_fetch_object(db_query("SELECT nid FROM institution WHERE institution_id = $id"));
      if(!$node)
        return drupal_not_found();
      else

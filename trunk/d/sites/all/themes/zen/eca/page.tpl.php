@@ -111,7 +111,10 @@
         <?php if ($breadcrumb || $title || $tabs || $help || $messages): ?>
           <div id="content-header">
             <?php print $breadcrumb; ?>
-            <?php if ($title && $node->type != 'agent' && $node->type != 'artwork' && $node->type != 'exhibition'): ?>
+            <?php if ($title && $node->type != 'agent'      && $node->type != 'artwork' 
+                             && $node->type != 'exhibition' && $node->type != 'publication' 
+                             && $node->type != 'institution'): 
+            ?>
               <h1 class="title"><?php print $title; ?></h1>
             <?php endif; ?>
             <?php print $messages; ?>
@@ -129,7 +132,9 @@
           // if there is content _bottom, and the node type none of the listed, print. 
           //(in the listed node-type $content_bottom is output in the node.tpl.php)
           if( $content_bottom && !(strpos($body_classes, 'node-type-agent') 
-                    || strpos($body_classes, 'node-type-exhibition') 
+                    || strpos($body_classes, 'node-type-exhibition')
+                    || strpos($body_classes, 'node-type-publication')
+                    || strpos($body_classes, 'node-type-institution')   
                     || strpos($body_classes, 'node-type-artwork')) ): ?>    
             
             <div id="content-bottom" class="region region-content_bottom">

@@ -61,9 +61,9 @@ if($teaser){
             }            
           }
                    
-          print_value(return_agents_by_node($node->artists), t('Artist(s)') );
+          print_value(return_nodes($node->artists), t('Artist(s)') );
           
-          print_value(_textile_process(array(1 => $node->description)), t('Description'), true);
+          print_value($node->description, t('Description'), true);
           print_value($node->creation_year . return_location( $node->ca_l_city, $node->ca_l_country), t('Created'), false, '', false );
           print_value($node->ca_at_name, t('Artwork Type') );
           print_value($node->material, t('Material') );

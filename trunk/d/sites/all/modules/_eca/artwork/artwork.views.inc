@@ -3,6 +3,196 @@
 
 function artwork_views_data(){
   $data = array();
+  
+  //BASE TABLE
+  $data['compartdb_artwork']['table']['base'] = array(
+    'field' => 'artwork_id', // the exhibit module function render() needs this var to be set!!!
+    'artwork_id' => 'Primary key',
+    'title' => t('Artwork'),
+    'help' => t('An artwork in the compart DB'),
+    'weight' => -10,
+  );
+  
+  //tables
+  $data['compartdb_artwork']['table']['group'] = t('Artwork CA');
+  $data['compartdb_artwork_type']['table']['group'] = t('Artwort Type CA');
+  $data['compartdb_creating']['table']['group'] = t('Creating CA');
+  $data['compartdb_showing_artwork']['table']['group'] = t('Shown_At CA');
+  
+  $data['artwork']['table']['group'] = t('Artwork Mapping'); 
+  
+  $data['compartdb_illustrated_by']['table']['group'] = t('Illustrated By CA');
+  $data['compartdb_media_file']['table']['group'] = t('Media File CA');
+  
+  //conncections
+  $data['artwork']['table']['join']['compartdb_artwork'] = array(    
+    'left_field' => 'artwork_id',
+    'field' => 'artwork_id',
+  );
+  $data['compartdb_artwork_type']['table']['join']['compartdb_artwork'] = array(    
+    'left_field' => 'artwork_type_id',
+    'field' => 'artwork_type_id',
+  );
+  $data['compartdb_creating']['table']['join']['compartdb_artwork'] = array(    
+    'left_field' => 'artwork_id',
+    'field' => 'artwork_id',
+  );
+  $data['compartdb_showing_artwork']['table']['join']['compartdb_artwork'] = array(    
+    'left_field' => 'artwork_id',
+    'field' => 'artwork_id',
+  );
+  $data['compartdb_illustrated_by']['table']['join']['compartdb_artwork'] = array(
+    'left_field' => 'artwork_id',
+    'field' => 'row_id',
+    //'type' => 'inner', //to view just does nodes which have any media_file (might be a non-image)
+    'extra' => array( 'table_id' => array(
+                         'field' => 'table_id',
+                         'operator' => '=',
+                         'value' => '5',
+                         'numeric' => true,
+                       ),
+                    ),
+  );  
+  $data['compartdb_media_file']['table']['join']['compartdb_artwork'] = array(
+    'left_table' => 'compartdb_illustrated_by',
+    'left_field' => 'media_file_id',
+    'field' => 'media_file_id',
+  ); 
+  
+  //fields
+  $data['compartdb_artwork']['title'] = array(
+    'title' => t('Title'),
+    'help' => t('Title'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+  $data['compartdb_artwork']['creation_year'] = array(
+    'title' => t('Creation Year'),
+    'help' => t('A string describing the creation year'),
+    'field' => array(
+      'handler' => 'eca_main_handler_field_year',
+      'click sortable' => TRUE,
+      'numeric' => TRUE
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+  );
+  $data['compartdb_artwork']['description'] = array(
+    'title' => t('Description'),
+    'help' => t('Description'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator_string',
+    ),
+  );
+  $data['compartdb_artwork']['permissions'] = array(
+    'title' => t('Permissions'),
+    'help' => t('Permissions'), 
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+  );
+  $data['compartdb_artwork']['last_change'] = array(
+    'title' => t('Timestamp of last change'),
+    'help' => t('Timestamp of last change'), 
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  ); 
+  $data['compartdb_artwork_type']['name'] = array(
+     'title' => t('Artwork Type Name'),
+     'help' => t('Artwork Type Name'),
+     'field' => array(
+       'handler' => 'views_handler_field',
+       'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter',
+    ),
+   );
+  $data['artwork']['nid'] = array(
+    'title' => t('Artwork Node'),
+    'help' => t('The Artwork Node'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'relationship' => array(
+      'base' => 'node',
+      'base_field' => 'nid'
+    ),
+  );  
+  $data['compartdb_creating']['agent_id'] = array(
+    'title' => t('Artist'),
+    'help' => t('Artist'),
+    'field' => array(
+      'handler' => 'artwork_handler_field_creator_list',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'argument' => array(
+      'handler' => 'eca_main_handler_argument_agent_id',
+      'empty field name' => t('No agent'),
+      'numeric' => TRUE,
+    ),
+  );
+  $data['compartdb_showing_artwork']['exhibition_id'] = array(
+     'title' => t('Exhibition ID'),
+     'help' => t('Exhibition ID'),
+     'argument' => array(
+      'handler' => 'artwork_handler_argument_exhibition_id',
+      'empty field name' => t('No Exhibition'),
+      'numeric' => TRUE,
+    ),
+  );
+  $data['compartdb_media_file']['file_name'] = array(
+    'title' => t('file_name'),
+    'help' => t('file_name'),
+    'field' => array(
+      'handler' => 'artwork_handler_field_file_name',
+      'click sortable' => TRUE,
+    ),
+  );    
+  
+  return $data;  
+}
+
+/*function _artwork_views_data(){
+  $data = array();
   $data['artwork']['table']['group'] = t('Artwork');
   $data['compartdb_creating']['table']['group'] = t('Creating CA');
   $data['compartdb_agent']['table']['group'] = t('Agent CA');
@@ -40,7 +230,7 @@ function artwork_views_data(){
     'left_table' => 'artwork',
     'left_field' => 'artwork_id',
     'field' => 'row_id',
-    /*'type' => 'inner', */ //to view just does nodes which have any media_file (might be a non-image)
+    //'type' => 'inner', //to view just does nodes which have any media_file (might be a non-image)
     'extra' => array( 'table_id' => array(
                          'field' => 'table_id',
                          'operator' => '=',
@@ -82,6 +272,7 @@ function artwork_views_data(){
        'click sortable' => TRUE,
      )
    );
+   
   
   $data['compartdb_creating']['agent_id'] = array(
      'title' => t('Agent ID'),
@@ -130,7 +321,7 @@ function artwork_views_data(){
   
   //print_r($data);
   return $data;
-}
+}*/
 
 /**
  * Implementation of hook_views_handlers() to register all of the basic handlers
@@ -142,13 +333,15 @@ function artwork_views_handlers() {
       'path' => drupal_get_path('module', 'artwork') . '',
     ),
     'handlers' => array(
-        'artwork_handler_field_artwork_agents' => array(
+        'artwork_handler_field_creator_list' => array(
           'parent' => 'views_handler_field_prerender_list' ),
         'artwork_handler_field_file_name' => array(
           'parent' => 'views_handler_field' ),
         'eca_main_handler_argument_agent_id' => array(
           'parent' => 'views_handler_argument_many_to_one', 
           'path' => drupal_get_path('module', 'eca_main') ),
+        'artwork_handler_argument_exhibition_id' => array(
+          'parent' => 'views_handler_argument_many_to_one' ),
         'eca_main_handler_field_year' => array(
           'parent' => 'views_handler_field_numeric', 
           'path' => drupal_get_path('module', 'eca_main') )
