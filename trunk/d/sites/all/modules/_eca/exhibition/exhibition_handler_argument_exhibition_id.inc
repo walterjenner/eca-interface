@@ -3,7 +3,7 @@
 /**
  * Allow exhibitions ID(s) as argument, to show all allworks at a given exhibition
  */
-class artwork_handler_argument_exhibition_id extends views_handler_argument_many_to_one {
+class exhibition_handler_argument_exhibition_id extends views_handler_argument_many_to_one {
   function title_query() {
     $titles = array();
     $placeholders = implode(', ', array_fill(0, sizeof($this->value), '%d'));
