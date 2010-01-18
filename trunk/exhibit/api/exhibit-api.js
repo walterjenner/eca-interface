@@ -8,6 +8,8 @@
  */
 
 (function() {
+    var isCompiled = ("Exhibit_isCompiled" in window) && window.Exhibit_isCompiled;
+    
     var useLocalResources = false;
     var noAuthentication = false;
     
@@ -62,6 +64,9 @@
             "data/importers/jsonp-importer.js",
             "data/importers/babel-based-importer.js",
             "data/importers/rdfa-importer.js",
+            "data/importers/exhibit-xml-importer.js",
+            "data/importers/tsv-csv-importer.js",
+            "data/importers/json-importer.js",
             
             "data/exporters/rdf-xml-exporter.js",
             "data/exporters/semantic-wikitext-exporter.js",
@@ -131,8 +136,8 @@
         
         var includeMap = false;
         var includeTimeline = false;
-        
-        /*var defaultClientLocales = ("language" in navigator ? navigator.language : navigator.browserLanguage).split(";");
+        /*
+        var defaultClientLocales = ("language" in navigator ? navigator.language : navigator.browserLanguage).split(";");
         for (var l = 0; l < defaultClientLocales.length; l++) {
             var locale = defaultClientLocales[l];
             if (locale != "en") {
@@ -164,8 +169,7 @@
         }
         
         if (useLocalResources) {
-            /*Exhibit.urlPrefix = "http://127.0.0.1:8888/exhibit/api/";*/
-            Exhibit.urlPrefix = "http://localhost/wwww/exhibit/api/"; /*walter*/
+            Exhibit.urlPrefix = "http://127.0.0.1:8888/exhibit/api/";
         }
 
         if (Exhibit.params.locale) { // ISO-639 language codes,
@@ -232,23 +236,22 @@
             scriptURLs.push(Exhibit.urlPrefix + "extensions/map/map-extension.js");
         }
         
-        SimileAjax.includeJavascriptFiles(document, "", scriptURLs);
-        SimileAjax.includeCssFiles(document, "", cssURLs);
+        if (!isCompiled) {
+            SimileAjax.includeJavascriptFiles(document, "", scriptURLs);
+            SimileAjax.includeCssFiles(document, "", cssURLs);
+        }
+        
         Exhibit.loaded = true;
     };
 
     /*
      *  Load SimileAjax if it's not already loaded
      */
-    if (typeof SimileAjax == "undefined") {
+    if (typeof SimileAjax == "undefined" && !isCompiled) {
         window.SimileAjax_onLoad = loadMe;
         
-       /* var url = useLocalResources ?
-            "http://127.0.0.1:8888/ajax/api/simile-ajax-api.js?bundle=false" :
-            "http://api.simile-widgets.org/ajax/2.2.1/simile-ajax-api.js";*/
-        
         var url = useLocalResources ?
-            "http://127.0.0.1/www/eca/ecaDrupal/ajax/api/simile-ajax-api.js" :
+            "http://127.0.0.1:8888/ajax/api/simile-ajax-api.js?bundle=false" :
             "http://api.simile-widgets.org/ajax/2.2.1/simile-ajax-api.js";
             
         var createScriptElement = function() {

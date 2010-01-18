@@ -622,6 +622,35 @@ div.exhibit-collectionView-footer {
     margin:     2em 0;
 }
 
+div.exhibit-collectionView-pagingControls {
+    margin: 1em 0;
+    text-align: center;
+}
+
+.exhibit-collectionView-pagingControls-currentPage {
+    padding: 0px 0.5em;
+    font-weight: bold;
+}
+
+.exhibit-collectionView-pagingControls-page {
+    padding: 0px 0.5em;
+}
+
+ul.exhibit-collectionView-pagingControls {
+    clear: both;
+    margin: 2em 0;
+    text-align: center;
+}
+ul.exhibit-collectionView-pagingControls li {
+    list-style-type: none;
+    display: inline;
+}
+ul.exhibit-collectionView-pagingControls li a {
+    border: 1px solid #90C2E1;
+    background: #DFEDF7;
+    padding: 2px 5px;
+    text-decoration: none;
+}
 table.exhibit-tabularView-body {
     width: 100%;
 }
@@ -634,7 +663,23 @@ table.exhibit-tabularView-body {
 .exhibit-tabularView-columnHeader-sorted {
     cursor:         pointer;
     white-space:    pre;
-}div.exhibit-thumbnailView-group {
+}
+
+div.exhibit-tabularView-pagingControls {
+    margin: 1em 0;
+    text-align: center;
+}
+
+.exhibit-tabularView-pagingControls-currentPage {
+    padding: 0px 0.5em;
+    font-weight: bold;
+}
+
+.exhibit-tabularView-pagingControls-page {
+    padding: 0px 0.5em;
+}
+
+div.exhibit-thumbnailView-group {
     clear: both;
 }
 
@@ -646,8 +691,7 @@ div.exhibit-thumbnailView-itemContainer {
 }
 
 div.exhibit-thumbnailView-itemContainer-IE {
-    float:      left;   
-    overflow:   visible;
+    float:      left;
 }table.exhibit-tileView-body {
     width: 100%;
 }

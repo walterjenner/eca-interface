@@ -8,7 +8,7 @@ if (!("l10n" in Exhibit.ViewPanel)) {
 }
 
 Exhibit.ViewPanel.l10n.createSelectViewActionTitle = function(viewLabel) {
-    return "W&auml;hle Sicht " + viewLabel;
+    return "Wähle Sicht " + viewLabel;
 };
 Exhibit.ViewPanel.l10n.missingViewClassMessage = "Der Beschreibung einer der Sichten fehlt das viewClass Attribut.";
 Exhibit.ViewPanel.l10n.viewClassNotFunctionMessage = function(expr) {

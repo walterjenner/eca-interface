@@ -37,11 +37,11 @@ Exhibit.Database.l10n.sortLabels = {
     },
     "number": {
         ascending:  "kleinstes zuerst",
-        descending: unescape("gr%F6%DFtes zuerst")
+        descending: "größtes zuerst"
     },
     "date": {
-        ascending:  unescape("fr%FChestes zuerst"),
-        descending: unescape("sp%E4testes zuerst")
+        ascending:  "frühestes zuerst",
+        descending: "spätestes zuerst"
     },
     "boolean": {
         ascending:  "falsch zuerst",

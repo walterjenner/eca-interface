@@ -14,7 +14,8 @@ Exhibit.TabularView = function(containerElmt, uiContext) {
     var view = this;
     this._listener = { 
         onItemsChanged: function() {
-            view._reconstruct(); 
+            view._settings.page = 0;
+            view._reconstruct();
         }
     };
     uiContext.getCollection().addListener(this._listener);
@@ -27,7 +28,13 @@ Exhibit.TabularView._settingSpecs = {
     "showToolbox":          { type: "boolean", defaultValue: true },
     "border":               { type: "int",     defaultValue: 1 },
     "cellPadding":          { type: "int",     defaultValue: 5 },
-    "cellSpacing":          { type: "int",     defaultValue: 3 }
+    "cellSpacing":          { type: "int",     defaultValue: 3 },
+    "paginate":             { type: "boolean", defaultValue: false },
+    "pageSize":             { type: "int",     defaultValue: 20 },
+    "pageWindow":           { type: "int",     defaultValue: 2 },
+    "page":                 { type: "int",     defaultValue: 0 },
+    "alwaysShowPagingControls": { type: "boolean", defaultValue: false },
+    "pagingControlLocations":   { type: "enum",    defaultValue: "topbottom", choices: [ "top", "bottom", "topbottom" ] }
 };
 
 Exhibit.TabularView.create = function(configuration, containerElmt, uiContext) {
@@ -265,7 +272,7 @@ Exhibit.TabularView.prototype._reconstruct = function() {
         items.sort(this._createSortFunction(items, sortColumn.expression, this._settings.sortAscending));
     
         /*
-         *  Sort the items
+         *  Style the table
          */
         var table = document.createElement("table");
         table.className = "exhibit-tabularView-body";
@@ -350,12 +357,54 @@ Exhibit.TabularView.prototype._reconstruct = function() {
                 }
             }
         }
-        for (var i = 0; i < items.length; i++) {
+        
+        var start, end;
+        var generatePagingControls = false;
+        if (this._settings.paginate) {
+            start = this._settings.page * this._settings.pageSize;
+            end = Math.min(start + this._settings.pageSize, items.length);
+            
+            generatePagingControls = (items.length > this._settings.pageSize) || (items.length > 0 && this._settings.alwaysShowPagingControls);
+        } else {
+            start = 0;
+            end = items.length;
+        }
+        for (var i = start; i < end; i++) {
             renderItem(i);
         }
 
         bodyDiv.appendChild(table);
+        
+        if (generatePagingControls) {
+            if (this._settings.pagingControlLocations == "top" || this._settings.pagingControlLocations == "topbottom") {
+                this._renderPagingDiv(this._dom.topPagingDiv, items.length, this._settings.page);
+                this._dom.topPagingDiv.style.display = "block";
+            }
+            
+            if (this._settings.pagingControlLocations == "bottom" || this._settings.pagingControlLocations == "topbottom") {
+                this._renderPagingDiv(this._dom.bottomPagingDiv, items.length, this._settings.page);
+                this._dom.bottomPagingDiv.style.display = "block";
+            }
+        } else {
+            this._dom.topPagingDiv.style.display = "none";
+            this._dom.bottomPagingDiv.style.display = "none";
+        }
     }
+};
+
+Exhibit.TabularView.prototype._renderPagingDiv = function(parentElmt, itemCount, page) {
+    var pageCount = Math.ceil(itemCount / this._settings.pageSize);
+    var self = this;
+    
+    Exhibit.OrderedViewFrame.renderPageLinks(
+        parentElmt, 
+        page,
+        pageCount,
+        this._settings.pageWindow,
+        function(p) {
+            self._gotoPage(p);
+        }
+    );
 };
 
 Exhibit.TabularView.prototype._getColumnLabel = function(expression) {
@@ -487,6 +536,8 @@ Exhibit.TabularView.prototype._doSort = function(columnIndex) {
     var oldSortAscending = this._settings.sortAscending;
     var newSortColumn = columnIndex;
     var newSortAscending = oldSortColumn == newSortColumn ? !oldSortAscending : true;
+    var oldPage = this._settings.page;
+    var newPage = 0;
     var settings = this._settings;
     
     var self = this;
@@ -494,14 +545,35 @@ Exhibit.TabularView.prototype._doSort = function(columnIndex) {
         function() {
             settings.sortColumn = newSortColumn;
             settings.sortAscending = newSortAscending;
+            settings.page = newPage;
             self._reconstruct();
         },
         function() {
             settings.sortColumn = oldSortColumn;
             settings.sortAscending = oldSortAscending;
+            settings.page = oldPage;
             self._reconstruct();
         },
         Exhibit.TabularView.l10n.makeSortActionTitle(this._columns[columnIndex].label, newSortAscending)
+    );
+};
+
+Exhibit.TabularView.prototype._gotoPage = function(page) {
+    var oldPage = this._settings.page;
+    var newPage = page;
+    var settings = this._settings;
+    
+    var self = this;
+    SimileAjax.History.addLengthyAction(
+        function() {
+            settings.page = newPage;
+            self._reconstruct();
+        },
+        function() {
+            settings.page = oldPage;
+            self._reconstruct();
+        },
+        Exhibit.OrderedViewFrame.l10n.makePagingActionTitle(page)
     );
 };
 
@@ -513,6 +585,8 @@ Exhibit.TabularView._constructDefaultValueList = function(values, valueType, par
 
 Exhibit.TabularView.createDom = function(div) {
     var l10n = Exhibit.TabularView.l10n;
+    var l10n2 = Exhibit.OrderedViewFrame.l10n;
+    
     var headerTemplate = {
         elmt:       div,
         className:  "exhibit-collectionView-header",
@@ -520,8 +594,16 @@ Exhibit.TabularView.createDom = function(div) {
             {   tag:    "div",
                 field:  "collectionSummaryDiv"
             },
+            {   tag:        l10n2.pagingControlContainerElement,
+                className:  "exhibit-tabularView-pagingControls",
+                field:      "topPagingDiv"
+            },
             {   tag:    "div",
                 field:  "bodyDiv"
+            },
+            {   tag:        l10n2.pagingControlContainerElement,
+                className:  "exhibit-tabularView-pagingControls",
+                field:      "bottomPagingDiv"
             }
         ]
     };
