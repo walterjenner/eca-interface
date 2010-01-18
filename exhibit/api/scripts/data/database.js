@@ -96,6 +96,7 @@ Exhibit.Database._Impl = function() {
     this._properties["uri"]             = uriProperty;
     
     var changeProperty = new Exhibit.Database._Property("change", this);
+    changeProperty._uri                    = "http://simile.mit.edu/2006/11/exhibit#change";
     changeProperty._valueType              = "text";
     changeProperty._label                  = "change type";
     changeProperty._pluralLabel            = "change types";
@@ -106,6 +107,7 @@ Exhibit.Database._Impl = function() {
     this._properties["change"]             = changeProperty;
     
     var changedItemProperty = new Exhibit.Database._Property("changedItem", this);
+   changedItemProperty._uri                    = "http://simile.mit.edu/2006/11/exhibit#changedItem";
     changedItemProperty._valueType              = "text";
     changedItemProperty._label                  = "changed item";
     changedItemProperty._pluralLabel            = "changed item";
@@ -113,6 +115,7 @@ Exhibit.Database._Impl = function() {
     this._properties["changedItem"]             = changedItemProperty;
     
     var modifiedProperty = new Exhibit.Database._Property(Exhibit.Database.ModifiedPropertyName, this);
+    modifiedProperty._uri                       = "http://simile.mit.edu/2006/11/exhibit#modified";
     modifiedProperty._valueType                 = "text";
     modifiedProperty._label                     = "modified";
     modifiedProperty._pluralLabel               = "modified";
@@ -133,7 +136,11 @@ Exhibit.Database._Impl.prototype.removeListener = function(listener) {
 };
 
 Exhibit.Database._Impl.prototype.loadDataLinks = function(fDone) {
-    var links = SimileAjax.jQuery('head > link[rel=exhibit/data]').get()
+    var links = SimileAjax.jQuery('head > link[rel=exhibit/data]').get();
+    this._loadLinks(links, this, fDone);
+};
+
+Exhibit.Database._Impl.prototype.loadLinks = function(links, fDone) {
     this._loadLinks(links, this, fDone);
 };
 

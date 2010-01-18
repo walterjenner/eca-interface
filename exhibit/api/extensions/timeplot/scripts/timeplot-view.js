@@ -1,5 +1,9 @@
 /*==================================================
  *  Exhibit.TimeplotView
+ *
+ *  Development partially funded by Zepheira.
+ *  http://zepheira.com/
+ *  See the main Exhibit LICENSE.txt for licensing.
  *==================================================
  */
  
@@ -35,7 +39,7 @@ Exhibit.TimeplotView._settingSpecs = {
     "colorCoder":              { type: "text",       defaultValue: null },
     "showHeader":              { type: "boolean",    defaultValue: true },
     "showSummary":             { type: "boolean",    defaultValue: true },
-    "showFooter":              { type: "boolean",    defaultValue: true }
+    "showToolbox":             { type: "boolean",    defaultValue: true }
 };
 
 Exhibit.TimeplotView._accessorSpecs = [
@@ -117,8 +121,10 @@ Exhibit.TimeplotView.prototype.dispose = function() {
     
     this._timeplot = null;
     
-    this._toolboxWidget.dispose();
-    this._toolboxWidget = null;
+    if (this._settings.showToolbox) {
+        this._toolboxWidget.dispose();
+        this._toolboxWidget = null;
+    }
     
     this._dom.dispose();
     this._dom = null;
@@ -159,7 +165,10 @@ Exhibit.TimeplotView.prototype._initializeUI = function() {
         }, 
         legendWidgetSettings
     );
-    this._toolboxWidget = Exhibit.ToolboxWidget.createFromDOM(this._div, this._div, this._uiContext);
+
+    if (this._settings.showToolbox) {
+        this._toolboxWidget = Exhibit.ToolboxWidget.createFromDOM(this._div, this._div, this._uiContext);
+    }
     
     this._eventSources = [];
     this._eventSource = new Timeplot.DefaultEventSource();

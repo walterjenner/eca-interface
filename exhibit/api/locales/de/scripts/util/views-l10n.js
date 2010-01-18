@@ -12,7 +12,7 @@ Exhibit.ViewUtilities.l10n.unplottableMessageFormatter = function(totalCount, un
     
     return String.substitute(
         "<a class='exhibit-action exhibit-views-unplottableCount' href='javascript:void' id='unplottableCountLink'>%0</a> "+
-        "von <class class='exhibit-views-totalCount'>%1</span> k&ouml;nnen nicht angezeigt werden.",
+        "von <class class='exhibit-views-totalCount'>%1</span> können nicht angezeigt werden.",
         [ count == 1 ? (count + " Ergebnis") : (count + " Ergebnisse"), totalCount ]
     );
 };
