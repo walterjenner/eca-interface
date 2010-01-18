@@ -179,12 +179,13 @@
     <?php endif; ?>
 
   </div></div> <!-- /#page-inner, /#page -->
-
-  <?php if ($closure_region): ?>
-    <div id="closure-blocks" class="region region-closure"><?php print $closure_region; ?></div>
-  <?php endif; ?>
-
-  <?php print $closure; ?>
+  <div id="page-bottom">
+    <?php if ($closure_region): ?>
+      <div id="closure-blocks" class="region region-closure"><?php print $closure_region; ?></div>
+    <?php endif; ?>
+  
+    <?php print $closure; ?>
+  </div><!-- /#page-bottom -->
 
 </body>
 </html>

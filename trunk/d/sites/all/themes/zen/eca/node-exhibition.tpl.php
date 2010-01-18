@@ -28,7 +28,7 @@ if($teaser){
       
         <?php print flag_create_link('bookmarks', $node->nid);  ?>   
         <ul class="ui-tabs-nav">
-            <li><a href="#info-tab" title="View basic infos about this exhibition." rel="address:/"><span><?php print t('Info'); ?></span></a></li>
+            <li><a href="#info-tab" title="View basic infos about this exhibition." rel="address:/"><span><?php print t('Summary'); ?></span></a></li>
             <?php if($content_bottom): ?>
               <li><a href="#related-tab" title="View related items of this exhibition." rel="address:/related-tab"><span><?php print t('Related'); ?></span></a></li>
             <?php endif; ?>

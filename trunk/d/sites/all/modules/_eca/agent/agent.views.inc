@@ -222,10 +222,6 @@ function agent_views_data(){
   $data['compartdb_exhibits_in2']['exhibition_id'] = array(
      'title' => t('Exhibition ID'),
      'help' => t('Exhibition ID'),
-     'field' => array(
-       'handler' => 'exhibition_handler_field_agent_list',
-       'click sortable' => TRUE,
-     ),
      'argument' => array(
       'handler' => 'exhibition_handler_argument_exhibition_id',
       'name field' => 'agent_id',

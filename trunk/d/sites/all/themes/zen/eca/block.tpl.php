@@ -32,7 +32,7 @@
 <div id="block-<?php print $block->module . '-' . $block->delta; ?>" class="<?php print $classes; ?>"><div class="block-inner <?php if($block->module == 'eca_main'){ print 'collapsible-sidebox'; }?> ">
 
   <?php if ($block->subject): ?>
-    <h2 class="title"><?php print $block->subject; ?><span class="numSnippet"><?php print $block->numSnippet; ?></span></h2>
+    <h2 class="title"><?php print $block->subject; ?><?php if ($block->numSnippet): ?> <span class="numSnippet"><?php print $block->numSnippet; ?></span>  <?php endif; ?></h2>
   <?php endif; ?>
      
   <div class="content-class">

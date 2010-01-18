@@ -26,13 +26,17 @@ body {
   width: 960px;
 }
 
+#page-bottom {
+    
+}
+
 #header {  
   /*border-bottom: 1px solid #e6e6e6;*/
   height: 120px;
 }
 
 #header-inner {
-  padding-top:15px;
+  padding-top:5px;
 }
 
 #sidebar-left-inner .content-class, #sidebar-right-inner .content-class, #content, #header {
@@ -52,7 +56,7 @@ body {
 }
 
 #navbar-inner {
-  padding-top: 15px;
+  padding-top: 20px;
 }
 
 #search-box, #finder-box{
@@ -145,21 +149,22 @@ body {
 
 .sidebar-right #content
 {
-  width: 710px;
+  width: 800px;
   margin-left: 0;
-  margin-right: -710px; /* Negative value of #content's width + left margin. */
+  margin-right: -800px; /* Negative value of #content's width + left margin. */
 }
 
 .two-sidebars #content
 {
-  width: 460px;
+  width: 550px;
   margin-left: 250px; /* The width of #sidebar-left */
-  margin-right: -710px; /* Negative value of #content's width + left margin. */
+  margin-right: -800px; /* Negative value of #content's width + left margin. */
 }
 
 #content-inner
 {
   margin: 0;
+  margin-top:10px;
 }
 
 /** sidebar-left **/
@@ -175,15 +180,15 @@ body {
 #sidebar-left-inner
 {
   margin: 0 20px 0 0;
-  padding: 15px 0 15px 0;
+  padding: 20px;
 }
 
 /** sidebar-right **/
 #sidebar-right
 {
   float: left;
-  width: 250px;
-  margin-left: 710px; /* Width of content + sidebar-left. */
+  width: 160px;
+  margin-left: 800px; /* Width of content + sidebar-left. */
   margin-right: -960px; /* Negative value of #sidebar-right's width + left margin. */
   padding: 0; /* DO NOT CHANGE. Add padding or margin to #sidebar-right-inner. */
 }
