@@ -1,53 +1,43 @@
-/*
- * colors
- * 
- * link: hover: blue, active: dark-blue, visited: grey
- * 
- * 
- */
-
+/** hi there. this was once made by valderama.net 2010 */
 
 body {
-  font-family: Arial, sans-serif;
-  color: #2D1E1E;
+  font-family: Verdana, Arial, sans-serif;
+  color: #000;
 }
 
 h1, h2, h3, h4, h5, h6, .views-table caption {
-	color: #2D1E1E; /*brown, same as primary links*/
-  font-family: Helvetica, Arial, sans-serif;
+	color: #000;
+  font-family: Helvetica, Verdana, Arial, sans-serif;
   font-weight: normal;
 }
-h1 {  
-}
-h2, .views-table caption {
-  font-size:1.5em;
-}
+h1 {  font-size: 18px; }
+h2, .views-table caption { font-size:14px; }
+h3 { font-size: 13px; }
 
-p {
-  
+p {  
 }
 
 a {
-	/*color: #0071BC;*/
- color: #2D1E1E;
- text-decoration: none;
- 
+ color: #000;
+ text-decoration: none; 
 }
-
 a:hover {
-  /*color: #2E3192;*/
 }
-
 a:active {
-  /*color: #2E3192;*/
 }
-
 a:visited, a.visited {
   color: #666;
 }
 
 table {
   width: 100%; 
+}
+tr.odd { background: #F8F8F8 !important; } 
+tr.even {}
+
+hr {
+  border:1px solid #ddd;
+  height:1px;
 }
 
 
