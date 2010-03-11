@@ -125,7 +125,7 @@ class TextileExt extends Textile
     {
         $title = get_publication_title($id);
         $output .= ' [Source: ';
-        $output .= l(_filter_url_trim($title, URL_LENGTH), 'publication/' . $id, array( 'attributes' => array('title' => $title, 'class' => 'dialog-link' )) );
+        $output .= l(_filter_url_trim($title, URL_LENGTH), 'publication/' . $id, array( 'attributes' => array('title' => $title, 'class' => '' )) );
         if($t) $output .= ', p. ' .$t;
         $output .= ']'; 
         return $output;
