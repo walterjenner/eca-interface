@@ -56,8 +56,8 @@ if($teaser){
             print('<h3>'.$node->it_name.'</h3>');
           
           print_value($node->description, t('Description') );
-          if(!is_empty($item->url))
-            print_value(l($node->url, absolute($item->url)), 'Web page');
+          if(!is_empty($node->url))
+            print_value(l($node->url, absolute($node->url)), 'Web page');
           print_value(return_address($node->street, $node->zip, $node->city, $node->country), t('Address') );
           
           print_value( return_happenings( $node->happenings ), t('Happening(s)') );
