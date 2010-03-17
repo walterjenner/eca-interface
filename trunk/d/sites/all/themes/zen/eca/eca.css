@@ -362,6 +362,7 @@ div.tag-widget ul.inline-tags li:hover, div.tag-widget ul.inline-tags li.hover {
   font-size: 0.8em;
 }
 #autocomplete ul {
+  font-size: 0.8em;
   border: 2px solid #e6e6e6;
   background: #fff;
 }
