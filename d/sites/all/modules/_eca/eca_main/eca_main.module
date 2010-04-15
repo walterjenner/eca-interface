@@ -585,5 +585,26 @@ function eca_main_views_api(){
     'api' => 2
   );
 }
-  
+
+/*
+ * implementation of the comment hook
+ *
+ * instead of going to #comment-id the user is forwarded to #/comment-tab
+ */
+ 
+  function eca_main_comment(&$a1, $op){
+    if ($op == 'insert'){
+      drupal_set_message("Thanks for your comment!", 'status');
+      drupal_goto('node/'.$a1['nid'],null,'/comment-tab');
+    }
+    elseif ($op == 'update'){
+      drupal_goto('node/'.$a1['nid'],null,'/comment-tab');
+    }
+    elseif ($op == 'delete'){
+     //dvr($a1);
+     if($a1->nid)
+       drupal_goto('node/'.$a1->nid, null, '/comment-tab');
+    }
+    
+  }
 
