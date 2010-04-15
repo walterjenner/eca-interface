@@ -24,7 +24,9 @@
                         1000020 => 4, //nake
                         1000022 => 7, //jes
                         1000023 => 8, //susi
-                        1000031 => 9);
+                        1000031 => 9, //stefan
+                        1000032 => 29 //hemant
+                        );
   
   //the folders where certain file types are stored
   global $formatFolder;
