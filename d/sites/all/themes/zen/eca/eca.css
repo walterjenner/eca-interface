@@ -838,13 +838,17 @@ div.exhibit-text-facet input:focus, div.exhibit-text-facet input:active,
 .profile h3 {
   border: none !important;
 }
-.profile dt {
+.profile dt, .profile dd {
   font-weight:normal;
   display:inline;
 }
-.profile dd {
-  font-weight:normal;
-  display:inline;
+
+dd.profile-profile_name, dd.profile-profile_country, dd.profile-profile_website {
+  display: block !important;
+  font-style:italic;
+}
+dt.profile-profile_name, dt.profile-profile_country, dt.profile-profile_website {
+  font-weight:bold; 
 }
 
 /*** SEARCH RESULT **********/

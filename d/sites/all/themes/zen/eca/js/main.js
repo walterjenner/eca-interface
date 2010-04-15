@@ -2,6 +2,9 @@
  * @author valderama
  */
 
+//OVERRIDE EXHIBIT FUNCTIONS
+
+
 function onArtworkShow( obj ){
   //$(obj).child("")tooltip();
   // console.log( "get child which is a link and add the tooltip" + obj );  
