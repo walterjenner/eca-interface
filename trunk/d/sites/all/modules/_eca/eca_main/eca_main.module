@@ -602,8 +602,7 @@ function eca_main_views_api(){
     }
     elseif ($op == 'delete'){
      //dvr($a1);
-     if($a1->nid)
-       drupal_goto('node/'.$a1->nid, null, '/comment-tab');
+     drupal_goto('node/'.$a1->nid, null, '/comment-tab');
     }
     
   }
