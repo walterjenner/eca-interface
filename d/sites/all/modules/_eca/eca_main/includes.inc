@@ -25,7 +25,7 @@
                         1000022 => 7, //jes
                         1000023 => 8, //susi
                         1000031 => 9, //stefan
-                        1000032 => 29 //hemant
+                        1000036 => 29 //hemant
                         );
   
   //the folders where certain file types are stored
