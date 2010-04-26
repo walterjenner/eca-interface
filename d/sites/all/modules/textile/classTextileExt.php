@@ -97,6 +97,10 @@ class TextileExt extends Textile
 
         $url = $this->relURL($url);
         
+        if( preg_match("/Artist/i", $url) ){
+           $url = str_replace('Artist', 'Agent', $url);
+        }
+        
         if( preg_match("/Agent|Exhibition|Artwork|Collective|Award|Institution|Publication|Algorithm/i", $url) ){
           
           $url = str_replace('@', '/', $url);
