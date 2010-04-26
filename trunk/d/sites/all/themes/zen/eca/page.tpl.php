@@ -9,6 +9,7 @@
 
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+  <meta name="google-site-verification" content="BLANGnrDbAcQ5m8le1tcIJP3L8Z6ExCUERyJsyZjXx8" />
   <title><?php print $head_title; ?></title>
   <?php print $head; ?>
   <?php print $styles; ?>

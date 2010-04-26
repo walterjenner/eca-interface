@@ -524,6 +524,9 @@
        //$multiline = true;
        $showLabel = false;
      }
+     elseif(strcasecmp($label, "material") == 0){
+       $value = check_markup( $value, TEXTILE_FORMAT_ID, false );
+     }
      
      if($nolabel)
        $multiline = false;
