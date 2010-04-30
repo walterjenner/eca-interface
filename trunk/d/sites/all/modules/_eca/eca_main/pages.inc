@@ -320,7 +320,7 @@ function eca_main_agent( $id = 0 ){
      if(!$agent)
        return drupal_not_found();
      else
-       return drupal_goto("node/$agent->nid");
+       return drupal_goto("node/$agent->nid", NULL, NULL, 301);
   }
   exit();
 }
@@ -332,7 +332,7 @@ function eca_main_exhibition( $id = 0 ){
      if(!$node)
        return drupal_not_found();
      else
-       return drupal_goto("node/$node->nid");
+       return drupal_goto("node/$node->nid", NULL, NULL, 301);
   }
   exit();
 }
@@ -345,7 +345,7 @@ function eca_main_artwork( $id = 0 ){
      if(!$node)
        return drupal_not_found();
      else
-       return drupal_goto("node/$node->nid");
+       return drupal_goto("node/$node->nid", NULL, NULL, 301);
   }
   exit();
 }
@@ -358,7 +358,7 @@ function eca_main_publication( $id = 0 ){
      if(!$node)
        return drupal_not_found();
      else
-       return drupal_goto("node/$node->nid");
+       return drupal_goto("node/$node->nid", NULL, NULL, 301);
   }
   exit();
 }
@@ -371,7 +371,7 @@ function eca_main_institution( $id = 0 ){
      if(!$node)
        return drupal_not_found();
      else
-       return drupal_goto("node/$node->nid");
+       return drupal_goto("node/$node->nid", NULL, NULL, 301);
   }
   exit();
 }
